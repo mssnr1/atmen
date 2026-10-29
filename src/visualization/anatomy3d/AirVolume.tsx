@@ -5,7 +5,7 @@ import type { BreathingEngine } from '../../engine'
 import { breathState, usedAir } from '../breathState'
 import { makeParticles, particleState, type ParticleState } from './airflow3d'
 
-const COUNT = 1400
+const COUNT = 2400
 
 const vertex = /* glsl */ `
   attribute float aAlpha;
