@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { BottomSheet } from '../components/BottomSheet'
 import { IconButton } from '../components/Button'
 import { CloseIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
@@ -13,7 +13,7 @@ import { usePracticeSession } from '../hooks/usePracticeSession'
 import { useI18n, type Messages } from '../i18n'
 import { paceText, presetIndex, rhythmText } from '../lib/exerciseText'
 import { formatClock, formatSeconds } from '../lib/format'
-import { navigate, takeAutostart } from '../lib/route'
+import { navigate } from '../lib/route'
 import { store, useStore } from '../storage/store'
 import { visualizationModes } from '../visualization/modes'
 import { Visualization } from '../visualization/Visualization'
@@ -54,12 +54,6 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
-
-  // Coming from an exercise card: begin right away.
-  useEffect(() => {
-    if (takeAutostart(exercise.id)) session.start()
-    // Only on the first render of this exercise.
-  }, [exercise.id])
 
   const goHome = () => {
     session.reset()
@@ -163,15 +157,19 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             <IconButton label={t.pause} onClick={session.pause} className="size-16 bg-surface hover:bg-surface-2" data-testid="pause">
               <PauseIcon className="size-6" />
             </IconButton>
-          ) : (
-            <IconButton
-              label={s.status === 'paused' ? t.resume : t.start}
-              onClick={s.status === 'paused' ? session.resume : session.start}
-              className="size-16 bg-blue text-white hover:bg-blue-deep"
-              data-testid={s.status === 'paused' ? 'resume' : 'start'}
-            >
+          ) : s.status === 'paused' ? (
+            <IconButton label={t.resume} onClick={session.resume} className="size-16 bg-blue text-white hover:bg-blue-deep" data-testid="resume">
               <PlayIcon className="ml-1 size-6" />
             </IconButton>
+          ) : (
+            <button
+              type="button"
+              onClick={session.start}
+              className="h-14 rounded-full bg-blue px-10 text-[1.0625rem] text-white transition hover:bg-blue-deep active:scale-95"
+              data-testid="start"
+            >
+              {t.start}
+            </button>
           )}
           <IconButton label={t.openSettings} onClick={() => setSheetOpen(true)} className="size-12 border border-line" data-testid="open-settings">
             <SlidersIcon className="size-5" strokeWidth={1.5} />

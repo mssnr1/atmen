@@ -25,21 +25,11 @@ export function navigate(route: Route): void {
   window.location.hash = route.name === 'home' ? '/' : route.name === 'practice' ? `/practice/${route.exerciseId}` : `/${route.name}`
 }
 
-let autostart: string | null = null
-
 /**
- * Open an exercise and begin breathing straight away. Audio is unlocked here,
- * inside the tap, because mobile browsers only allow it from a gesture.
+ * Open an exercise, ready to start. Audio is unlocked here, inside the tap,
+ * because mobile browsers only allow it from a gesture.
  */
 export function startPractice(exerciseId: string): void {
   void audioCues.unlock()
-  autostart = exerciseId
   navigate({ name: 'practice', exerciseId })
-}
-
-/** True once if the practice screen for this exercise should start by itself. */
-export function takeAutostart(exerciseId: string): boolean {
-  const yes = autostart === exerciseId
-  autostart = null
-  return yes
 }

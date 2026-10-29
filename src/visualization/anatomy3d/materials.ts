@@ -39,9 +39,9 @@ function glass(color: string, rim: string, base: number, edge: number, extra: TH
 export function makeMaterials(): Record<MaterialKind, THREE.Material> {
   return {
     skin: glass('#f4f6fa', '#b9c4d6', 0.05, 0.62),
-    lung: glass('#9dbcfb', '#3f78f2', 0.28, 0.82),
+    lung: glass('#f6c9ba', '#e3907b', 0.26, 0.82),
     diaphragm: glass('#f7c2ab', '#e8977a', 0.32, 0.88),
-    airway: glass('#6f9dff', '#2f6bf5', 0.45, 0.95, { emissive: '#2f6bf5', emissiveIntensity: 0.55 }),
+    airway: glass('#f2ad9c', '#d8735f', 0.42, 0.92, { emissive: '#d8735f', emissiveIntensity: 0.25 }),
     heart: new THREE.MeshStandardMaterial({ color: '#ef7a6a', roughness: 0.42, emissive: '#b8382c', emissiveIntensity: 0.12 }),
   }
 }
