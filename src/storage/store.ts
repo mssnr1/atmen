@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { defaultVisualizationMode, visualizationModes } from '../visualization/modes'
 import type { Preferences, SessionRecord, StoredData } from './types'
 
 const STORAGE_KEY = 'breath.data'
@@ -6,7 +7,7 @@ const MAX_SESSIONS = 2000
 
 const defaults: StoredData = {
   version: 1,
-  preferences: { audioEnabled: true, vibrationEnabled: true, durationByExercise: {} },
+  preferences: { audioEnabled: true, vibrationEnabled: true, visualizationMode: defaultVisualizationMode, durationByExercise: {} },
   sessions: [],
 }
 
@@ -14,9 +15,11 @@ const defaults: StoredData = {
 function migrate(raw: unknown): StoredData {
   if (!raw || typeof raw !== 'object') return defaults
   const data = raw as Partial<StoredData>
+  const preferences = { ...defaults.preferences, ...data.preferences }
+  if (!visualizationModes.some((m) => m.id === preferences.visualizationMode)) preferences.visualizationMode = defaultVisualizationMode
   return {
     version: 1,
-    preferences: { ...defaults.preferences, ...data.preferences },
+    preferences,
     sessions: Array.isArray(data.sessions) ? data.sessions : [],
   }
 }

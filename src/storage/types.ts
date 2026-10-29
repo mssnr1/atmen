@@ -1,6 +1,9 @@
+import type { VisualizationMode } from '../visualization/modes'
+
 export interface Preferences {
   audioEnabled: boolean
   vibrationEnabled: boolean
+  visualizationMode: VisualizationMode
   /** Last chosen session duration per exercise id. */
   durationByExercise: Record<string, number>
 }

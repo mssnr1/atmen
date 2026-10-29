@@ -1,4 +1,3 @@
-import { BreathingIndicator } from '../components/BreathingIndicator'
 import { Button, IconButton } from '../components/Button'
 import { DurationPicker } from '../components/DurationPicker'
 import { CloseIcon, PauseIcon, PlayIcon, RestartIcon, SoundIcon, SoundOffIcon, VibrateIcon, VibrateOffIcon } from '../components/icons'
@@ -10,6 +9,8 @@ import { usePracticeSession } from '../hooks/usePracticeSession'
 import { formatClock, formatSeconds } from '../lib/format'
 import { navigate } from '../lib/route'
 import { store, useStore } from '../storage/store'
+import { Visualization } from '../visualization/Visualization'
+import { VisualizationSwitch } from '../visualization/VisualizationSwitch'
 import { CompletionView } from './CompletionView'
 
 const PHASE_LABELS: Record<PhaseType, string> = {
@@ -68,8 +69,11 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         <CompletionView exerciseName={exercise.name} summary={summary} onRestart={session.restart} onHome={goHome} />
       ) : (
         <>
-          <section className="flex flex-1 flex-col items-center justify-center py-4" aria-label="Breathing guide">
-            <BreathingIndicator engine={session.engine} />
+          <div className="flex justify-center pt-1">
+            <VisualizationSwitch value={prefs.visualizationMode} onChange={(mode) => store.updatePreferences({ visualizationMode: mode })} />
+          </div>
+          <section className="flex flex-1 flex-col items-center justify-center py-3" aria-label="Breathing guide">
+            <Visualization mode={prefs.visualizationMode} engine={session.engine} status={s.status} />
 
             <div className="mt-4 flex h-16 flex-col items-center" aria-live="polite">
               <p className="text-3xl font-light" data-testid="phase-label">

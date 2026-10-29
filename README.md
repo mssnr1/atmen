@@ -22,7 +22,16 @@ src/
   feedback/     Audio cues (Web Audio, pre-scheduled), vibration, screen wake lock
   storage/      Versioned localStorage store: preferences + completed sessions
   hooks/        usePracticeSession — wires engine to feedback and storage
-  components/   BreathingIndicator (animation only), buttons, duration picker
+  visualization/  How a breath is shown. Reads the engine, never drives it.
+    breathState.ts    snapshot → lung volume + airflow rate, shared by every mode
+    modes.ts          mode registry (Simple, Anatomical)
+    abstract/         Simple mode: the expanding circle
+    anatomical/
+      model.ts          body geometry + mechanics (volume → diaphragm → lungs → belly)
+      airflow.ts        where the air is during a breath (front, lung fill, outside cloud)
+      airVolumeShader.ts, AirVolumeRenderer.ts   WebGL density-field rendering of the air
+      BodyFigure.tsx    semi-transparent SVG body
+  components/   Buttons, duration picker
   screens/      Home, Practice, Completion
 ```
 
@@ -49,6 +58,13 @@ export const boxBreathing: Exercise = {
 ```
 
 Register it in `src/exercises/index.ts`; the player, animation, audio and haptics handle it unchanged.
+
+**Visualizations.** Each mode samples the engine clock on every animation frame, so switching mode
+mid-session picks up at exactly the current point of the breath and never touches the session.
+In Anatomical mode a single variable, lung volume, drives everything: the diaphragm descends with it,
+the lungs rest on the diaphragm, and the belly is displaced by the same descent. Airflow intensity is the
+rate of change of that volume. The air is a WebGL density field (domain-warped noise, Beer–Lambert opacity),
+rendered at half resolution because it is soft. Without WebGL, the lungs are tinted instead.
 
 ## Notes
 

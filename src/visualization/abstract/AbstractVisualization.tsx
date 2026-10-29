@@ -1,42 +1,25 @@
-import { useEffect, useRef, type ReactNode } from 'react'
-import type { BreathingEngine, EngineSnapshot } from '../engine'
+import { useEffect, useRef } from 'react'
+import type { BreathingEngine } from '../../engine'
+import { breathState, type BreathState } from '../breathState'
 
 const MIN_SCALE = 0.42
 const MAX_SCALE = 1
 const RING_RADIUS = 48
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS
 
-/** Breathing feels sinusoidal: slow at the turns, fastest mid-breath. */
-const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2
-
-/** Animation only: maps an engine position to a circle size (0..1 of full). */
-export function scaleFor(s: EngineSnapshot): number {
-  if (s.status === 'idle') return MIN_SCALE
-  const range = MAX_SCALE - MIN_SCALE
-  const t = easeInOutSine(Math.min(Math.max(s.phaseProgress, 0), 1))
-  switch (s.phase.type) {
-    case 'inhale':
-      return MIN_SCALE + range * t
-    case 'exhale':
-      return MAX_SCALE - range * t
-    case 'holdIn':
-      return MAX_SCALE
-    case 'holdOut':
-      return MIN_SCALE
-  }
-}
+/** The circle's size follows lung volume. */
+export const scaleFor = (b: BreathState) => MIN_SCALE + (MAX_SCALE - MIN_SCALE) * b.volume
 
 interface Props {
   engine: BreathingEngine
-  children?: ReactNode
 }
 
 /**
- * Draws the expanding/contracting circle and the session ring. It samples the
+ * Simple Abstract mode. Draws the expanding/contracting circle and the session ring. It samples the
  * engine's clock on every animation frame and writes styles directly, so the
  * motion stays in sync with the timer without re-rendering React at 60 fps.
  */
-export function BreathingIndicator({ engine, children }: Props) {
+export function AbstractVisualization({ engine }: Props) {
   const orb = useRef<HTMLDivElement>(null)
   const halo = useRef<HTMLDivElement>(null)
   const ring = useRef<SVGCircleElement>(null)
@@ -45,7 +28,7 @@ export function BreathingIndicator({ engine, children }: Props) {
     let frame = 0
     const draw = () => {
       const s = engine.sample()
-      const scale = scaleFor(s)
+      const scale = scaleFor(breathState(s))
       if (orb.current) orb.current.style.transform = `scale(${scale})`
       if (halo.current) {
         halo.current.style.transform = `scale(${scale * 1.18})`
@@ -59,7 +42,7 @@ export function BreathingIndicator({ engine, children }: Props) {
   }, [engine])
 
   return (
-    <div className="relative aspect-square w-[min(78vw,20rem,32dvh)]" data-testid="breathing-indicator">
+    <div className="relative aspect-square h-full max-h-80 max-w-full" data-testid="abstract-visualization">
       <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90" aria-hidden>
         <circle cx="50" cy="50" r={RING_RADIUS} fill="none" stroke="currentColor" strokeWidth="1" className="text-white/10" />
         <circle
@@ -85,7 +68,6 @@ export function BreathingIndicator({ engine, children }: Props) {
           style={{ transform: `scale(${MIN_SCALE})` }}
         />
       </div>
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">{children}</div>
     </div>
   )
 }
