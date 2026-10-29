@@ -26,11 +26,13 @@ src/
     breathState.ts    snapshot → lung volume + airflow rate, shared by every mode
     modes.ts          mode registry (Simple, Anatomical)
     abstract/         Simple mode: the expanding circle
-    anatomical/
-      model.ts          body geometry + mechanics (volume → diaphragm → lungs → belly)
-      airflow.ts        where the air is during a breath (front, lung fill, outside cloud)
-      airVolumeShader.ts, AirVolumeRenderer.ts   WebGL density-field rendering of the air
-      BodyFigure.tsx    semi-transparent SVG body
+    anatomy3d/        Anatomical mode: three.js / React Three Fiber
+      AnatomyModel.tsx  loads the GLB, drives lung/diaphragm/belly morphs from the engine, heartbeat
+      airflow3d.ts      where the air volume is for a breath state (nose → trachea → bronchi → lungs)
+      AirVolume.tsx     the air as soft translucent sprites
+      Anatomy3DVisualization.tsx  canvas, camera, orbit/zoom/pan limits, reset view, fallback
+  guide/        Four-segment indicator for the current breath phase
+blender/        Reproducible Blender scripts, .blend source, preview render, model docs and licence
   components/   Buttons, duration picker
   screens/      Home, Practice, Completion
 ```
@@ -70,3 +72,10 @@ rendered at half resolution because it is soft. Without WebGL, the lungs are tin
 
 - iOS Safari has no Vibration API; the vibration toggle is disabled there. Audio respects the silent switch.
 - Session records already have an optional `feedback` field reserved for before/after ratings.
+
+## Anatomy model licence
+
+The 3D anatomy (`public/models/atmen-anatomy.glb`, `blender/atmen-anatomy.blend`) is adapted from
+[Z-Anatomy](https://github.com/Z-Anatomy/Models-of-human-anatomy) (CC BY-SA 4.0) and
+BodyParts3D, © The Database Center for Life Science (CC BY-SA 2.1 Japan), and is itself
+licensed under CC BY-SA 4.0. See [blender/README.md](blender/README.md).
