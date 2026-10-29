@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { BluePage } from '../components/BluePage'
 import { ArrowRightIcon } from '../components/icons'
 import { Wordmark } from '../components/Wordmark'
@@ -15,7 +15,51 @@ export function WelcomeScreen() {
     store.updatePreferences({ welcomeSeen: true })
     navigate({ name: 'home' })
   }
-  const current = t.welcome[page]
+  const count = t.welcome.length
+  const go = (p: number) => setPage(Math.min(Math.max(p, 0), count - 1))
+
+  // Swipe between the pages: the track follows the finger and snaps to the
+  // nearest page on release, with a quick flick enough to turn one.
+  const track = useRef<HTMLDivElement>(null)
+  const drag = useRef<{ x: number; y: number; t: number; dx: number; horizontal: boolean | null } | null>(null)
+  const [dx, setDx] = useState(0)
+  const onPointerDown = (e: PointerEvent) => {
+    drag.current = { x: e.clientX, y: e.clientY, t: performance.now(), dx: 0, horizontal: null }
+  }
+  const onPointerMove = (e: PointerEvent) => {
+    const d = drag.current
+    if (!d) return
+    const mx = e.clientX - d.x
+    const my = e.clientY - d.y
+    if (d.horizontal === null && Math.hypot(mx, my) > 8) {
+      d.horizontal = Math.abs(mx) > Math.abs(my)
+      if (d.horizontal) track.current?.setPointerCapture(e.pointerId)
+    }
+    if (!d.horizontal) return
+    // Resist at the first and last page.
+    const edge = (page === 0 && mx > 0) || (page === count - 1 && mx < 0)
+    d.dx = edge ? mx / 3 : mx
+    setDx(d.dx)
+  }
+  const onPointerUp = () => {
+    const d = drag.current
+    drag.current = null
+    if (!d?.horizontal) return
+    const width = track.current?.clientWidth ?? 1
+    const speed = d.dx / Math.max(1, performance.now() - d.t)
+    if (d.dx < -width * 0.2 || speed < -0.5) go(page + 1)
+    else if (d.dx > width * 0.2 || speed > 0.5) go(page - 1)
+    setDx(0)
+  }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') setPage((p) => Math.min(p + 1, count - 1))
+      if (e.key === 'ArrowLeft') setPage((p) => Math.max(p - 1, 0))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [count])
 
   return (
     <BluePage testId="welcome">
@@ -28,21 +72,45 @@ export function WelcomeScreen() {
         )}
       </header>
 
-      <section key={page} className="flex flex-1 animate-[fade-in_400ms_ease-out] flex-col justify-center py-10" aria-live="polite">
-        <h1 className="text-[2.75rem] leading-[1.08] font-normal tracking-[-0.01em] text-balance">{current.title}</h1>
-        <p className="mt-10 text-[1.0625rem] leading-relaxed text-white/85">
-          {current.lines.map((line) => (
-            <span key={line} className="block">
-              {line}
-            </span>
+      <div
+        ref={track}
+        className="-mx-7 flex flex-1 touch-pan-y overflow-hidden select-none"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        data-testid="welcome-track"
+      >
+        <div
+          className={`flex w-full ${dx === 0 ? 'transition-transform duration-[400ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]' : ''}`}
+          style={{ transform: `translateX(calc(${-page * 100}% + ${dx}px))` }}
+        >
+          {t.welcome.map((p, i) => (
+            <section
+              key={i}
+              className="flex w-full shrink-0 flex-col justify-center px-7 py-10"
+              aria-hidden={i !== page}
+              aria-live={i === page ? 'polite' : undefined}
+            >
+              <h1 className="text-[2.75rem] leading-[1.08] font-normal tracking-[-0.01em] text-balance">{p.title}</h1>
+              <p className="mt-10 text-[1.0625rem] leading-relaxed text-white/85">
+                {p.lines.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
+              </p>
+            </section>
           ))}
-        </p>
-      </section>
+        </div>
+      </div>
 
       <footer className="flex items-center justify-between pb-6">
-        <div className="flex gap-2" aria-hidden>
+        <div className="-ml-2 flex">
           {t.welcome.map((_, i) => (
-            <span key={i} className={`size-2 rounded-full transition-colors ${i === page ? 'bg-white' : 'bg-white/40'}`} />
+            <button key={i} type="button" onClick={() => go(i)} aria-label={`${i + 1} / ${count}`} aria-current={i === page ? 'step' : undefined} className="p-2">
+              <span className={`block size-2 rounded-full transition-colors ${i === page ? 'bg-white' : 'bg-white/40'}`} />
+            </button>
           ))}
         </div>
         <button
