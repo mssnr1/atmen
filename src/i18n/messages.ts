@@ -39,6 +39,7 @@ export interface Messages {
   pace: string
   settings: string
   openSettings: string
+  aboutExercise: string
   breathingPace: string
   breathingPaceHint: string
   slowDown: string
@@ -123,6 +124,7 @@ const de: Messages = {
   pace: 'Tempo',
   settings: 'Einstellungen',
   openSettings: 'Einstellungen öffnen',
+  aboutExercise: 'Über die Übung',
   breathingPace: 'Atemtempo',
   breathingPaceHint: 'Sekunden ein / aus',
   slowDown: 'Mit der Zeit langsamer',
@@ -209,6 +211,7 @@ const en: Messages = {
   pace: 'Pace',
   settings: 'Settings',
   openSettings: 'Open settings',
+  aboutExercise: 'About this exercise',
   breathingPace: 'Breathing pace',
   breathingPaceHint: 'Seconds in / out',
   slowDown: 'Slow down over time',

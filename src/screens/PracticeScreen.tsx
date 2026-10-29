@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BottomSheet } from '../components/BottomSheet'
 import { CrossfadeText } from '../components/CrossfadeText'
 import { IconButton } from '../components/Button'
-import { CircleIcon, CloseIcon, LungsIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
+import { CircleIcon, CloseIcon, InfoIcon, LungsIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
 import { Segmented } from '../components/Segmented'
 import { Squircle } from '../components/Squircle'
 import { Switch } from '../components/Switch'
@@ -52,6 +52,8 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   const { snapshot: s, summary } = session
   const [sheetOpen, setSheetOpen] = useState(false)
   const closeSheet = useCallback(() => setSheetOpen(false), [])
+  const [infoOpen, setInfoOpen] = useState(false)
+  const closeInfo = useCallback(() => setInfoOpen(false), [])
   // The controls float over the visualization; it needs their height to keep its content clear of them.
   const [panelHeight, setPanelHeight] = useState(0)
   const panel = useCallback((el: HTMLElement | null) => {
@@ -101,24 +103,23 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
 
   return (
     <main className="safe-top relative mx-auto flex h-dvh max-w-md flex-col overflow-hidden bg-white" data-testid="practice">
-      <header className="relative z-10 grid grid-cols-[2.75rem_1fr_2.75rem] items-start gap-2 px-3">
+      <header className="relative z-10 flex items-center justify-between px-3">
         <IconButton label={t.close} onClick={goHome} data-testid="practice-close">
-          <CloseIcon className="size-[22px]" strokeWidth={1.5} />
+          <CloseIcon className="size-5" strokeWidth={1.5} />
         </IconButton>
-        <div className="pt-1.5 text-center">
-          <h1 className="text-[1.125rem] leading-tight">{text.name}</h1>
-          <p className="mt-0.5 text-[0.875rem] text-muted" data-testid="rhythm">
-            {rhythmText(exercise, scale, lang, t)}
-          </p>
+        <div className="flex items-center">
+          <IconButton label={t.aboutExercise} onClick={() => setInfoOpen(true)} data-testid="exercise-info">
+            <InfoIcon className="size-5" strokeWidth={1.5} />
+          </IconButton>
+          <IconButton
+            label={prefs.audioEnabled ? t.soundOff : t.soundOn}
+            pressed={prefs.audioEnabled}
+            disabled={!audioSupported()}
+            onClick={() => session.setAudioEnabled(!prefs.audioEnabled)}
+          >
+            {prefs.audioEnabled ? <SoundIcon className="size-5" strokeWidth={1.5} /> : <SoundOffIcon className="size-5" strokeWidth={1.5} />}
+          </IconButton>
         </div>
-        <IconButton
-          label={prefs.audioEnabled ? t.soundOff : t.soundOn}
-          pressed={prefs.audioEnabled}
-          disabled={!audioSupported()}
-          onClick={() => session.setAudioEnabled(!prefs.audioEnabled)}
-        >
-          {prefs.audioEnabled ? <SoundIcon className="size-[22px]" strokeWidth={1.5} /> : <SoundOffIcon className="size-[22px]" strokeWidth={1.5} />}
-        </IconButton>
       </header>
 
       <section className="relative min-h-0 flex-1" aria-label={t.guide}>
@@ -132,12 +133,12 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         <div className="absolute top-2 right-4">
           <Segmented
             label={t.visualization}
-            className="!rounded-full !bg-white/80 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur [&>button]:!flex [&>button]:!min-h-7 [&>button]:!items-center [&>button]:!rounded-full [&>button]:!px-2.5"
+            className="!rounded-full !bg-white/80 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur [&>button]:!flex [&>button]:!size-10 [&>button]:!min-h-0 [&>button]:!flex-none [&>button]:!items-center [&>button]:!justify-center [&>button]:!rounded-full [&>button]:!p-0"
             options={visualizationModes.map((m) => ({
               value: m.id,
               label: t.modes[m.id].label,
               title: t.modes[m.id].description,
-              icon: m.id === 'anatomical' ? <LungsIcon className="size-[18px]" strokeWidth={1.5} /> : <CircleIcon className="size-[18px]" strokeWidth={1.5} />,
+              icon: m.id === 'anatomical' ? <LungsIcon className="size-5" strokeWidth={1.5} /> : <CircleIcon className="size-5" strokeWidth={1.5} />,
             }))}
             value={prefs.visualizationMode}
             onChange={(visualizationMode) => store.updatePreferences({ visualizationMode })}
@@ -205,6 +206,14 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         </div>
         </Squircle>
       </section>
+
+      <BottomSheet open={infoOpen} title={text.name} closeLabel={t.close} onClose={closeInfo}>
+        <p className="pt-1 text-[0.9375rem] text-muted" data-testid="rhythm">
+          {rhythmText(exercise, scale, lang, t)} · {t.minutes(Math.round(s.plan.totalDurationMs / 60_000))} · {t.breaths(totalCycles)}
+        </p>
+        <p className="mt-3 text-[0.9375rem] leading-relaxed">{text.summary}</p>
+        <p className="mt-3 pb-2 text-[0.9375rem] leading-relaxed text-muted">{text.howItWorks}</p>
+      </BottomSheet>
 
       <BottomSheet open={sheetOpen} title={t.settings} closeLabel={t.close} onClose={closeSheet}>
         <h3 className="flex items-center gap-1.5 pt-3 text-[0.9375rem]">{t.breathingPace}</h3>
