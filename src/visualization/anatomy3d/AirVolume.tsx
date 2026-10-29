@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { useEffect, useMemo, type RefObject } from 'react'
+import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
 import type { BreathingEngine } from '../../engine'
 import { breathState, usedAir } from '../breathState'
@@ -41,6 +41,7 @@ const fragment = /* glsl */ `
  * Fresh air is blue, used air violet.
  */
 export function AirVolume({ engine, drift }: { engine: BreathingEngine; drift: RefObject<number> }) {
+  const mixVelocity = useRef(0)
   const particles = useMemo(() => makeParticles(COUNT), [])
   const { geometry, material, scratch } = useMemo(() => {
     const g = new THREE.BufferGeometry()
@@ -85,9 +86,12 @@ export function AirVolume({ engine, drift }: { engine: BreathingEngine; drift: R
     geometry.attributes.position.needsUpdate = true
     geometry.attributes.aAlpha.needsUpdate = true
     geometry.attributes.aSize.needsUpdate = true
-    // The colour turns over about a third of a second, like the breath bar.
+    // The colour turns slowly and softly, easing in and out (a critically damped spring, ~1.5 s).
     const u = material.uniforms.uMix
-    u.value += (usedAir(b.phase) - u.value) * (1 - Math.exp(-Math.min(delta, 0.1) / 0.12))
+    const dt = Math.min(delta, 0.1)
+    const w = 4
+    mixVelocity.current += (w * w * (usedAir(b.phase) - u.value) - 2 * w * mixVelocity.current) * dt
+    u.value = Math.min(Math.max(u.value + mixVelocity.current * dt, 0), 1)
     // Sprite size in world units (~1.4 cm), converted to pixels for this viewport.
     const fov = ((camera as THREE.PerspectiveCamera).fov * Math.PI) / 180
     material.uniforms.uScale.value = (0.014 * size.height * window.devicePixelRatio) / (2 * Math.tan(fov / 2))
