@@ -1,6 +1,6 @@
 import type { EngineSnapshot } from '../engine'
 
-export const SEGMENTS = 4
+export const SEGMENTS = 1
 
 /** The filled part of one segment, as fractions of its width from the left. */
 export interface SegmentFill {
@@ -11,10 +11,10 @@ export interface SegmentFill {
 const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1)
 
 /**
- * The four segments show one phase, not the session. Breathing in, blue fills
- * them from the left until all four are full. Breathing out, the blue keeps
- * moving right and leaves them, so they empty from the left. Fills are
- * continuous within a segment.
+ * The indicator shows one phase, not the session. Breathing in, blue fills it
+ * from the left until it is full. Breathing out, the blue keeps moving right
+ * and leaves it, so it empties from the left. With more than one segment the
+ * fill runs through them in turn.
  */
 export function segmentFills(s: Pick<EngineSnapshot, 'status' | 'phase' | 'phaseProgress'>): SegmentFill[] {
   const p = clamp01(s.phaseProgress)

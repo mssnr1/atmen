@@ -3,7 +3,7 @@ import type { BreathingEngine } from '../engine'
 import { SEGMENTS, segmentFills } from './segments'
 
 /**
- * The four-segment breathing indicator. Reads the engine clock on every
+ * The breathing indicator bar. Reads the engine clock on every
  * animation frame and moves the fills directly, so it stays exactly in step
  * with the engine at any pace without re-rendering React.
  */
@@ -27,9 +27,9 @@ export function BreathSegments({ engine, label }: { engine: BreathingEngine; lab
   }, [engine])
 
   return (
-    <div className="flex justify-center gap-3" role="img" aria-label={label} data-testid="breath-segments">
+    <div className="mx-auto flex max-w-[15rem] justify-center gap-3" role="img" aria-label={label} data-testid="breath-segments">
       {Array.from({ length: SEGMENTS }, (_, i) => (
-        <span key={i} className="relative h-9 w-11 overflow-hidden rounded-[9px] bg-surface-2">
+        <span key={i} className="relative h-9 flex-1 overflow-hidden rounded-[10px] bg-surface-2">
           <span
             ref={(el) => {
               fills.current[i] = el

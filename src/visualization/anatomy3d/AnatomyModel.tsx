@@ -35,7 +35,7 @@ const BEAT_S = 60 / 62
 /**
  * The anatomical model, driven by the breathing engine. Every frame it samples
  * the engine and sets the morph targets of lungs, diaphragm, belly and chest
- * from the same breath state the air volume and the four segments use, so
+ * from the same breath state the air volume and the breath indicator use, so
  * nothing runs on a timer of its own. Only the heartbeat runs on its own clock,
  * on purpose.
  */

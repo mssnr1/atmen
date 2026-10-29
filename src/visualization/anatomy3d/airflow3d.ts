@@ -9,7 +9,7 @@ import paths from './airway-paths.json'
  * current position on that route is `b - (1 - volume)`, so as lung volume goes
  * from 0 to 1 the whole volume is drawn in through the nose, down the trachea,
  * through both bronchi and out into the lungs, and on the way out it travels
- * the same route back and leaves the nose as a cloud that disperses. Position
+ * the same route back and leaves the nose as a red haze that disperses. Position
  * depends only on the breath state, never on its own timer, so the air can
  * never drift away from the engine (and air never goes anywhere but the
  * airways and lungs).
@@ -121,6 +121,8 @@ export interface ParticleState {
   alpha: number
   /** Relative sprite size: small in the airways, larger in the lungs and outside. */
   size: number
+  /** 0 fresh air (blue), 1 used air (red). */
+  used: number
 }
 
 /**
@@ -140,23 +142,30 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
     out.alpha = 0
     return out
   }
+  // Fresh air is blue on the way in and turns red once it has reached the
+  // lungs; it is breathed out red.
+  out.used = b.phase === 'inhale' ? smoothstep(0.72, 1, b.phaseProgress) : b.phase === 'holdOut' ? 0 : 1
 
   if (pos < 0) {
-    // Outside: a soft cloud in front of the nose that spreads with distance.
+    // Outside. Breathing in, nothing is drawn in front of the nose: the air
+    // only appears as it enters. Breathing out, it leaves as a red haze that
+    // drifts away, spreads and fades into the surroundings.
+    if (b.phase !== 'exhale') {
+      out.alpha = 0
+      return out
+    }
     const d = -pos
     const start = route.points[0]
-    const spread = 0.012 + 0.07 * d
-    const w = wobble(0.006 + 0.02 * d, 1.6)
+    const spread = 0.015 + 0.12 * d
+    const w = wobble(0.008 + 0.035 * d, 1.4)
     out.position = [
-      start[0] + OUT_DIR[0] * 0.16 * d + p.dir[0] * spread + w[0],
-      start[1] + OUT_DIR[1] * 0.16 * d + p.dir[1] * spread * 0.7 + w[1],
-      start[2] + OUT_DIR[2] * 0.16 * d + p.dir[2] * spread + w[2],
+      start[0] + OUT_DIR[0] * 0.24 * d + p.dir[0] * spread + w[0],
+      start[1] + OUT_DIR[1] * 0.24 * d + p.dir[1] * spread * 0.8 + 0.03 * d * d + w[1],
+      start[2] + OUT_DIR[2] * 0.24 * d + p.dir[2] * spread + w[2],
     ]
-    const near = 1 - smoothstep(0.05, 0.75, d)
-    // Breathing in, the cloud gathers in front of the nose; breathing out it fades as it leaves.
-    const fade = b.phase === 'inhale' ? smoothstep(0, 0.15, b.phaseProgress) : b.phase === 'exhale' ? 1 - smoothstep(0.7, 1, b.phaseProgress) : 0
-    out.alpha = 0.3 * near * fade
-    out.size = 1.2 + 1.6 * d
+    const near = 1 - smoothstep(0.1, 1, d)
+    out.alpha = 0.18 * near * (1 - smoothstep(0.8, 1, b.phaseProgress))
+    out.size = 1.3 + 2.2 * d
     return out
   }
 
