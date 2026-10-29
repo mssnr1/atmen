@@ -22,7 +22,8 @@ export function TabBar({ current }: { current: Tab }) {
               <button
                 type="button"
                 aria-current={active ? 'page' : undefined}
-                onClick={() => navigate({ name: id })}
+                // Tapping Home again while on it shows the welcome cards once more.
+                onClick={() => navigate(active && id === 'home' ? { name: 'welcome' } : { name: id })}
                 className={`flex w-full flex-col items-center gap-1 pt-2.5 pb-1 text-[0.6875rem] ${active ? 'text-blue' : 'text-muted'}`}
               >
                 <Icon className="size-[22px]" strokeWidth={1.5} />
