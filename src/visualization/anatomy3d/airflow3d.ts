@@ -159,7 +159,7 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
         start[1] + OUT_DIR[1] * 0.45 * d + p.dir[1] * radius + w[1],
         start[2] + OUT_DIR[2] * 0.45 * d + p.dir[2] * radius * 0.4 + w[2],
       ]
-      out.alpha = 0.05 * (1 - smoothstep(0, 0.85, d)) ** 1.5 * smoothstep(0, 0.12, b.phaseProgress)
+      out.alpha = 0.05 * (1 - smoothstep(0, 0.85, d)) ** 1.5 * smoothstep(0, 0.4, b.phaseProgress)
       out.size = 0.9 + 1.8 * d
       return out
     }
@@ -177,7 +177,7 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
       start[2] + OUT_DIR[2] * 0.24 * d + p.dir[2] * spread + w[2],
     ]
     const near = 1 - smoothstep(0.1, 1, d)
-    out.alpha = 0.055 * near * smoothstep(0, 0.3, b.phaseProgress) * (1 - smoothstep(0.8, 1, b.phaseProgress)) * (1 - rest)
+    out.alpha = 0.055 * near * smoothstep(0, 0.3, b.phaseProgress) * (1 - smoothstep(0.55, 1, b.phaseProgress)) * (1 - rest)
     out.size = 1.3 + 2.2 * d
     return out
   }
