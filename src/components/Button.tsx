@@ -1,27 +1,31 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'ghost'
+type Variant = 'primary' | 'secondary' | 'white' | 'ghost'
 
 const styles: Record<Variant, string> = {
-  primary: 'bg-accent text-ink hover:bg-accent-soft active:scale-[0.98]',
-  secondary: 'bg-white/10 text-mist hover:bg-white/15 active:scale-[0.98]',
-  ghost: 'text-mist/80 hover:text-mist hover:bg-white/6',
+  primary: 'bg-blue text-white hover:bg-blue-deep',
+  secondary: 'bg-surface text-ink hover:bg-surface-2',
+  white: 'bg-white text-ink hover:bg-white/90',
+  ghost: 'text-ink-2 hover:bg-surface',
 }
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant
   icon?: ReactNode
+  /** Icon after the label instead of before it. */
+  trailingIcon?: ReactNode
 }
 
-export function Button({ variant = 'primary', icon, className = '', children, ...rest }: Props) {
+export function Button({ variant = 'primary', icon, trailingIcon, className = '', children, ...rest }: Props) {
   return (
     <button
       type="button"
-      className={`inline-flex min-h-13 items-center justify-center gap-2 rounded-full px-6 text-[1.0625rem] font-medium whitespace-nowrap [&>svg]:shrink-0 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-40 ${styles[variant]} ${className}`}
+      className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-6 text-[1.0625rem] font-medium whitespace-nowrap transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue disabled:opacity-40 [&>svg]:shrink-0 ${styles[variant]} ${className}`}
       {...rest}
     >
       {icon}
       {children}
+      {trailingIcon}
     </button>
   )
 }
@@ -38,7 +42,7 @@ export function IconButton({ label, pressed, className = '', children, ...rest }
       aria-label={label}
       title={label}
       aria-pressed={pressed}
-      className={`inline-flex size-11 items-center justify-center rounded-full text-mist transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-30 ${className}`}
+      className={`inline-flex size-11 items-center justify-center rounded-full transition hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-blue disabled:opacity-30 ${className}`}
       {...rest}
     >
       {children}

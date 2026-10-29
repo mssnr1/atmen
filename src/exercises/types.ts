@@ -4,18 +4,24 @@ import type { Language } from '../i18n/messages'
 /** The words for an exercise in one language. */
 export interface ExerciseText {
   name: string
+  /** Two short lines on what the exercise is for, shown on its card. */
+  purpose: [string, string]
   tagline: string
-  /** One or two sentences shown on the home screen. */
+  /** One or two sentences shown on the learn screen. */
   summary: string
   /** Short explanation of how it works. */
   howItWorks: string
   benefits: string[]
   /** How to do it. */
   instructions: string[]
-  /** One name per tempo level. */
-  tempoLabels: string[]
   /** Optional safety or context note. */
   caution?: string
+}
+
+/** A selectable breathing pace: a multiplier of the pattern's phase durations. */
+export interface PaceOption {
+  scale: number
+  label: Record<Language, string>
 }
 
 /**
@@ -30,9 +36,6 @@ export interface Exercise {
   defaultDurationMs: number
   /** Round durations to whole breaths so sessions never end mid-breath. */
   alignToCycles: boolean
-  /**
-   * Tempo levels as multipliers of the pattern's phase durations, ordered from
-   * slowest to fastest, and the one to start with.
-   */
-  tempo: { scales: number[]; defaultLevel: number }
+  /** Pace presets, fastest first, and the one to start with. */
+  paces: { options: PaceOption[]; defaultIndex: number }
 }

@@ -2,11 +2,12 @@ import { useSyncExternalStore } from 'react'
 import { audioCues } from '../feedback/audio'
 
 /** Minimal hash router: "#/practice/resonance" -> ["practice", "resonance"]. */
-export type Route = { name: 'home' } | { name: 'practice'; exerciseId: string }
+export type Route = { name: 'home' } | { name: 'learn' } | { name: 'settings' } | { name: 'welcome' } | { name: 'practice'; exerciseId: string }
 
 function parse(hash: string): Route {
   const [name, id] = hash.replace(/^#\/?/, '').split('/')
   if (name === 'practice' && id) return { name: 'practice', exerciseId: id }
+  if (name === 'learn' || name === 'settings' || name === 'welcome') return { name }
   return { name: 'home' }
 }
 
@@ -21,7 +22,7 @@ export function useRoute(): Route {
 }
 
 export function navigate(route: Route): void {
-  window.location.hash = route.name === 'home' ? '/' : `/practice/${route.exerciseId}`
+  window.location.hash = route.name === 'home' ? '/' : route.name === 'practice' ? `/practice/${route.exerciseId}` : `/${route.name}`
 }
 
 let autostart: string | null = null

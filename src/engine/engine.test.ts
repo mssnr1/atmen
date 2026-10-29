@@ -150,6 +150,16 @@ describe('pace', () => {
     expect(inhales[10]).toBeCloseTo(5500 * SLOW_DOWN_FACTOR)
   })
 
+  it('keeps the chosen session length when the pace changes mid-session', () => {
+    const plan = resolvePlan(resonance, { kind: 'duration', durationMs: 5 * 60_000 })
+    const slowing = replan(plan, 30_000, { scale: 1, slowDown: true })
+    expect(slowing.totalCycles).toBeLessThan(plan.totalCycles)
+    expect(Math.abs(slowing.totalDurationMs - 300_000)).toBeLessThan(10_000)
+    const slower = replan(plan, 30_000, { scale: 6000 / 5500, slowDown: false })
+    expect(Math.abs(slower.totalDurationMs - 300_000)).toBeLessThan(7_000)
+    expect(positionAt(slower, 30_000).phase.durationMs).toBe(5500)
+  })
+
   it('tracks progress within the current cycle', () => {
     const plan = resolvePlan(resonance, { kind: 'cycles', count: 3 })
     expect(positionAt(plan, 16_500).cycleProgress).toBeCloseTo(0.5)

@@ -23,6 +23,7 @@ export function usePracticeSession(exercise: Exercise, durationMs: number, pace:
   )
   const wakeLock = useMemo(() => new ScreenWakeLock(), [])
   const [summary, setSummary] = useState<SessionSummary | null>(null)
+  const [sessionId, setSessionId] = useState<string | null>(null)
 
   const snapshot = useSyncExternalStore(
     useCallback((cb: () => void) => engine.subscribe(cb), [engine]),
@@ -59,13 +60,17 @@ export function usePracticeSession(exercise: Exercise, durationMs: number, pace:
       if (event.type === 'complete') {
         if (prefs.vibrationEnabled) vibrate('complete')
         wakeLock.release()
-        store.addSession({
+        const { pace: p } = event.snapshot.plan
+        const id = store.addSession({
           exerciseId: exercise.id,
           startedAt: event.summary.startedAt.toISOString(),
           completedAt: event.summary.completedAt.toISOString(),
           durationMs: Math.round(event.summary.durationMs),
           cycles: event.summary.completedCycles,
+          phasesMs: event.snapshot.plan.activePhases.map((ph) => Math.round(ph.durationMs * p.scale)),
+          slowDown: p.slowDown,
         })
+        setSessionId(id)
         setSummary(event.summary)
       }
     })
@@ -97,6 +102,7 @@ export function usePracticeSession(exercise: Exercise, durationMs: number, pace:
       // Create the audio context inside the tap so mobile browsers allow sound later.
       void audio.unlock()
       setSummary(null)
+      setSessionId(null)
       engine[action]()
       scheduleAudio(true)
       void wakeLock.acquire()
@@ -108,6 +114,7 @@ export function usePracticeSession(exercise: Exercise, durationMs: number, pace:
     engine,
     snapshot,
     summary,
+    sessionId,
     start: useCallback(() => begin('start'), [begin]),
     restart: useCallback(() => begin('restart'), [begin]),
     pause: useCallback(() => {
@@ -126,6 +133,7 @@ export function usePracticeSession(exercise: Exercise, durationMs: number, pace:
       audio.cancel()
       wakeLock.release()
       setSummary(null)
+      setSessionId(null)
     }, [engine, wakeLock]),
     setAudioEnabled: useCallback(
       (enabled: boolean) => {

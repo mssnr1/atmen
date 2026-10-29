@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { detectLanguage, languages } from '../i18n/messages'
 import { defaultVisualizationMode, visualizationModes } from '../visualization/modes'
-import type { PacePreference, Preferences, SessionRecord, StoredData } from './types'
+import type { PacePreference, Preferences, SessionFeedback, SessionRecord, StoredData } from './types'
 
 const STORAGE_KEY = 'breath.data'
 const MAX_SESSIONS = 2000
@@ -15,6 +15,8 @@ const defaults: StoredData = {
     visualizationMode: defaultVisualizationMode,
     durationByExercise: {},
     paceByExercise: {},
+    showProgress: false,
+    welcomeSeen: false,
   },
   sessions: [],
 }
@@ -25,6 +27,10 @@ function migrate(raw: unknown): StoredData {
   const data = raw as Partial<StoredData>
   const preferences = { ...defaults.preferences, ...data.preferences }
   if (!visualizationModes.some((m) => m.id === preferences.visualizationMode)) preferences.visualizationMode = defaultVisualizationMode
+  // Tempo levels from before the pace presets have no meaning any more.
+  preferences.paceByExercise = Object.fromEntries(
+    Object.entries(preferences.paceByExercise ?? {}).filter(([, p]) => typeof (p as Partial<PacePreference>).preset === 'number'),
+  )
   if (!languages.some((l) => l.id === preferences.language)) preferences.language = defaults.preferences.language
   return {
     version: 1,
@@ -72,9 +78,17 @@ export const store = {
   setPace(exerciseId: string, pace: PacePreference) {
     store.updatePreferences({ paceByExercise: { ...state.preferences.paceByExercise, [exerciseId]: pace } })
   },
-  addSession(record: Omit<SessionRecord, 'id'>) {
+  /** Saves a completed session and returns its id. */
+  addSession(record: Omit<SessionRecord, 'id'>): string {
     const id = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
     commit({ ...state, sessions: [...state.sessions, { id, ...record }].slice(-MAX_SESSIONS) })
+    return id
+  },
+  setFeedback(sessionId: string, patch: SessionFeedback) {
+    commit({
+      ...state,
+      sessions: state.sessions.map((s) => (s.id === sessionId ? { ...s, feedback: { ...s.feedback, ...patch } } : s)),
+    })
   },
 }
 
