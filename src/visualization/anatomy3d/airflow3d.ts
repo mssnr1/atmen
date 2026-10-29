@@ -163,7 +163,7 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
       start[2] + OUT_DIR[2] * 0.24 * d + p.dir[2] * spread + w[2],
     ]
     const near = 1 - smoothstep(0.1, 1, d)
-    out.alpha = 0.055 * near * (1 - smoothstep(0.8, 1, b.phaseProgress)) * (1 - rest)
+    out.alpha = 0.055 * near * smoothstep(0, 0.3, b.phaseProgress) * (1 - smoothstep(0.8, 1, b.phaseProgress)) * (1 - rest)
     out.size = 1.3 + 2.2 * d
     return out
   }
@@ -173,7 +173,7 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
     const c = pointOn(route, pos / AIRWAY)
     out.position = [c[0] + w[0], c[1] + w[1], c[2] + w[2]]
     // Air in the airways glows most while it is moving.
-    out.alpha = (0.06 + 0.12 * b.flow) * (1 - rest)
+    out.alpha = (0.012 + 0.17 * b.flow) * (1 - rest)
     out.size = 0.75
     return out
   }
