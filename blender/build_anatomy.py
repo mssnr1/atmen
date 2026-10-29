@@ -28,7 +28,7 @@ Morph targets (shape keys), all 0 = resting/exhaled:
     Lung_*.Inhale        3D expansion, mostly lower and lateral
     Diaphragm.Inhale     dome flattens and descends
     Abdomen.Inhale       belly wall moves out, edges stay put
-    Body_Shell.Inhale    rib cage widens and lifts, seamless with the belly
+    Body_Shell.Inhale    whole upper body fills out, shoulders lift, seamless with the belly
     Heart.Beat           ventricles contract, atria fill
 """
 
@@ -282,23 +282,26 @@ def abdomen_inhale(obj):
 
 
 def body_inhale(obj):
-    """The rib cage widens: upper ribs lift forward (pump handle), lower ribs swing out (bucket handle)."""
-    fall = boundary_falloff(obj, 0.05)
-    # Mesh coordinates are local to the object; the chest band is given in world height.
+    """The whole upper body fills out: the rib cage widens all round, most at
+    the front, and the shoulders lift and spread a little with it."""
+    fall = boundary_falloff(obj, 0.04)
+    # Mesh coordinates are local to the object; heights below are world heights.
     m = obj.matrix_world
     world = [m @ v.co for v in obj.data.vertices]
     band_ys = [w.y for w in world if 1.15 < w.z < 1.4]
     yc = (min(band_ys) + max(band_ys)) / 2
-    half_w = max(abs(w.x) for w in world if 1.15 < w.z < 1.35)
 
     def d(_, i):
         w = world[i]
-        band = smoothstep(1.06, 1.18, w.z) * (1 - smoothstep(1.4, 1.47, w.z))
-        upper = smoothstep(1.18, 1.38, w.z)
-        front = smoothstep(yc + 0.03, yc - 0.06, w.y)  # front of the chest is -Y
-        side = max(-1.0, min(1.0, w.x / half_w))
-        f = band * fall[i]
-        return Vector((0.009 * (1 - 0.5 * upper) * side * f, -0.013 * (0.4 + 0.6 * upper) * front * f, 0.004 * f))
+        trunk = smoothstep(1.02, 1.16, w.z) * (1 - smoothstep(1.5, 1.58, w.z))
+        shoulder = smoothstep(1.36, 1.48, w.z)
+        out = Vector((w.x, w.y - yc, 0))
+        if out.length > 1e-6:
+            out.normalize()
+        front = 0.6 + 0.6 * smoothstep(yc + 0.03, yc - 0.06, w.y)  # front of the chest is -Y
+        f = trunk * fall[i]
+        grow = out * (0.008 * front * (1 - 0.4 * shoulder))
+        return (grow + Vector((0, 0, 0.002 + 0.004 * shoulder))) * f
 
     add_key(obj, "Inhale", d)
 
