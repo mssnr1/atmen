@@ -38,6 +38,14 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   const { snapshot: s, summary } = session
   const [sheetOpen, setSheetOpen] = useState(false)
   const closeSheet = useCallback(() => setSheetOpen(false), [])
+  // The controls float over the visualization; it needs their height to keep its content clear of them.
+  const [panelHeight, setPanelHeight] = useState(0)
+  const panel = useCallback((el: HTMLElement | null) => {
+    if (!el) return
+    const ro = new ResizeObserver(() => setPanelHeight(el.offsetHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   // Coming from an exercise card: begin right away.
   useEffect(() => {
@@ -59,8 +67,8 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   const setPace = (patch: { preset?: number; slowDown?: boolean }) => store.setPace(exercise.id, { preset, slowDown, ...patch })
 
   return (
-    <main className="safe-area mx-auto flex h-dvh max-w-md flex-col bg-white" data-testid="practice">
-      <header className="grid grid-cols-[2.75rem_1fr_2.75rem] items-start gap-2 px-3">
+    <main className="safe-top relative mx-auto flex h-dvh max-w-md flex-col overflow-hidden bg-white" data-testid="practice">
+      <header className="relative z-10 grid grid-cols-[2.75rem_1fr_2.75rem] items-start gap-2 px-3">
         <IconButton label={t.close} onClick={goHome} data-testid="practice-close">
           <CloseIcon className="size-[22px]" strokeWidth={1.5} />
         </IconButton>
@@ -81,7 +89,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       </header>
 
       <section className="relative min-h-0 flex-1" aria-label={t.guide}>
-        <Visualization mode={prefs.visualizationMode} engine={session.engine} showProgress={prefs.showProgress} />
+        <Visualization mode={prefs.visualizationMode} engine={session.engine} showProgress={prefs.showProgress} bottomInset={panelHeight} />
         <div className="absolute top-2 right-4">
           <Segmented
             label={t.visualization}
@@ -93,7 +101,10 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         </div>
       </section>
 
-      <section className="rounded-t-[28px] bg-white px-5 pt-5 shadow-[0_-10px_30px_rgb(0_0_0/0.04)]">
+      <section
+        ref={panel}
+        className="safe-bottom absolute inset-x-0 bottom-0 z-10 rounded-t-[28px] bg-white/60 px-5 pt-5 shadow-[0_-10px_30px_rgb(0_0_0/0.04)] backdrop-blur-[12px]"
+      >
         <BreathSegments engine={session.engine} label={t.guide} />
         <div className="mt-3 text-center" aria-live="polite">
           <p className="text-[1.375rem] leading-tight" data-testid="phase-label">

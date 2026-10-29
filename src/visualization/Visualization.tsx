@@ -10,6 +10,8 @@ interface Props {
   mode: VisualizationMode
   engine: BreathingEngine
   showProgress: boolean
+  /** Height in px of controls that float over the bottom of the area. */
+  bottomInset?: number
 }
 
 /**
@@ -18,16 +20,17 @@ interface Props {
  * mid-session picks up at exactly the current point of the breath without
  * touching the session.
  */
-export function Visualization({ mode, engine, showProgress }: Props) {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center py-2">
-      {mode === 'abstract' ? (
-        <AbstractVisualization engine={engine} showProgress={showProgress} />
-      ) : (
-        <Suspense fallback={null}>
-          <Anatomy3DVisualization engine={engine} showProgress={showProgress} />
-        </Suspense>
-      )}
+export function Visualization({ mode, engine, showProgress, bottomInset = 0 }: Props) {
+  // The body runs on behind the floating controls; the abstract view stays clear of them.
+  return mode === 'abstract' ? (
+    <div className="absolute inset-0 flex items-center justify-center pt-2" style={{ paddingBottom: bottomInset + 8 }}>
+      <AbstractVisualization engine={engine} showProgress={showProgress} />
+    </div>
+  ) : (
+    <div className="absolute inset-0">
+      <Suspense fallback={null}>
+        <Anatomy3DVisualization engine={engine} showProgress={showProgress} bottomInset={bottomInset} />
+      </Suspense>
     </div>
   )
 }

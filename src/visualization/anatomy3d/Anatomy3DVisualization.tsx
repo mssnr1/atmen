@@ -9,30 +9,38 @@ import { useI18n } from '../../i18n'
 import { AbstractVisualization } from '../abstract/AbstractVisualization'
 import { AnatomyModel } from './AnatomyModel'
 
-/** What the camera looks at: the middle of the chest, a little above the heart. */
+/** What the camera looks at by default: the middle of the chest. Its height is set per viewport by `fitView`. */
 const TARGET = new THREE.Vector3(0, 1.37, 0.0)
 /** Default view: slightly from the model's left and from above, a 3/4 perspective. */
 const AZIMUTH = THREE.MathUtils.degToRad(28)
 const ELEVATION = THREE.MathUtils.degToRad(6)
 const FOV = 28
-/** Half the height and width of what must be visible: head to diaphragm, shoulder to shoulder. */
-const HALF_H = 0.37
-const HALF_W = 0.23
+/** Half the width that must be visible, shoulder to shoulder. */
+const HALF_W = 0.17
+/** Head to the lower lungs fill the part of the view above the controls; diaphragm and belly show through them. */
+const TOP = 1.8
+const BOTTOM = 1.17
 /** Panning keeps the target inside this box so the model cannot be lost. */
 const PAN_LIMIT = new THREE.Box3(new THREE.Vector3(-0.2, 1.05, -0.15), new THREE.Vector3(0.2, 1.7, 0.2))
 
-/** Camera distance that fits the upper body into a viewport of this aspect ratio. */
-export function fitDistance(aspect: number): number {
+/**
+ * Default camera for a viewport of this aspect ratio, where only the top
+ * `clear` fraction is not covered by the controls: head to diaphragm fill that
+ * part, and the body continues down behind the controls.
+ */
+export function fitView(aspect: number, clear = 1): { distance: number; target: THREE.Vector3 } {
   const t = Math.tan(THREE.MathUtils.degToRad(FOV) / 2)
-  return Math.max(HALF_H / t, HALF_W / (t * aspect))
+  const halfH = Math.max((TOP - BOTTOM) / (2 * clear), HALF_W / aspect)
+  const distance = halfH / t
+  return { distance, target: new THREE.Vector3(TARGET.x, TOP - halfH, TARGET.z) }
 }
 
-function defaultPosition(aspect: number): THREE.Vector3 {
-  const d = fitDistance(aspect)
+function defaultPosition(aspect: number, clear: number): THREE.Vector3 {
+  const { distance: d, target } = fitView(aspect, clear)
   return new THREE.Vector3(
-    TARGET.x + d * Math.cos(ELEVATION) * Math.sin(AZIMUTH),
-    TARGET.y + d * Math.sin(ELEVATION),
-    TARGET.z + d * Math.cos(ELEVATION) * Math.cos(AZIMUTH),
+    target.x + d * Math.cos(ELEVATION) * Math.sin(AZIMUTH),
+    target.y + d * Math.sin(ELEVATION),
+    target.z + d * Math.cos(ELEVATION) * Math.cos(AZIMUTH),
   )
 }
 
@@ -56,30 +64,32 @@ class ModelBoundary extends Component<{ fallback: ReactNode; children: ReactNode
   }
 }
 
-function Rig({ controls, resetSignal }: { controls: React.RefObject<OrbitControlsImpl | null>; resetSignal: number }) {
+function Rig({ controls, resetSignal, bottomInset }: { controls: React.RefObject<OrbitControlsImpl | null>; resetSignal: number; bottomInset: number }) {
   const { camera, size } = useThree()
   const aspect = size.width / Math.max(1, size.height)
+  const clear = Math.min(Math.max(1 - bottomInset / Math.max(1, size.height), 0.4), 1)
   const reset = useCallback(() => {
-    camera.position.copy(defaultPosition(aspect))
-    controls.current?.target.copy(TARGET)
-    camera.lookAt(TARGET)
+    const { target } = fitView(aspect, clear)
+    camera.position.copy(defaultPosition(aspect, clear))
+    controls.current?.target.copy(target)
+    camera.lookAt(target)
     controls.current?.update()
-  }, [camera, aspect, controls])
+  }, [camera, aspect, clear, controls])
   // Default view on mount, on reset, and when the viewport changes shape.
   useEffect(reset, [reset, resetSignal])
   return null
 }
 
-export function Anatomy3DVisualization({ engine, showProgress }: { engine: BreathingEngine; showProgress: boolean }) {
+export function Anatomy3DVisualization({ engine, showProgress, bottomInset = 0 }: { engine: BreathingEngine; showProgress: boolean; bottomInset?: number }) {
   const { t } = useI18n()
   const controls = useRef<OrbitControlsImpl | null>(null)
   const [resetSignal, setResetSignal] = useState(0)
   const [supported] = useState(webglAvailable)
 
   const fallback = (
-    <div className="relative flex h-full w-full flex-col items-center justify-center">
+    <div className="relative flex h-full w-full flex-col items-center justify-center pt-2" style={{ paddingBottom: bottomInset + 8 }}>
       <AbstractVisualization engine={engine} showProgress={showProgress} />
-      <p className="absolute bottom-1 px-6 text-center text-[0.8125rem] text-muted" data-testid="model-fallback">
+      <p style={{ bottom: bottomInset }} className="absolute px-6 text-center text-[0.8125rem] text-muted" data-testid="model-fallback">
         {t.modelFallback}
       </p>
     </div>
@@ -98,7 +108,7 @@ export function Anatomy3DVisualization({ engine, showProgress }: { engine: Breat
         >
           <Canvas
             dpr={[1, 1.75]}
-            camera={{ fov: FOV, near: 0.05, far: 10, position: defaultPosition(1) }}
+            camera={{ fov: FOV, near: 0.05, far: 10, position: defaultPosition(1, 1) }}
             gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
             data-testid="anatomy-canvas"
           >
@@ -131,7 +141,7 @@ export function Anatomy3DVisualization({ engine, showProgress }: { engine: Breat
                 }
               }}
             />
-            <Rig controls={controls} resetSignal={resetSignal} />
+            <Rig controls={controls} resetSignal={resetSignal} bottomInset={bottomInset} />
           </Canvas>
         </Suspense>
       </ModelBoundary>
@@ -141,7 +151,8 @@ export function Anatomy3DVisualization({ engine, showProgress }: { engine: Breat
         aria-label={t.resetView}
         title={t.resetView}
         data-testid="reset-view"
-        className="absolute bottom-2 left-4 flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[0.8125rem] text-ink-2 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur"
+        style={{ bottom: bottomInset + 10 }}
+        className="absolute left-4 flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[0.8125rem] text-ink-2 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur"
       >
         <ExpandIcon className="size-4" strokeWidth={1.6} />
         {t.resetView}
