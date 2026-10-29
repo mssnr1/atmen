@@ -28,6 +28,8 @@ function shownPhase(s: EngineSnapshot): BreathPhase {
 
 /** The camera turn (see Anatomy3DVisualization) plus a moment of stillness before the first breath. */
 const LEAD_IN_MS = 4200
+/** When the exercise ends the figure turns back to face the user before the completion screen. */
+const OUTRO_MS = 3800
 
 function phaseLabel(s: EngineSnapshot, t: Messages): string {
   if (s.status === 'idle') return t.ready
@@ -73,13 +75,22 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
     }, LEAD_IN_MS)
   }
 
+  const [outroDone, setOutroDone] = useState(false)
+  const completed = s.status === 'completed'
+  useEffect(() => {
+    setOutroDone(false)
+    if (!completed) return
+    const id = window.setTimeout(() => setOutroDone(true), OUTRO_MS)
+    return () => window.clearTimeout(id)
+  }, [completed])
+
   const goHome = () => {
     window.clearTimeout(leadInTimer.current)
     session.reset()
     navigate({ name: 'home' })
   }
 
-  if (s.status === 'completed' && summary) {
+  if (s.status === 'completed' && summary && (outroDone || prefs.visualizationMode !== 'anatomical')) {
     return <CompletionFlow exercise={exercise} summary={summary} sessionId={session.sessionId} scale={scale} />
   }
 
@@ -115,7 +126,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           engine={session.engine}
           showProgress={prefs.showProgress}
           bottomInset={panelHeight}
-          started={leadIn || s.status !== 'idle'}
+          started={leadIn || (s.status !== 'idle' && s.status !== 'completed')}
         />
         <div className="absolute top-2 right-4">
           <Segmented
