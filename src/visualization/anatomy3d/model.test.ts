@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { AIRWAY, makeParticles, particleState, routes, type ParticleState } from './airflow3d'
-import type { BreathState } from '../breathState'
+import { usedAir, type BreathState } from '../breathState'
 
 /** The JSON chunk of a GLB: enough to check structure without decoding meshes. */
 function gltfJson(path: string) {
@@ -46,7 +46,7 @@ describe('air volume', () => {
     elapsedS: 0,
   })
   const particles = makeParticles(400)
-  const sample = (b: BreathState) => particles.map((p) => ({ ...particleState(p, b, 0, { position: [0, 0, 0], alpha: 0, size: 1, used: 0 } as ParticleState) }))
+  const sample = (b: BreathState) => particles.map((p) => ({ ...particleState(p, b, 0, { position: [0, 0, 0], alpha: 0, size: 1 } as ParticleState) }))
   const nostril = routes[0].points[0]
 
   it('is all outside before an inhale and all inside the airways and lungs after it', () => {
@@ -71,12 +71,13 @@ describe('air volume', () => {
     expect(meanY(0.05)).toBeGreaterThan(nostril[1] - 0.06)
   })
 
-  it('draws no cloud in front of the nose while breathing in, a red one while breathing out', () => {
-    const outside = (b: BreathState) => particles.filter((p) => p.b - (1 - b.volume) < 0).map((p) => particleState(p, b, 0, { position: [0, 0, 0], alpha: 0, size: 1, used: 0 }))
+  it('draws no cloud in front of the nose while breathing in, a violet one while breathing out', () => {
+    const outside = (b: BreathState) => particles.filter((p) => p.b - (1 - b.volume) < 0).map((p) => particleState(p, b, 0, { position: [0, 0, 0], alpha: 0, size: 1 }))
     expect(outside(state(0.3, 'inhale', 0.3)).every((s) => s.alpha === 0)).toBe(true)
     const out = outside(state(0.5, 'exhale', 0.5))
     expect(out.some((s) => s.alpha > 0)).toBe(true)
-    expect(out.every((s) => s.used === 1)).toBe(true)
+    expect(usedAir('exhale')).toBe(1)
+    expect(usedAir('inhale')).toBe(0)
   })
 
   it('gives the airways a share of the route', () => {
