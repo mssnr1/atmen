@@ -196,11 +196,12 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
   // Each particle leaves the bronchus somewhere along its last stretch, so the air fans out.
   const end = pointOn(route, 0.72 + 0.28 * p.seed)
   const lung = lungs[route.side]
-  // Targets move out a little with the lungs as they expand.
-  const grow = 1 + 0.16 * b.volume
+  // Targets move out with the lungs as they widen; mostly sideways and forward, barely down.
+  const grow = 1 + 0.25 * b.volume
+  const growY = 1 + 0.05 * b.volume
   const tgt: V3 = [
     lung.center[0] + (p.target[0] - lung.center[0]) * grow,
-    lung.center[1] + (p.target[1] - lung.center[1]) * grow - 0.025 * rest,
+    lung.center[1] + (p.target[1] - lung.center[1]) * growY - 0.025 * rest,
     lung.center[2] + (p.target[2] - lung.center[2]) * grow,
   ]
   // Fast out of the bronchi, then easing into place, so the lungs fill out quickly.
