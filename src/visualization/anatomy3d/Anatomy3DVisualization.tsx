@@ -1,6 +1,6 @@
 import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { ExpandIcon } from '../../components/icons'
@@ -91,17 +91,24 @@ function Rig({
   }, [started])
   const facing = useRef(facingFor(started))
   const turn = useRef<{ from: number; to: number; t: number } | null>(null)
-  const reset = useCallback(() => {
-    turn.current = null
-    facing.current = facingFor(startedRef.current)
+  // Default view on mount, on Reset view, and when the viewport changes shape.
+  // A layout change (the controls panel shrinks when the exercise starts)
+  // keeps the current facing and any turn in progress; only Reset view jumps.
+  const lastSignal = useRef(resetSignal)
+  useEffect(() => {
+    if (lastSignal.current !== resetSignal) {
+      lastSignal.current = resetSignal
+      turn.current = null
+      facing.current = facingFor(startedRef.current)
+    }
     const { target } = fitView(aspect, clear)
-    camera.position.copy(defaultPosition(aspect, clear, facing.current))
+    const tw = turn.current
+    const azimuth = tw ? tw.from + (tw.to - tw.from) * easeInOut(tw.t) : facing.current
+    camera.position.copy(defaultPosition(aspect, clear, azimuth))
     controls.current?.target.copy(target)
     camera.lookAt(target)
     controls.current?.update()
-  }, [camera, aspect, clear, controls])
-  // Default view on mount, on reset, and when the viewport changes shape.
-  useEffect(reset, [reset, resetSignal])
+  }, [camera, aspect, clear, controls, resetSignal])
 
   // Turn around the model when the exercise starts (or goes back to the start).
   const spherical = useMemo(() => new THREE.Spherical(), [])
