@@ -29,19 +29,19 @@ export function HomeScreen() {
         />
       </header>
 
-      <section className="pt-4">
-        <h1 className="text-[5.5rem] leading-[0.9] font-black tracking-[-0.045em]" data-testid="app-name">
+      <section className="pt-6 text-center">
+        <h1 className="pl-[0.35em] text-4xl font-light tracking-[0.35em]" data-testid="app-name">
           {t.appName}
         </h1>
-        <p className="mt-3 text-xl font-semibold text-mist/65">{t.tagline}</p>
+        <p className="mt-3 text-base text-mist/60">{t.tagline}</p>
       </section>
 
-      <section aria-labelledby="featured" className="mt-10">
-        <p className="text-sm font-extrabold tracking-[0.18em] text-accent uppercase">{t.exercise}</p>
-        <h2 id="featured" className="mt-1.5 text-[2rem] leading-tight font-extrabold tracking-tight">
+      <section aria-labelledby="featured" className="mt-12">
+        <p className="text-xs font-semibold tracking-[0.18em] text-accent uppercase">{t.exercise}</p>
+        <h2 id="featured" className="mt-1.5 text-2xl font-medium">
           {text.name}
         </h2>
-        <p className="mt-1 text-lg font-medium text-mist/65" aria-label={rhythm.join(', ')}>
+        <p className="mt-1 text-base text-mist/60" aria-label={rhythm.join(', ')}>
           {rhythm.join(' · ')}
         </p>
 
@@ -66,7 +66,7 @@ export function HomeScreen() {
               onClick={() => startPractice(e.id)}
               className="w-full rounded-2xl bg-white/6 p-4 text-left hover:bg-white/10"
             >
-              <span className="block text-lg font-bold">{e.text[lang].name}</span>
+              <span className="block text-lg font-medium">{e.text[lang].name}</span>
               <span className="block text-mist/60">{e.text[lang].tagline}</span>
             </button>
           ))}
@@ -74,15 +74,15 @@ export function HomeScreen() {
       )}
 
       <section className="mt-14 space-y-4" aria-labelledby="why">
-        <h3 id="why" className="text-2xl font-extrabold tracking-tight">
+        <h3 id="why" className="text-xl font-medium">
           {t.whyItWorks}
         </h3>
-        <p className="text-lg leading-relaxed text-mist/85">{text.summary}</p>
-        <p className="text-lg leading-relaxed text-mist/65">{text.howItWorks}</p>
+        <p className="text-base leading-relaxed text-mist/85">{text.summary}</p>
+        <p className="text-base leading-relaxed text-mist/60">{text.howItWorks}</p>
         <ul className="space-y-2 pt-1">
           {text.benefits.map((b) => (
-            <li key={b} className="flex items-center gap-3 text-lg font-semibold">
-              <span className="size-2 shrink-0 rounded-full bg-accent" aria-hidden />
+            <li key={b} className="flex items-center gap-3 text-base text-mist/85">
+              <span className="size-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
               {b}
             </li>
           ))}
@@ -90,20 +90,20 @@ export function HomeScreen() {
       </section>
 
       <section className="mt-12 space-y-4" aria-labelledby="howto">
-        <h3 id="howto" className="text-2xl font-extrabold tracking-tight">
+        <h3 id="howto" className="text-xl font-medium">
           {t.howTo}
         </h3>
         <ol className="space-y-3">
           {text.instructions.map((step, i) => (
-            <li key={step} className="flex gap-4 text-lg leading-snug text-mist/85">
-              <span className="w-5 shrink-0 font-black text-accent tabular-nums">{i + 1}</span>
+            <li key={step} className="flex gap-3 text-base leading-snug text-mist/85">
+              <span className="w-4 shrink-0 font-medium text-accent tabular-nums">{i + 1}</span>
               {step}
             </li>
           ))}
         </ol>
       </section>
 
-      <footer className="mt-auto pt-14 pb-2 text-center text-[0.9375rem] font-medium text-mist/45">
+      <footer className="mt-auto pt-14 pb-2 text-center text-sm text-mist/45">
         {sessions.length > 0 ? `${t.sessionsCompleted(sessions.length)} · ${t.inspired}` : t.inspired}
       </footer>
     </main>

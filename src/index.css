@@ -6,12 +6,14 @@
   --color-mist: #eef6f4;
   --color-accent: #7ee0cf;
   --color-accent-soft: #a8eee2;
+  /* Breathing out, next to the mint of breathing in. */
+  --color-exhale: #8fb4ff;
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
 html {
-  /* A slightly larger base size: everything sized in rem grows with it. */
-  font-size: 106.25%;
+  /* Browser default size; text sizes below are set per element. */
+  font-size: 100%;
   -webkit-text-size-adjust: 100%;
 }
 

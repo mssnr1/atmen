@@ -17,7 +17,7 @@ export function Button({ variant = 'primary', icon, className = '', children, ..
   return (
     <button
       type="button"
-      className={`inline-flex min-h-14 items-center justify-center gap-2.5 rounded-full px-7 text-lg font-bold whitespace-nowrap [&>svg]:shrink-0 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-40 ${styles[variant]} ${className}`}
+      className={`inline-flex min-h-13 items-center justify-center gap-2 rounded-full px-6 text-[1.0625rem] font-medium whitespace-nowrap [&>svg]:shrink-0 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-40 ${styles[variant]} ${className}`}
       {...rest}
     >
       {icon}

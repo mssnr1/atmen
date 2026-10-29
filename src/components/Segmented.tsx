@@ -9,7 +9,7 @@ interface Props<T extends string | number> {
 
 /** A row of mutually exclusive options. */
 export function Segmented<T extends string | number>({ label, options, value, onChange, size = 'md', className = '' }: Props<T>) {
-  const item = size === 'md' ? 'min-h-12 flex-1 px-4 text-lg' : 'min-h-9 px-3.5 text-[0.9375rem]'
+  const item = size === 'md' ? 'min-h-11 flex-1 px-4 text-base' : 'min-h-8 px-3 text-sm'
   return (
     <div role="radiogroup" aria-label={label} className={`flex gap-1 rounded-full bg-white/8 p-1 ${className}`}>
       {options.map((o) => {
@@ -22,7 +22,7 @@ export function Segmented<T extends string | number>({ label, options, value, on
             aria-checked={selected}
             title={o.title}
             onClick={() => onChange(o.value)}
-            className={`rounded-full font-bold transition-colors focus-visible:outline-2 focus-visible:outline-accent ${item} ${
+            className={`rounded-full font-medium transition-colors focus-visible:outline-2 focus-visible:outline-accent ${item} ${
               selected ? 'bg-mist text-ink' : 'text-mist/65 hover:text-mist'
             }`}
           >

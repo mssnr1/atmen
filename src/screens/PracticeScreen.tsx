@@ -96,11 +96,14 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             <div className="relative min-h-0 flex-1">
               <Visualization mode={prefs.visualizationMode} engine={session.engine} />
             </div>
-            <div className="flex flex-col items-center pt-2 pb-4" aria-live="polite">
-              <p className="text-5xl leading-tight font-black tracking-tight" data-testid="phase-label">
+            <div className="flex flex-col items-center pt-1 pb-3" aria-live="polite">
+              <p
+                className={`text-3xl leading-tight font-medium ${active && s.phase.type === 'exhale' ? 'text-exhale' : active && s.phase.type === 'inhale' ? 'text-accent' : ''}`}
+                data-testid="phase-label"
+              >
                 {phaseLabel(s, t)}
               </p>
-              <p className="mt-1 text-xl font-semibold text-mist/60 tabular-nums" data-testid="phase-time">
+              <p className="mt-0.5 text-base text-mist/55 tabular-nums" data-testid="phase-time">
                 {active
                   ? `${s.status === 'paused' ? `${t.paused} · ` : ''}${formatCountdown(s.phaseRemainingMs, lang)} s`
                   : t.breaths(totalCycles)}
@@ -109,7 +112,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           </section>
 
           <section aria-label={t.progress}>
-            <div className="mb-2 flex justify-between text-[0.9375rem] font-bold text-mist/70 tabular-nums">
+            <div className="mb-1.5 flex justify-between text-sm text-mist/60 tabular-nums">
               <span data-testid="cycle-count">
                 {active ? t.breathOf(Math.min(s.cycleIndex + 1, totalCycles), totalCycles) : t.breaths(totalCycles)}
               </span>
@@ -117,18 +120,27 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             </div>
             <BreathBars
               label={t.progress}
+              phases={exercise.pattern.phases}
               total={totalCycles}
               completed={s.completedCycles}
               current={active ? s.cycleProgress : null}
             />
           </section>
 
-          <section className="mt-4" aria-label={t.tempo}>
-            <div className="flex items-baseline justify-between">
-              <span className="text-lg font-bold">{t.tempo}</span>
-              <span className="text-lg font-bold text-accent" data-testid="tempo-value">
-                {text.tempoLabels[level]} · {formatSeconds(phaseMs, lang)} s
+          <section className="mt-3" aria-label={t.tempo}>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm text-mist/60">
+                {t.tempo} ·{' '}
+                <span className="text-mist" data-testid="tempo-value">
+                  {text.tempoLabels[level]} {formatSeconds(phaseMs, lang)} s
+                </span>
               </span>
+              <Switch
+                label={t.slowDown}
+                hint={t.slowDownHint}
+                checked={pacePref.slowDown}
+                onChange={(slowDown) => setPace({ slowDown })}
+              />
             </div>
             <TempoSlider
               label={t.tempo}
@@ -137,15 +149,9 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
               valueText={`${text.tempoLabels[level]}, ${formatSeconds(phaseMs, lang)} s`}
               onChange={(next) => setPace({ level: next })}
             />
-            <Switch
-              label={t.slowDown}
-              hint={t.slowDownHint}
-              checked={pacePref.slowDown}
-              onChange={(slowDown) => setPace({ slowDown })}
-            />
           </section>
 
-          <section className="mt-4">
+          <section className="mt-2">
             {s.status === 'idle' && (
               <div className="flex flex-col gap-3">
                 <Segmented
