@@ -231,16 +231,19 @@ def bounds(obj):
 
 
 def lung_inhale(obj):
+    """The lungs follow the chest wall all round (they cling to it through the
+    pleura) and the diaphragm below, so they grow everywhere, most at the base."""
     lo, hi = bounds(obj)
     c = (lo + hi) / 2
     h = hi.z - lo.z
 
     def d(co, _):
         low = 1 - smoothstep(lo.z, hi.z, co.z)  # 1 at the base, 0 at the apex
-        w = 0.25 + 0.75 * low
+        w = 0.65 + 0.35 * low
         lateral = (co.x - c.x) / ((hi.x - lo.x) / 2)
         front = (co.y - c.y) / ((hi.y - lo.y) / 2)
-        return Vector((0.15 * w * lateral * (hi.x - lo.x) / 2, 0.1 * w * front * (hi.y - lo.y) / 2, -0.15 * h * low**1.5))
+        rise = 0.03 * h * (1 - low) ** 2  # the apex lifts a little with the upper ribs
+        return Vector((0.15 * w * lateral * (hi.x - lo.x) / 2, 0.14 * w * front * (hi.y - lo.y) / 2, -0.15 * h * low**1.5 + rise))
 
     add_key(obj, "Inhale", d)
 

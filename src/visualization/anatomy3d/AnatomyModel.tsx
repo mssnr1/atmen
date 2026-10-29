@@ -27,7 +27,7 @@ const PARTS: Record<string, { kind: MaterialKind; order: number }> = {
  * How much more the breath moves each part than in life, so the motion reads
  * on a phone screen: the chest wall most, lungs, diaphragm and belly with it.
  */
-const BREATH_GAIN: Record<string, number> = { Body_Shell: 2.6, Lung_Left: 1.7, Lung_Right: 1.7, Diaphragm: 1.7, Abdomen: 1.7 }
+const BREATH_GAIN: Record<string, number> = { Body_Shell: 2.6, Lung_Left: 2, Lung_Right: 2, Diaphragm: 2, Abdomen: 1.7 }
 
 /** A heartbeat shape over one beat (0..1): a strong contraction, then a smaller one. */
 export function heartbeat(phase: number): number {
