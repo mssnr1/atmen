@@ -55,6 +55,11 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
       if (!mesh.isMesh) return
       const part = PARTS[mesh.name] ?? PARTS[mesh.parent?.name ?? '']
       if (!part) return
+      // The heart stays out of the picture so the lungs and diaphragm read clearly.
+      if (part.kind === 'heart') {
+        mesh.visible = false
+        return
+      }
       mesh.material = materials[part.kind]
       mesh.renderOrder = part.order
       const dict = mesh.morphTargetDictionary

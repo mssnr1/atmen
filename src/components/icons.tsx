@@ -147,3 +147,9 @@ export const ExpandIcon = (p: P) => (
     <path d="M4 12a8 8 0 1 0 8-8M4 4v4h4" />
   </svg>
 )
+export const CircleIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <circle cx="12" cy="12" r="8" />
+    <circle cx="12" cy="12" r="4" opacity={0.5} />
+  </svg>
+)
