@@ -152,15 +152,15 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
       // Breathing in, the air is drawn in from in front of the face: a funnel
       // that narrows into the nostrils and thickens as it goes, fading in from
       // nothing at its wide end.
-      const radius = 0.006 + 0.075 * d
-      const w = wobble(0.004 + 0.01 * d, 1.2)
+      const radius = 0.006 + 0.11 * d
+      const w = wobble(0.004 + 0.012 * d, 1.2)
       out.position = [
-        start[0] + OUT_DIR[0] * 0.3 * d + p.dir[0] * radius + w[0],
-        start[1] + OUT_DIR[1] * 0.3 * d + p.dir[1] * radius + w[1],
-        start[2] + OUT_DIR[2] * 0.3 * d + p.dir[2] * radius * 0.4 + w[2],
+        start[0] + OUT_DIR[0] * 0.45 * d + p.dir[0] * radius + w[0],
+        start[1] + OUT_DIR[1] * 0.45 * d + p.dir[1] * radius + w[1],
+        start[2] + OUT_DIR[2] * 0.45 * d + p.dir[2] * radius * 0.4 + w[2],
       ]
-      out.alpha = 0.06 * (1 - smoothstep(0, 0.75, d)) ** 2 * smoothstep(0, 0.2, b.phaseProgress)
-      out.size = 0.8 + 1.2 * d
+      out.alpha = 0.05 * (1 - smoothstep(0, 0.85, d)) ** 1.5 * smoothstep(0, 0.12, b.phaseProgress)
+      out.size = 0.9 + 1.8 * d
       return out
     }
     // Breathing out, it leaves as a violet haze that drifts away, spreads and
