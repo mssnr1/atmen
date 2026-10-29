@@ -1,35 +1,48 @@
+import { useEffect, useMemo } from 'react'
+import { BreathBars } from '../components/BreathBars'
 import { Button, IconButton } from '../components/Button'
-import { DurationPicker } from '../components/DurationPicker'
 import { CloseIcon, PauseIcon, PlayIcon, RestartIcon, SoundIcon, SoundOffIcon, VibrateIcon, VibrateOffIcon } from '../components/icons'
-import type { EngineSnapshot, PhaseType } from '../engine'
+import { Segmented } from '../components/Segmented'
+import { Switch } from '../components/Switch'
+import { TempoSlider } from '../components/TempoSlider'
+import type { EngineSnapshot } from '../engine'
 import type { Exercise } from '../exercises'
 import { audioSupported } from '../feedback/audio'
 import { vibrationSupported } from '../feedback/haptics'
 import { usePracticeSession } from '../hooks/usePracticeSession'
-import { formatClock, formatSeconds } from '../lib/format'
-import { navigate } from '../lib/route'
+import { useI18n, type Messages } from '../i18n'
+import { formatClock, formatCountdown, formatSeconds } from '../lib/format'
+import { navigate, takeAutostart } from '../lib/route'
 import { store, useStore } from '../storage/store'
+import { visualizationModes } from '../visualization/modes'
 import { Visualization } from '../visualization/Visualization'
-import { VisualizationSwitch } from '../visualization/VisualizationSwitch'
 import { CompletionView } from './CompletionView'
 
-const PHASE_LABELS: Record<PhaseType, string> = {
-  inhale: 'Breathe in',
-  holdIn: 'Hold',
-  exhale: 'Breathe out',
-  holdOut: 'Hold',
-}
-
-function phaseLabel(s: EngineSnapshot): string {
-  if (s.status === 'idle') return 'Ready'
-  return s.phase.label ?? PHASE_LABELS[s.phase.type]
+function phaseLabel(s: EngineSnapshot, t: Messages): string {
+  if (s.status === 'idle') return t.ready
+  return s.phase.label ?? t.phase[s.phase.type]
 }
 
 export function PracticeScreen({ exercise }: { exercise: Exercise }) {
+  const { lang, t } = useI18n()
+  const text = exercise.text[lang]
   const prefs = useStore((d) => d.preferences)
   const durationMs = prefs.durationByExercise[exercise.id] ?? exercise.defaultDurationMs
-  const session = usePracticeSession(exercise, durationMs)
+  const pacePref = prefs.paceByExercise[exercise.id] ?? { level: exercise.tempo.defaultLevel, slowDown: false }
+  const level = Math.min(Math.max(pacePref.level, 0), exercise.tempo.scales.length - 1)
+  const pace = useMemo(
+    () => ({ scale: exercise.tempo.scales[level], slowDown: pacePref.slowDown }),
+    [exercise, level, pacePref.slowDown],
+  )
+  const session = usePracticeSession(exercise, durationMs, pace)
   const { snapshot: s, summary } = session
+
+  // Coming from the home screen's Start button: begin right away.
+  useEffect(() => {
+    if (takeAutostart(exercise.id)) session.start()
+    // Only on the first render of this exercise.
+  }, [exercise.id])
+
   const goHome = () => {
     session.reset()
     navigate({ name: 'home' })
@@ -37,17 +50,27 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
 
   const active = s.status === 'running' || s.status === 'paused'
   const totalCycles = Math.ceil(s.plan.totalCycles)
+  const phaseMs = exercise.pattern.phases[0].durationMs * exercise.tempo.scales[level]
+  const setPace = (patch: Partial<typeof pacePref>) => store.setPace(exercise.id, { level, slowDown: pacePref.slowDown, ...patch })
 
   return (
-    <main className="safe-area mx-auto flex min-h-dvh max-w-md flex-col px-6">
-      <header className="flex items-center justify-between">
-        <IconButton label="Close" onClick={goHome}>
+    <main className="safe-area mx-auto flex h-dvh max-w-md flex-col px-5">
+      <header className="flex items-center justify-between gap-2">
+        <IconButton label={t.close} onClick={goHome}>
           <CloseIcon />
         </IconButton>
-        <h1 className="text-sm font-medium tracking-wide text-mist/75">{exercise.name}</h1>
+        {s.status !== 'completed' && (
+          <Segmented
+            size="sm"
+            label={t.visualization}
+            options={visualizationModes.map((m) => ({ value: m.id, label: t.modes[m.id].label, title: t.modes[m.id].description }))}
+            value={prefs.visualizationMode}
+            onChange={(mode) => store.updatePreferences({ visualizationMode: mode })}
+          />
+        )}
         <div className="flex">
           <IconButton
-            label={prefs.audioEnabled ? 'Turn audio cues off' : 'Turn audio cues on'}
+            label={prefs.audioEnabled ? t.audioOff : t.audioOn}
             pressed={prefs.audioEnabled}
             disabled={!audioSupported()}
             onClick={() => session.setAudioEnabled(!prefs.audioEnabled)}
@@ -55,7 +78,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             {prefs.audioEnabled ? <SoundIcon /> : <SoundOffIcon />}
           </IconButton>
           <IconButton
-            label={prefs.vibrationEnabled ? 'Turn vibration off' : 'Turn vibration on'}
+            label={prefs.vibrationEnabled ? t.vibrationOff : t.vibrationOn}
             pressed={prefs.vibrationEnabled}
             disabled={!vibrationSupported()}
             onClick={() => store.updatePreferences({ vibrationEnabled: !prefs.vibrationEnabled })}
@@ -66,74 +89,89 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       </header>
 
       {s.status === 'completed' && summary ? (
-        <CompletionView exerciseName={exercise.name} summary={summary} onRestart={session.restart} onHome={goHome} />
+        <CompletionView exerciseName={text.name} summary={summary} onRestart={session.restart} onHome={goHome} />
       ) : (
         <>
-          <div className="flex justify-center pt-1">
-            <VisualizationSwitch value={prefs.visualizationMode} onChange={(mode) => store.updatePreferences({ visualizationMode: mode })} />
-          </div>
-          <section className="flex flex-1 flex-col items-center justify-center py-3" aria-label="Breathing guide">
-            <Visualization mode={prefs.visualizationMode} engine={session.engine} status={s.status} />
-
-            <div className="mt-4 flex h-16 flex-col items-center" aria-live="polite">
-              <p className="text-3xl font-light" data-testid="phase-label">
-                {phaseLabel(s)}
+          <section className="flex min-h-0 flex-1 flex-col" aria-label={t.guide}>
+            <div className="relative min-h-0 flex-1">
+              <Visualization mode={prefs.visualizationMode} engine={session.engine} />
+            </div>
+            <div className="flex flex-col items-center pt-2 pb-4" aria-live="polite">
+              <p className="text-5xl leading-tight font-black tracking-tight" data-testid="phase-label">
+                {phaseLabel(s, t)}
               </p>
-              <p className="mt-2 text-sm text-mist/55 tabular-nums" data-testid="phase-time">
+              <p className="mt-1 text-xl font-semibold text-mist/60 tabular-nums" data-testid="phase-time">
                 {active
-                  ? `${s.status === 'paused' ? 'Paused · ' : ''}${(Math.ceil(s.phaseRemainingMs / 100) / 10).toFixed(1)} s of ${formatSeconds(s.phase.durationMs)} s`
-                  : exercise.pattern.phases.map((p) => `${formatSeconds(p.durationMs)} s ${PHASE_LABELS[p.type].toLowerCase()}`).join(' · ')}
+                  ? `${s.status === 'paused' ? `${t.paused} · ` : ''}${formatCountdown(s.phaseRemainingMs, lang)} s`
+                  : t.breaths(totalCycles)}
               </p>
             </div>
           </section>
 
-          <section aria-label="Session" className="pb-2">
-            <div className="mb-2 flex justify-between text-sm text-mist/60 tabular-nums">
+          <section aria-label={t.progress}>
+            <div className="mb-2 flex justify-between text-[0.9375rem] font-bold text-mist/70 tabular-nums">
               <span data-testid="cycle-count">
-                {active ? `Cycle ${Math.min(s.cycleIndex + 1, totalCycles)} of ${totalCycles}` : `${totalCycles} cycles`}
+                {active ? t.breathOf(Math.min(s.cycleIndex + 1, totalCycles), totalCycles) : t.breaths(totalCycles)}
               </span>
-              <span data-testid="remaining">{formatClock(s.remainingMs)} left</span>
+              <span data-testid="remaining">{t.timeLeft(formatClock(s.remainingMs))}</span>
             </div>
-            <div
-              className="h-1 overflow-hidden rounded-full bg-white/10"
-              role="progressbar"
-              aria-label="Session progress"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(s.progress * 100)}
-            >
-              <div className="h-full rounded-full bg-accent transition-[width] duration-200 ease-linear" style={{ width: `${s.progress * 100}%` }} />
-            </div>
+            <BreathBars
+              label={t.progress}
+              total={totalCycles}
+              completed={s.completedCycles}
+              current={active ? s.cycleProgress : null}
+            />
+          </section>
 
+          <section className="mt-4" aria-label={t.tempo}>
+            <div className="flex items-baseline justify-between">
+              <span className="text-lg font-bold">{t.tempo}</span>
+              <span className="text-lg font-bold text-accent" data-testid="tempo-value">
+                {text.tempoLabels[level]} · {formatSeconds(phaseMs, lang)} s
+              </span>
+            </div>
+            <TempoSlider
+              label={t.tempo}
+              levels={exercise.tempo.scales.length}
+              value={level}
+              valueText={`${text.tempoLabels[level]}, ${formatSeconds(phaseMs, lang)} s`}
+              onChange={(next) => setPace({ level: next })}
+            />
+            <Switch
+              label={t.slowDown}
+              hint={t.slowDownHint}
+              checked={pacePref.slowDown}
+              onChange={(slowDown) => setPace({ slowDown })}
+            />
+          </section>
+
+          <section className="mt-4">
             {s.status === 'idle' && (
-              <div className="mt-5 flex flex-col items-center gap-4">
-                <ul className="w-full space-y-1 text-[13px] leading-snug text-mist/65">
-                  {exercise.instructions.map((i) => (
-                    <li key={i} className="flex gap-3">
-                      <span className="mt-1.5 size-1 shrink-0 rounded-full bg-accent" aria-hidden />
-                      {i}
-                    </li>
-                  ))}
-                </ul>
-                <DurationPicker options={exercise.durationOptionsMs} value={durationMs} onChange={(ms) => store.setDuration(exercise.id, ms)} />
+              <div className="flex flex-col gap-3">
+                <Segmented
+                  label={t.duration}
+                  options={exercise.durationOptionsMs.map((ms) => ({ value: ms, label: t.minutes(ms / 60_000) }))}
+                  value={durationMs}
+                  onChange={(ms) => store.setDuration(exercise.id, ms)}
+                />
                 <Button className="w-full" icon={<PlayIcon className="size-5" />} onClick={session.start}>
-                  Start
+                  {t.start}
                 </Button>
               </div>
             )}
 
             {active && (
-              <div className="mt-8 flex items-center justify-center gap-4">
-                <Button variant="secondary" className="w-36" icon={<RestartIcon className="size-5" />} onClick={session.restart}>
-                  Restart
+              <div className="flex gap-3">
+                <Button variant="secondary" className="flex-1" icon={<RestartIcon className="size-5" />} onClick={session.restart}>
+                  {t.restart}
                 </Button>
                 {s.status === 'running' ? (
-                  <Button className="w-40" icon={<PauseIcon className="size-5" />} onClick={session.pause}>
-                    Pause
+                  <Button className="flex-[1.4]" icon={<PauseIcon className="size-5" />} onClick={session.pause}>
+                    {t.pause}
                   </Button>
                 ) : (
-                  <Button className="w-40" icon={<PlayIcon className="size-5" />} onClick={session.resume}>
-                    Resume
+                  <Button className="flex-[1.4]" icon={<PlayIcon className="size-5" />} onClick={session.resume}>
+                    {t.resume}
                   </Button>
                 )}
               </div>

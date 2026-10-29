@@ -1,10 +1,11 @@
 import { PausableClock, defaultTimeSource, type TimeSource } from './clock'
-import { positionAt, resolvePlan } from './timeline'
+import { defaultPace, positionAt, replan, resolvePlan } from './timeline'
 import type {
   BreathingPattern,
   EngineEvent,
   EngineSnapshot,
   EngineStatus,
+  Pace,
   SessionLength,
   SessionPlan,
   SessionSummary,
@@ -21,6 +22,7 @@ const defaultTicker: Ticker = (cb) => {
 export interface EngineOptions {
   pattern: BreathingPattern
   length: SessionLength
+  pace?: Pace
   now?: TimeSource
   ticker?: Ticker
   /** Wall clock, used only for session dates. */
@@ -48,7 +50,7 @@ export class BreathingEngine {
   private snapshot: EngineSnapshot
 
   constructor(options: EngineOptions) {
-    this.plan = resolvePlan(options.pattern, options.length)
+    this.plan = resolvePlan(options.pattern, options.length, options.pace ?? defaultPace)
     this.clock = new PausableClock(options.now ?? defaultTimeSource)
     this.ticker = options.ticker ?? defaultTicker
     this.wallClock = options.wallClock ?? (() => new Date())
@@ -74,13 +76,31 @@ export class BreathingEngine {
 
   /** Change pattern or length. Resets the session to idle. */
   configure(pattern: BreathingPattern, length: SessionLength): void {
-    this.plan = resolvePlan(pattern, length)
+    this.plan = resolvePlan(pattern, length, this.plan.pace)
     this.reset()
+  }
+
+  /**
+   * Change how fast to breathe. Before a session this re-plans it (a duration
+   * keeps roughly its length); during one the change applies from the next
+   * phase and the number of breaths stays the same.
+   */
+  setPace(pace: Pace): void {
+    const { scale, slowDown } = this.plan.pace
+    if (pace.scale === scale && pace.slowDown === slowDown) return
+    this.plan =
+      this.status === 'idle'
+        ? resolvePlan(this.plan.pattern, this.plan.length, pace)
+        : replan(this.plan, this.clock.elapsedMs, pace)
+    this.snapshot = this.sample()
+    this.emit({ type: 'plan', snapshot: this.snapshot })
   }
 
   start(): void {
     if (this.status === 'running') return
     if (this.status === 'paused') return this.resume()
+    // A fresh session drops pace changes made during the last one, keeping the current pace.
+    this.plan = resolvePlan(this.plan.pattern, this.plan.length, this.plan.pace)
     this.clock.reset()
     this.lastPhaseKey = null
     this.startedAt = this.wallClock()

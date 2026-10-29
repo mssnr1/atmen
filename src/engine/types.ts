@@ -25,15 +25,46 @@ export type SessionLength =
   | { kind: 'duration'; durationMs: number; alignToCycles?: boolean }
   | { kind: 'cycles'; count: number }
 
-/** A pattern plus a length, resolved into concrete numbers. */
+/**
+ * How fast the pattern is breathed.
+ * - `scale` multiplies every phase duration (1 = as configured, 1.5 = slower).
+ * - `slowDown` stretches each breath a little more than the last, easing to
+ *   noticeably slower breaths at the end of the session.
+ */
+export interface Pace {
+  scale: number
+  slowDown: boolean
+}
+
+/** One phase laid out on the session timeline. */
+export interface PlanSegment {
+  startMs: number
+  durationMs: number
+  /** The phase with its actual duration at this point of the session. */
+  phase: BreathPhase
+  cycleIndex: number
+  /** Index into `plan.activePhases`. */
+  phaseIndex: number
+  /** Cut short by the end of an exact-duration session. */
+  truncated: boolean
+}
+
+/** A pattern plus a length and pace, resolved into a concrete timeline. */
 export interface SessionPlan {
   pattern: BreathingPattern
-  /** Phases with a duration > 0, in order. */
+  length: SessionLength
+  /** Phases with a duration > 0, in order, at their configured durations. */
   activePhases: BreathPhase[]
-  cycleDurationMs: number
-  totalDurationMs: number
-  /** Number of full cycles the session contains (may be fractional for exact durations). */
+  /** Number of cycles the session contains (may be fractional for exact durations). */
   totalCycles: number
+  pace: Pace
+  /** Cycle at which the slow-down curve starts. */
+  rampFrom: number
+  /** End time of an exact-duration session, otherwise null. */
+  fixedEndMs: number | null
+  segments: PlanSegment[]
+  cycleStartsMs: number[]
+  totalDurationMs: number
 }
 
 /** Where in a session a given elapsed time falls. */
@@ -45,8 +76,11 @@ export interface SessionPosition {
   /** 0-based index of the cycle in progress. */
   cycleIndex: number
   completedCycles: number
+  /** 0..1 within the current cycle. */
+  cycleProgress: number
   /** Index into `plan.activePhases`. */
   phaseIndex: number
+  /** The current phase, with its actual duration at the current pace. */
   phase: BreathPhase
   phaseElapsedMs: number
   phaseRemainingMs: number
@@ -81,4 +115,6 @@ export type EngineEvent =
   | { type: 'tick'; snapshot: EngineSnapshot }
   | { type: 'phase'; snapshot: EngineSnapshot }
   | { type: 'status'; snapshot: EngineSnapshot }
+  /** The timeline changed (pace), so scheduled cues need re-aligning. */
+  | { type: 'plan'; snapshot: EngineSnapshot }
   | { type: 'complete'; snapshot: EngineSnapshot; summary: SessionSummary }

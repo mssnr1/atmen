@@ -42,7 +42,7 @@ export function AbstractVisualization({ engine }: Props) {
   }, [engine])
 
   return (
-    <div className="relative aspect-square h-full max-h-80 max-w-full" data-testid="abstract-visualization">
+    <div className="relative aspect-square h-full max-h-[22rem] max-w-full" data-testid="abstract-visualization">
       <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90" aria-hidden>
         <circle cx="50" cy="50" r={RING_RADIUS} fill="none" stroke="currentColor" strokeWidth="1" className="text-white/10" />
         <circle

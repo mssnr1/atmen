@@ -73,6 +73,30 @@ export class AudioCues {
     this.scheduled = []
   }
 
+  /**
+   * A short wooden click for stepping a control, pitched by `step` (0 = low).
+   * Played right away, so call it from the tap or drag that caused it.
+   */
+  tick(step = 0): void {
+    const ctx = this.ctx
+    if (!ctx || !this.master) return
+    const at = ctx.currentTime
+    const gain = ctx.createGain()
+    gain.gain.setValueAtTime(0.0001, at)
+    gain.gain.exponentialRampToValueAtTime(0.4, at + 0.004)
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.07)
+    gain.connect(this.master)
+    const osc = ctx.createOscillator()
+    osc.type = 'triangle'
+    const freq = 660 * Math.pow(2, step / 6)
+    osc.frequency.setValueAtTime(freq * 1.5, at)
+    osc.frequency.exponentialRampToValueAtTime(freq, at + 0.03)
+    osc.connect(gain)
+    osc.start(at)
+    osc.stop(at + 0.09)
+    osc.onended = () => gain.disconnect()
+  }
+
   /** Completion chime, played now. */
   playCompletion(): void {
     if (this.ctx) this.chime(this.ctx.currentTime + 0.05)
@@ -118,3 +142,9 @@ export class AudioCues {
     }
   }
 }
+
+/**
+ * One instance for the whole app, so a tap on the home screen can unlock audio
+ * for the session that starts right after it.
+ */
+export const audioCues = new AudioCues()

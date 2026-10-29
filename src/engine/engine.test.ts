@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { BreathingEngine, type Ticker } from './BreathingEngine'
-import { positionAt, resolvePlan, transitionsBetween } from './timeline'
-import type { BreathingPattern, EngineEvent } from './types'
+import { SLOW_DOWN_FACTOR, positionAt, replan, resolvePlan, transitionsBetween } from './timeline'
+import type { BreathingPattern, EngineEvent, SessionLength } from './types'
 
 const resonance: BreathingPattern = {
   phases: [
@@ -20,7 +20,7 @@ const box: BreathingPattern = {
 }
 
 /** Manual time source and ticker so tests control time exactly. */
-function harness(pattern: BreathingPattern, length = { kind: 'duration' as const, durationMs: 5 * 60_000 }) {
+function harness(pattern: BreathingPattern, length: SessionLength = { kind: 'duration', durationMs: 5 * 60_000 }) {
   let now = 0
   let tick: (() => void) | null = null
   const ticker: Ticker = (cb) => {
@@ -108,7 +108,68 @@ describe('timeline', () => {
   })
 })
 
+describe('pace', () => {
+  it('scales phases and keeps a duration close to its length', () => {
+    const plan = resolvePlan(resonance, { kind: 'duration', durationMs: 5 * 60_000 }, { scale: 7 / 5.5, slowDown: false })
+    expect(positionAt(plan, 0).phase.durationMs).toBeCloseTo(7000)
+    expect(plan.totalCycles).toBe(21)
+    expect(plan.totalDurationMs).toBeCloseTo(294_000)
+  })
+
+  it('slows down smoothly to the slow-down factor', () => {
+    const plan = resolvePlan(resonance, { kind: 'cycles', count: 20 }, { scale: 1, slowDown: true })
+    const inhales = plan.segments.filter((s) => s.phase.type === 'inhale').map((s) => s.durationMs)
+    expect(inhales[0]).toBe(5500)
+    expect(inhales[19]).toBeCloseTo(5500 * SLOW_DOWN_FACTOR)
+    for (let i = 1; i < inhales.length; i++) expect(inhales[i]).toBeGreaterThan(inhales[i - 1])
+  })
+
+  it('a slowing session of a given length has fewer breaths', () => {
+    const steady = resolvePlan(resonance, { kind: 'duration', durationMs: 5 * 60_000 })
+    const slowing = resolvePlan(resonance, { kind: 'duration', durationMs: 5 * 60_000 }, { scale: 1, slowDown: true })
+    expect(slowing.totalCycles).toBeLessThan(steady.totalCycles)
+    expect(Math.abs(slowing.totalDurationMs - 300_000)).toBeLessThan(10_000)
+  })
+
+  it('replans from the next phase without touching the current one', () => {
+    const plan = resolvePlan(resonance, { kind: 'cycles', count: 10 })
+    const next = replan(plan, 2000, { scale: 2, slowDown: false })
+    expect(positionAt(next, 2000)).toMatchObject({ phaseIndex: 0, phaseElapsedMs: 2000 })
+    expect(positionAt(next, 2000).phase.durationMs).toBe(5500)
+    expect(positionAt(next, 5500).phase).toMatchObject({ type: 'exhale', durationMs: 11_000 })
+    expect(next.totalCycles).toBe(10)
+    expect(next.totalDurationMs).toBe(5500 + 11_000 * 19)
+  })
+
+  it('starts the slow-down curve from the next breath when turned on mid-session', () => {
+    const plan = resolvePlan(resonance, { kind: 'cycles', count: 11 })
+    const next = replan(plan, 12_000, { scale: 1, slowDown: true })
+    const inhales = next.segments.filter((s) => s.phase.type === 'inhale').map((s) => s.durationMs)
+    expect(inhales.slice(0, 3)).toEqual([5500, 5500, 5500])
+    expect(inhales[3]).toBeGreaterThan(5500)
+    expect(inhales[10]).toBeCloseTo(5500 * SLOW_DOWN_FACTOR)
+  })
+
+  it('tracks progress within the current cycle', () => {
+    const plan = resolvePlan(resonance, { kind: 'cycles', count: 3 })
+    expect(positionAt(plan, 16_500).cycleProgress).toBeCloseTo(0.5)
+  })
+})
+
 describe('BreathingEngine', () => {
+  it('changes pace mid-session and re-plans on a fresh start', () => {
+    const h = harness(resonance, { kind: 'cycles', count: 4 })
+    h.engine.start()
+    h.advance(1000)
+    h.engine.setPace({ scale: 2, slowDown: false })
+    expect(h.events.at(-1)?.type).toBe('plan')
+    expect(h.engine.getPlan().totalDurationMs).toBe(5500 + 11_000 * 7)
+    h.advance(5000)
+    expect(h.engine.getSnapshot().phase).toMatchObject({ type: 'exhale', durationMs: 11_000 })
+    h.engine.restart()
+    expect(h.engine.getPlan().totalDurationMs).toBe(11_000 * 8)
+  })
+
   it('is independent of tick rate', () => {
     const a = harness(resonance)
     const b = harness(resonance)

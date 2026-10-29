@@ -1,13 +1,21 @@
 import { useSyncExternalStore } from 'react'
+import { detectLanguage, languages } from '../i18n/messages'
 import { defaultVisualizationMode, visualizationModes } from '../visualization/modes'
-import type { Preferences, SessionRecord, StoredData } from './types'
+import type { PacePreference, Preferences, SessionRecord, StoredData } from './types'
 
 const STORAGE_KEY = 'breath.data'
 const MAX_SESSIONS = 2000
 
 const defaults: StoredData = {
   version: 1,
-  preferences: { audioEnabled: true, vibrationEnabled: true, visualizationMode: defaultVisualizationMode, durationByExercise: {} },
+  preferences: {
+    language: detectLanguage(),
+    audioEnabled: true,
+    vibrationEnabled: true,
+    visualizationMode: defaultVisualizationMode,
+    durationByExercise: {},
+    paceByExercise: {},
+  },
   sessions: [],
 }
 
@@ -17,6 +25,7 @@ function migrate(raw: unknown): StoredData {
   const data = raw as Partial<StoredData>
   const preferences = { ...defaults.preferences, ...data.preferences }
   if (!visualizationModes.some((m) => m.id === preferences.visualizationMode)) preferences.visualizationMode = defaultVisualizationMode
+  if (!languages.some((l) => l.id === preferences.language)) preferences.language = defaults.preferences.language
   return {
     version: 1,
     preferences,
@@ -59,6 +68,9 @@ export const store = {
     store.updatePreferences({
       durationByExercise: { ...state.preferences.durationByExercise, [exerciseId]: durationMs },
     })
+  },
+  setPace(exerciseId: string, pace: PacePreference) {
+    store.updatePreferences({ paceByExercise: { ...state.preferences.paceByExercise, [exerciseId]: pace } })
   },
   addSession(record: Omit<SessionRecord, 'id'>) {
     const id = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`

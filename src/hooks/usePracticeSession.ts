@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
-import { BreathingEngine, type SessionSummary } from '../engine'
+import { BreathingEngine, type Pace, type SessionSummary } from '../engine'
 import type { Exercise } from '../exercises'
-import { AudioCues } from '../feedback/audio'
+import { audioCues as audio } from '../feedback/audio'
 import { vibrate } from '../feedback/haptics'
 import { ScreenWakeLock } from '../feedback/wakeLock'
 import { store } from '../storage/store'
@@ -10,17 +10,17 @@ import { store } from '../storage/store'
  * Connects a breathing engine to the outside world: audio, vibration, wake
  * lock and session history. The engine itself knows none of these.
  */
-export function usePracticeSession(exercise: Exercise, durationMs: number) {
+export function usePracticeSession(exercise: Exercise, durationMs: number, pace: Pace) {
   const engine = useMemo(
     () =>
       new BreathingEngine({
         pattern: exercise.pattern,
         length: { kind: 'duration', durationMs, alignToCycles: exercise.alignToCycles },
+        pace,
       }),
-    // Duration changes are applied with configure() below, keeping the same engine.
+    // Duration and pace changes are applied below, keeping the same engine.
     [exercise],
   )
-  const audio = useMemo(() => new AudioCues(), [])
   const wakeLock = useMemo(() => new ScreenWakeLock(), [])
   const [summary, setSummary] = useState<SessionSummary | null>(null)
 
@@ -35,9 +35,26 @@ export function usePracticeSession(exercise: Exercise, durationMs: number) {
     }
   }, [engine, exercise, durationMs])
 
+  // Applies right away before a session, and from the next phase during one.
+  useEffect(() => engine.setPace(pace), [engine, pace])
+
+  const scheduleAudio = useCallback(
+    (fresh: boolean) => {
+      if (!store.get().preferences.audioEnabled) return
+      void audio.unlock().then(() => {
+        if (engine.getSnapshot().status === 'running') {
+          audio.scheduleSession(engine.getPlan(), () => engine.sample().elapsedMs, fresh)
+        }
+      })
+    },
+    [engine],
+  )
+
   useEffect(() => {
     const unsubscribe = engine.subscribe((event) => {
       const prefs = store.get().preferences
+      // The timeline moved, so the cues scheduled ahead are at the wrong times.
+      if (event.type === 'plan' && event.snapshot.status === 'running') scheduleAudio(false)
       if (event.type === 'phase' && prefs.vibrationEnabled) vibrate(event.snapshot.phase.type)
       if (event.type === 'complete') {
         if (prefs.vibrationEnabled) vibrate('complete')
@@ -56,26 +73,14 @@ export function usePracticeSession(exercise: Exercise, durationMs: number) {
       unsubscribe()
       engine.dispose()
     }
-  }, [engine, exercise, wakeLock])
+  }, [engine, exercise, wakeLock, scheduleAudio])
 
   useEffect(
     () => () => {
-      audio.dispose()
+      audio.cancel()
       wakeLock.dispose()
     },
-    [audio, wakeLock],
-  )
-
-  const scheduleAudio = useCallback(
-    (fresh: boolean) => {
-      if (!store.get().preferences.audioEnabled) return
-      void audio.unlock().then(() => {
-        if (engine.getSnapshot().status === 'running') {
-          audio.scheduleSession(engine.getPlan(), () => engine.sample().elapsedMs, fresh)
-        }
-      })
-    },
-    [audio, engine],
+    [wakeLock],
   )
 
   // Re-align audio with the engine clock whenever the page becomes visible again.
@@ -96,7 +101,7 @@ export function usePracticeSession(exercise: Exercise, durationMs: number) {
       scheduleAudio(true)
       void wakeLock.acquire()
     },
-    [audio, engine, scheduleAudio, wakeLock],
+    [engine, scheduleAudio, wakeLock],
   )
 
   return {
@@ -109,19 +114,19 @@ export function usePracticeSession(exercise: Exercise, durationMs: number) {
       engine.pause()
       audio.cancel()
       wakeLock.release()
-    }, [audio, engine, wakeLock]),
+    }, [engine, wakeLock]),
     resume: useCallback(() => {
       void audio.unlock()
       engine.resume()
       scheduleAudio(false)
       void wakeLock.acquire()
-    }, [audio, engine, scheduleAudio, wakeLock]),
+    }, [engine, scheduleAudio, wakeLock]),
     reset: useCallback(() => {
       engine.reset()
       audio.cancel()
       wakeLock.release()
       setSummary(null)
-    }, [audio, engine, wakeLock]),
+    }, [engine, wakeLock]),
     setAudioEnabled: useCallback(
       (enabled: boolean) => {
         store.updatePreferences({ audioEnabled: enabled })
@@ -129,7 +134,7 @@ export function usePracticeSession(exercise: Exercise, durationMs: number) {
         void audio.unlock()
         if (engine.getSnapshot().status === 'running') scheduleAudio(false)
       },
-      [audio, engine, scheduleAudio],
+      [engine, scheduleAudio],
     ),
   }
 }
