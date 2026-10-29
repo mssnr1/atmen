@@ -12,7 +12,7 @@ const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1)
 
 /**
  * The indicator shows one phase, not the session. Breathing in, blue fills it
- * from the left until it is full. Breathing out, the blue keeps moving right
+ * from the left until it is full. Breathing out, the fill (now violet) keeps moving right
  * and leaves it, so it empties from the left. With more than one segment the
  * fill runs through them in turn.
  */

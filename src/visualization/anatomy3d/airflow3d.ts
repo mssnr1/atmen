@@ -9,7 +9,7 @@ import paths from './airway-paths.json'
  * current position on that route is `b - (1 - volume)`, so as lung volume goes
  * from 0 to 1 the whole volume is drawn in through the nose, down the trachea,
  * through both bronchi and out into the lungs, and on the way out it travels
- * the same route back and leaves the nose as a red haze that disperses. Position
+ * the same route back and leaves the nose as a violet haze that disperses. Position
  * depends only on the breath state, never on its own timer, so the air can
  * never drift away from the engine (and air never goes anywhere but the
  * airways and lungs).
@@ -121,8 +121,6 @@ export interface ParticleState {
   alpha: number
   /** Relative sprite size: small in the airways, larger in the lungs and outside. */
   size: number
-  /** 0 fresh air (blue), 1 used air (red). */
-  used: number
 }
 
 /**
@@ -142,13 +140,10 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
     out.alpha = 0
     return out
   }
-  // Fresh air is blue on the way in and turns red once it has reached the
-  // lungs; it is breathed out red.
-  out.used = b.phase === 'inhale' ? smoothstep(0.72, 1, b.phaseProgress) : b.phase === 'holdOut' ? 0 : 1
 
   if (pos < 0) {
     // Outside. Breathing in, nothing is drawn in front of the nose: the air
-    // only appears as it enters. Breathing out, it leaves as a red haze that
+    // only appears as it enters. Breathing out, it leaves as a violet haze that
     // drifts away, spreads and fades into the surroundings.
     if (b.phase !== 'exhale') {
       out.alpha = 0

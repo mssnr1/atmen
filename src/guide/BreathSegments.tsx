@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { BreathingEngine } from '../engine'
+import { usedAir } from '../visualization/breathState'
 import { SEGMENTS, segmentFills } from './segments'
 
 /**
@@ -13,12 +14,16 @@ export function BreathSegments({ engine, label }: { engine: BreathingEngine; lab
   useEffect(() => {
     let frame = 0
     const draw = () => {
-      const f = segmentFills(engine.sample())
-      f.forEach((s, i) => {
+      const s = engine.sample()
+      const f = segmentFills(s)
+      // Blue while breathing in, violet while breathing out, like the air in the 3D view.
+      const color = s.status !== 'idle' && usedAir(s.phase.type) ? 'var(--color-violet)' : 'var(--color-blue)'
+      f.forEach((fill, i) => {
         const el = fills.current[i]
         if (!el) return
-        el.style.left = `${s.from * 100}%`
-        el.style.width = `${Math.max(0, s.to - s.from) * 100}%`
+        el.style.left = `${fill.from * 100}%`
+        el.style.width = `${Math.max(0, fill.to - fill.from) * 100}%`
+        el.style.backgroundColor = color
       })
       frame = requestAnimationFrame(draw)
     }
@@ -35,7 +40,7 @@ export function BreathSegments({ engine, label }: { engine: BreathingEngine; lab
               fills.current[i] = el
             }}
             data-testid="segment-fill"
-            className="absolute inset-y-0 left-0 w-0 bg-blue"
+            className="absolute inset-y-0 left-0 w-0 bg-blue transition-colors duration-300"
           />
         </span>
       ))}

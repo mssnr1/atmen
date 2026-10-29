@@ -2,7 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, type RefObject } from 'react'
 import * as THREE from 'three'
 import type { BreathingEngine } from '../../engine'
-import { breathState } from '../breathState'
+import { breathState, usedAir } from '../breathState'
 import { makeParticles, particleState, type ParticleState } from './airflow3d'
 
 const COUNT = 1400
@@ -10,30 +10,27 @@ const COUNT = 1400
 const vertex = /* glsl */ `
   attribute float aAlpha;
   attribute float aSize;
-  attribute float aUsed;
   uniform float uScale;
   varying float vAlpha;
-  varying float vUsed;
   void main() {
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mv;
     gl_PointSize = uScale * aSize / -mv.z;
     vAlpha = aAlpha;
-    vUsed = aUsed;
   }
 `
 
 const fragment = /* glsl */ `
   uniform vec3 uColor;
   uniform vec3 uUsed;
+  uniform float uMix;
   varying float vAlpha;
-  varying float vUsed;
   void main() {
     vec2 c = gl_PointCoord - 0.5;
     float d = dot(c, c) * 4.0;
     float a = exp(-d * 3.0) * vAlpha;
     if (a < 0.004) discard;
-    gl_FragColor = vec4(mix(uColor, uUsed, vUsed), a);
+    gl_FragColor = vec4(mix(uColor, uUsed, uMix), a);
   }
 `
 
@@ -41,7 +38,7 @@ const fragment = /* glsl */ `
  * The air as a soft volume of overlapping translucent sprites. Their positions
  * come from `particleState`, a pure function of the engine's breath state, so
  * the air follows the breathing engine exactly and stops when it pauses.
- * Fresh air is blue, used air red.
+ * Fresh air is blue, used air violet.
  */
 export function AirVolume({ engine, drift }: { engine: BreathingEngine; drift: RefObject<number> }) {
   const particles = useMemo(() => makeParticles(COUNT), [])
@@ -50,17 +47,16 @@ export function AirVolume({ engine, drift }: { engine: BreathingEngine; drift: R
     g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(COUNT * 3), 3).setUsage(THREE.DynamicDrawUsage))
     g.setAttribute('aAlpha', new THREE.BufferAttribute(new Float32Array(COUNT), 1).setUsage(THREE.DynamicDrawUsage))
     g.setAttribute('aSize', new THREE.BufferAttribute(new Float32Array(COUNT), 1).setUsage(THREE.DynamicDrawUsage))
-    g.setAttribute('aUsed', new THREE.BufferAttribute(new Float32Array(COUNT), 1).setUsage(THREE.DynamicDrawUsage))
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 1.4, 0.05), 0.6)
     const m = new THREE.ShaderMaterial({
       vertexShader: vertex,
       fragmentShader: fragment,
-      uniforms: { uColor: { value: new THREE.Color('#4a82ff') }, uUsed: { value: new THREE.Color('#e5483f') }, uScale: { value: 1 } },
+      uniforms: { uColor: { value: new THREE.Color('#4a82ff') }, uUsed: { value: new THREE.Color('#a855f7') }, uMix: { value: 0 }, uScale: { value: 1 } },
       transparent: true,
       depthWrite: false,
       depthTest: true,
     })
-    const scratch: ParticleState = { position: [0, 0, 0], alpha: 0, size: 1, used: 0 }
+    const scratch: ParticleState = { position: [0, 0, 0], alpha: 0, size: 1 }
     return { geometry: g, material: m, scratch }
   }, [])
 
@@ -72,12 +68,11 @@ export function AirVolume({ engine, drift }: { engine: BreathingEngine; drift: R
     [geometry, material],
   )
 
-  useFrame(({ size, camera }) => {
+  useFrame(({ size, camera }, delta) => {
     const b = breathState(engine.sample())
     const pos = geometry.attributes.position.array as Float32Array
     const alpha = geometry.attributes.aAlpha.array as Float32Array
     const sz = geometry.attributes.aSize.array as Float32Array
-    const used = geometry.attributes.aUsed.array as Float32Array
     for (let i = 0; i < COUNT; i++) {
       scratch.alpha = 0
       particleState(particles[i], b, drift.current ?? 0, scratch)
@@ -86,12 +81,13 @@ export function AirVolume({ engine, drift }: { engine: BreathingEngine; drift: R
       pos[i * 3 + 2] = scratch.position[2]
       alpha[i] = scratch.alpha
       sz[i] = scratch.size
-      used[i] = scratch.used
     }
     geometry.attributes.position.needsUpdate = true
     geometry.attributes.aAlpha.needsUpdate = true
     geometry.attributes.aSize.needsUpdate = true
-    geometry.attributes.aUsed.needsUpdate = true
+    // The colour turns over about a third of a second, like the breath bar.
+    const u = material.uniforms.uMix
+    u.value += (usedAir(b.phase) - u.value) * (1 - Math.exp(-Math.min(delta, 0.1) / 0.12))
     // Sprite size in world units (~1.4 cm), converted to pixels for this viewport.
     const fov = ((camera as THREE.PerspectiveCamera).fov * Math.PI) / 180
     material.uniforms.uScale.value = (0.014 * size.height * window.devicePixelRatio) / (2 * Math.tan(fov / 2))

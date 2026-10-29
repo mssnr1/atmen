@@ -19,6 +19,13 @@ export interface BreathState {
   elapsedS: number
 }
 
+/**
+ * Fresh air is blue; once the lungs are full it is used air, violet, until it
+ * has been breathed out. The breath bar and the 3D air share this, so they
+ * change colour together.
+ */
+export const usedAir = (phase: PhaseType | 'idle'): 0 | 1 => (phase === 'exhale' || phase === 'holdIn' ? 1 : 0)
+
 /** Breathing feels sinusoidal: slow at the turns, fastest mid-breath. */
 export const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2
 
