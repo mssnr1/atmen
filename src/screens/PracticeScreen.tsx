@@ -148,8 +148,8 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
 
       <section ref={panel} className="safe-bottom pointer-events-none absolute inset-x-0 bottom-0 z-10 px-3">
         <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-white/35 px-4 pt-3.5 pb-3 backdrop-blur-[12px]">
-        <div className="flex items-baseline justify-center gap-2 text-center" aria-live="polite">
-          <p className="text-[1.25rem] leading-tight" data-testid="phase-label">
+        <div className="flex flex-wrap items-baseline justify-center gap-x-2.5 gap-y-1 text-center" aria-live="polite">
+          <p className="text-[2.5rem] leading-none tracking-tight" data-testid="phase-label">
             <CrossfadeText text={phaseLabel(s, t)} />
           </p>
           {s.status !== 'running' && (
