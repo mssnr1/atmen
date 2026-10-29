@@ -7,6 +7,11 @@ export interface BreathPhase {
   durationMs: number
   /** Optional label override, e.g. "Sip in" for a double inhale. */
   label?: string
+  /**
+   * A short rest that is not announced: no tone or vibration, and the guide
+   * keeps showing the phase before it. Used for the pause at the top of a breath.
+   */
+  quiet?: boolean
 }
 
 /** One breathing cycle, repeated for the whole session. */

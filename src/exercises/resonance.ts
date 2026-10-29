@@ -42,6 +42,8 @@ export const resonanceBreathing: Exercise = {
   pattern: {
     phases: [
       { type: 'inhale', durationMs: phase },
+      // A moment of rest at the top of the breath.
+      { type: 'holdIn', durationMs: 2000, quiet: true },
       { type: 'exhale', durationMs: phase },
     ],
   },

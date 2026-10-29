@@ -4,7 +4,7 @@ import { IconButton } from '../components/Button'
 import { CloseIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
 import { Segmented } from '../components/Segmented'
 import { Switch } from '../components/Switch'
-import type { EngineSnapshot } from '../engine'
+import type { BreathPhase, EngineSnapshot } from '../engine'
 import type { Exercise } from '../exercises'
 import { audioSupported } from '../feedback/audio'
 import { vibrationSupported } from '../feedback/haptics'
@@ -19,9 +19,17 @@ import { visualizationModes } from '../visualization/modes'
 import { Visualization } from '../visualization/Visualization'
 import { CompletionFlow } from './CompletionFlow'
 
+/** The phase the guide shows: a quiet rest keeps showing the phase before it. */
+function shownPhase(s: EngineSnapshot): BreathPhase {
+  if (!s.phase.quiet || s.phaseIndex === 0) return s.phase
+  const before = s.plan.segments.find((g) => g.cycleIndex === s.cycleIndex && g.phaseIndex === s.phaseIndex - 1)
+  return before?.phase ?? s.phase
+}
+
 function phaseLabel(s: EngineSnapshot, t: Messages): string {
   if (s.status === 'idle') return t.ready
-  return s.phase.label ?? t.phase[s.phase.type]
+  const phase = shownPhase(s)
+  return phase.label ?? t.phase[phase.type]
 }
 
 export function PracticeScreen({ exercise }: { exercise: Exercise }) {
@@ -114,7 +122,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             {s.status === 'paused'
               ? t.paused
               : active
-                ? t.seconds(formatSeconds(s.phase.durationMs, lang))
+                ? t.seconds(formatSeconds(shownPhase(s).durationMs, lang))
                 : `${t.minutes(Math.round(s.plan.totalDurationMs / 60_000))} · ${t.breaths(totalCycles)}`}
           </p>
         </div>
