@@ -1,6 +1,6 @@
 import { OrbitControls } from '@react-three/drei'
-import { Canvas, useThree } from '@react-three/fiber'
-import { Component, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { ExpandIcon } from '../../components/icons'
@@ -35,14 +35,19 @@ export function fitView(aspect: number, clear = 1): { distance: number; target: 
   return { distance, target: new THREE.Vector3(TARGET.x, TOP - halfH, TARGET.z) }
 }
 
-function defaultPosition(aspect: number, clear: number): THREE.Vector3 {
+function defaultPosition(aspect: number, clear: number, azimuth = AZIMUTH): THREE.Vector3 {
   const { distance: d, target } = fitView(aspect, clear)
   return new THREE.Vector3(
-    target.x + d * Math.cos(ELEVATION) * Math.sin(AZIMUTH),
+    target.x + d * Math.cos(ELEVATION) * Math.sin(azimuth),
     target.y + d * Math.sin(ELEVATION),
-    target.z + d * Math.cos(ELEVATION) * Math.cos(AZIMUTH),
+    target.z + d * Math.cos(ELEVATION) * Math.cos(azimuth),
   )
 }
+
+/** Before the exercise starts the figure faces the user; once it starts it turns to the 3/4 view. */
+const facingFor = (engine: BreathingEngine) => (engine.getSnapshot().status === 'idle' ? 0 : AZIMUTH)
+const TURN_S = 1.4
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
 
 function webglAvailable(): boolean {
   try {
@@ -64,19 +69,55 @@ class ModelBoundary extends Component<{ fallback: ReactNode; children: ReactNode
   }
 }
 
-function Rig({ controls, resetSignal, bottomInset }: { controls: React.RefObject<OrbitControlsImpl | null>; resetSignal: number; bottomInset: number }) {
+function Rig({
+  engine,
+  controls,
+  resetSignal,
+  bottomInset,
+}: {
+  engine: BreathingEngine
+  controls: React.RefObject<OrbitControlsImpl | null>
+  resetSignal: number
+  bottomInset: number
+}) {
   const { camera, size } = useThree()
   const aspect = size.width / Math.max(1, size.height)
   const clear = Math.min(Math.max(1 - bottomInset / Math.max(1, size.height), 0.4), 1)
+  const facing = useRef(facingFor(engine))
+  const turn = useRef<{ from: number; to: number; t: number } | null>(null)
   const reset = useCallback(() => {
+    turn.current = null
+    facing.current = facingFor(engine)
     const { target } = fitView(aspect, clear)
-    camera.position.copy(defaultPosition(aspect, clear))
+    camera.position.copy(defaultPosition(aspect, clear, facing.current))
     controls.current?.target.copy(target)
     camera.lookAt(target)
     controls.current?.update()
-  }, [camera, aspect, clear, controls])
+  }, [engine, camera, aspect, clear, controls])
   // Default view on mount, on reset, and when the viewport changes shape.
   useEffect(reset, [reset, resetSignal])
+
+  // Turn around the model when the exercise starts (or goes back to the start).
+  const spherical = useMemo(() => new THREE.Spherical(), [])
+  const offset = useMemo(() => new THREE.Vector3(), [])
+  useFrame((_, dt) => {
+    const c = controls.current
+    if (!c) return
+    const want = facingFor(engine)
+    if (want !== facing.current) {
+      facing.current = want
+      turn.current = { from: spherical.setFromVector3(offset.copy(camera.position).sub(c.target)).theta, to: want, t: 0 }
+    }
+    const tw = turn.current
+    if (!tw) return
+    tw.t = Math.min(tw.t + dt / TURN_S, 1)
+    spherical.setFromVector3(offset.copy(camera.position).sub(c.target))
+    spherical.theta = tw.from + (tw.to - tw.from) * easeInOut(tw.t)
+    camera.position.copy(c.target).add(offset.setFromSpherical(spherical))
+    camera.lookAt(c.target)
+    c.update()
+    if (tw.t >= 1) turn.current = null
+  })
   return null
 }
 
@@ -108,7 +149,7 @@ export function Anatomy3DVisualization({ engine, showProgress, bottomInset = 0 }
         >
           <Canvas
             dpr={[1, 1.75]}
-            camera={{ fov: FOV, near: 0.05, far: 10, position: defaultPosition(1, 1) }}
+            camera={{ fov: FOV, near: 0.05, far: 10, position: defaultPosition(1, 1, 0) }}
             gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
             data-testid="anatomy-canvas"
           >
@@ -141,7 +182,7 @@ export function Anatomy3DVisualization({ engine, showProgress, bottomInset = 0 }
                 }
               }}
             />
-            <Rig controls={controls} resetSignal={resetSignal} bottomInset={bottomInset} />
+            <Rig engine={engine} controls={controls} resetSignal={resetSignal} bottomInset={bottomInset} />
           </Canvas>
         </Suspense>
       </ModelBoundary>
