@@ -8,12 +8,14 @@ export function WelcomeArt({ index, className = '' }: { index: number; className
   return (
     <svg viewBox="0 0 120 48" className={className} aria-hidden>
       {index === 0 && (
-        // A face in profile, facing left, with air drawn softly in at the nose.
+        // A nose seen from the front, with air rising from below into both nostrils.
         <g {...stroke}>
-          <path d="M90 0 C88 5 85 8 84 11 C81 17 74 23 70 27 C68 29 69 31 72 31 L78 31 C77 33 75 34 76 35.5 C77 36.5 79 36.5 78 38 C77 39.5 76 40 77 41.5 C79 44 82 45 86 46" />
-          <path d="M8 22 C26 22 38 26 60 29" opacity={0.85} strokeDasharray="0.1 4.5" />
-          <path d="M16 34 C32 33 46 31 62 30" opacity={0.5} strokeDasharray="0.1 4.5" />
-          <path d="M28 12 C40 15 50 22 60 28" opacity={0.3} strokeDasharray="0.1 4.5" />
+          <path d="M55 0 C55 9 52 16 48 21 C44 26 45 31 50 31.5 C53 32 54 30.5 56 31.5 C58 32.5 59 33 60 33 C61 33 62 32.5 64 31.5 C66 30.5 67 32 70 31.5 C75 31 76 26 72 21 C68 16 65 9 65 0" />
+          <path d="M51.5 28.5 C53 27 55.5 27 56.5 28.5 M63.5 28.5 C64.5 27 67 27 68.5 28.5" opacity={0.7} />
+          <path d="M22 47 C36 46 47 41 53 33" opacity={0.85} strokeDasharray="0.1 4.5" />
+          <path d="M98 47 C84 46 73 41 67 33" opacity={0.85} strokeDasharray="0.1 4.5" />
+          <path d="M38 48 C46 46 51 42 54.5 36" opacity={0.4} strokeDasharray="0.1 4.5" />
+          <path d="M82 48 C74 46 69 42 65.5 36" opacity={0.4} strokeDasharray="0.1 4.5" />
         </g>
       )}
       {index === 1 && (
