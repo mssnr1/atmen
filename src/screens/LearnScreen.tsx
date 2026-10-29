@@ -23,7 +23,7 @@ export function LearnScreen() {
                     <h2 className="text-[1.25rem]">{text.name}</h2>
                     <p className="mt-0.5 text-[0.8125rem] text-muted">{rhythmText(e, 1, lang, t)}</p>
                   </div>
-                  <Waveform phases={e.pattern.phases} className="h-6 w-16 text-blue" />
+                  <Waveform phases={e.pattern.phases} className="h-7 w-20 text-blue" />
                 </header>
                 <p className="mt-4 text-[0.9375rem] leading-relaxed text-ink-2">{text.summary}</p>
                 <h3 className="mt-5 text-[0.8125rem] font-medium tracking-wide text-blue uppercase">{t.whyItWorks}</h3>
