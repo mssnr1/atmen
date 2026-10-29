@@ -8,7 +8,6 @@ import type { BreathPhase, EngineSnapshot } from '../engine'
 import type { Exercise } from '../exercises'
 import { audioCues, audioSupported } from '../feedback/audio'
 import { vibrationSupported } from '../feedback/haptics'
-import { BreathSegments } from '../guide/BreathSegments'
 import { usePracticeSession } from '../hooks/usePracticeSession'
 import { useI18n, type Messages } from '../i18n'
 import { paceText, presetIndex, rhythmText } from '../lib/exerciseText'
@@ -132,8 +131,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         ref={panel}
         className="safe-bottom absolute inset-x-0 bottom-0 z-10 rounded-t-[28px] bg-white/35 px-5 pt-4 shadow-[0_-10px_30px_rgb(0_0_0/0.04)] backdrop-blur-[12px]"
       >
-        <BreathSegments engine={session.engine} label={t.guide} />
-        <div className="mt-2.5 flex items-baseline justify-center gap-2 text-center" aria-live="polite">
+        <div className="flex items-baseline justify-center gap-2 text-center" aria-live="polite">
           <p className="text-[1.25rem] leading-tight" data-testid="phase-label">
             {phaseLabel(s, t)}
           </p>
