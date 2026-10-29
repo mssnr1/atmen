@@ -17,9 +17,9 @@ const ELEVATION = THREE.MathUtils.degToRad(6)
 const FOV = 28
 /** Half the width that must be visible, shoulder to shoulder. */
 const HALF_W = 0.15
-/** Head to the lower lungs fill the part of the view above the controls; diaphragm and belly show through them. */
+/** Head to the bottom of the lungs and the diaphragm fill the part of the view above the controls. */
 const TOP = 1.77
-const BOTTOM = 1.27
+const BOTTOM = 1.1
 /** Panning keeps the target inside this box so the model cannot be lost. */
 const PAN_LIMIT = new THREE.Box3(new THREE.Vector3(-0.2, 1.05, -0.15), new THREE.Vector3(0.2, 1.7, 0.2))
 
@@ -226,11 +226,9 @@ export function Anatomy3DVisualization({
         aria-label={t.resetView}
         title={t.resetView}
         data-testid="reset-view"
-        style={{ bottom: bottomInset + 10 }}
-        className="absolute left-4 flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[0.8125rem] text-ink-2 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur"
+        className="absolute top-2 left-4 flex size-9 items-center justify-center rounded-full bg-white/80 text-ink-2 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur"
       >
         <ExpandIcon className="size-4" strokeWidth={1.6} />
-        {t.resetView}
       </button>
     </div>
   )

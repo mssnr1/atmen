@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BottomSheet } from '../components/BottomSheet'
 import { IconButton } from '../components/Button'
-import { CloseIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
+import { CircleIcon, CloseIcon, LungsIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
 import { Segmented } from '../components/Segmented'
 import { Squircle } from '../components/Squircle'
 import { Switch } from '../components/Switch'
@@ -120,8 +120,13 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         <div className="absolute top-2 right-4">
           <Segmented
             label={t.visualization}
-            className="!rounded-full !bg-white/80 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur [&>button]:!min-h-8 [&>button]:!rounded-full [&>button]:!px-3 [&>button]:!text-[0.8125rem]"
-            options={visualizationModes.map((m) => ({ value: m.id, label: t.modes[m.id].label, title: t.modes[m.id].description }))}
+            className="!rounded-full !bg-white/80 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur [&>button]:!flex [&>button]:!min-h-7 [&>button]:!items-center [&>button]:!rounded-full [&>button]:!px-2.5"
+            options={visualizationModes.map((m) => ({
+              value: m.id,
+              label: t.modes[m.id].label,
+              title: t.modes[m.id].description,
+              icon: m.id === 'anatomical' ? <LungsIcon className="size-[18px]" strokeWidth={1.5} /> : <CircleIcon className="size-[18px]" strokeWidth={1.5} />,
+            }))}
             value={prefs.visualizationMode}
             onChange={(visualizationMode) => store.updatePreferences({ visualizationMode })}
           />

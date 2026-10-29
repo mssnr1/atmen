@@ -1,6 +1,9 @@
+import type { ReactNode } from 'react'
+
 interface Props<T extends string | number> {
   label: string
-  options: { value: T; label: string; title?: string }[]
+  /** With an icon the option shows only the icon; its label becomes the accessible name. */
+  options: { value: T; label: string; title?: string; icon?: ReactNode }[]
   value: T
   onChange: (value: T) => void
   disabled?: boolean
@@ -19,14 +22,15 @@ export function Segmented<T extends string | number>({ label, options, value, on
             type="button"
             role="radio"
             aria-checked={selected}
-            title={o.title}
+            title={o.title ?? (o.icon ? o.label : undefined)}
+            aria-label={o.icon ? o.label : undefined}
             disabled={disabled}
             onClick={() => onChange(o.value)}
             className={`min-h-10 flex-1 rounded-xl px-3 text-[0.9375rem] transition-colors focus-visible:outline-2 focus-visible:outline-blue ${
               selected ? 'bg-white text-ink shadow-[0_1px_4px_rgb(0_0_0/0.08)]' : 'text-muted hover:text-ink'
             }`}
           >
-            {o.label}
+            {o.icon ?? o.label}
           </button>
         )
       })}

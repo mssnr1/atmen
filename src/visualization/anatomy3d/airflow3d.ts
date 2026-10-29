@@ -146,15 +146,29 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
   const rest = b.phase === 'holdIn' ? smoothstep(0, 0.7, b.phaseProgress) : b.phase === 'exhale' ? 1 - smoothstep(0, 0.3, b.phaseProgress) : 0
 
   if (pos < 0) {
-    // Outside. Breathing in, nothing is drawn in front of the nose: the air
-    // only appears as it enters. Breathing out, it leaves as a violet haze that
-    // drifts away, spreads and fades into the surroundings.
+    const d = -pos
+    const start = route.points[0]
+    if (b.phase === 'inhale') {
+      // Breathing in, the air is drawn in from in front of the face: a funnel
+      // that narrows into the nostrils and thickens as it goes, fading in from
+      // nothing at its wide end.
+      const radius = 0.006 + 0.075 * d
+      const w = wobble(0.004 + 0.01 * d, 1.2)
+      out.position = [
+        start[0] + OUT_DIR[0] * 0.3 * d + p.dir[0] * radius + w[0],
+        start[1] + OUT_DIR[1] * 0.3 * d + p.dir[1] * radius + w[1],
+        start[2] + OUT_DIR[2] * 0.3 * d + p.dir[2] * radius * 0.4 + w[2],
+      ]
+      out.alpha = 0.06 * (1 - smoothstep(0, 0.75, d)) ** 2 * smoothstep(0, 0.2, b.phaseProgress)
+      out.size = 0.8 + 1.2 * d
+      return out
+    }
+    // Breathing out, it leaves as a violet haze that drifts away, spreads and
+    // fades into the surroundings. In the rest between, nothing is outside.
     if (b.phase !== 'exhale') {
       out.alpha = 0
       return out
     }
-    const d = -pos
-    const start = route.points[0]
     const spread = 0.015 + 0.12 * d
     const w = wobble(0.008 + 0.035 * d, 1.4)
     out.position = [

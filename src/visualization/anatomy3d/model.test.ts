@@ -71,11 +71,15 @@ describe('air volume', () => {
     expect(meanY(0.05)).toBeGreaterThan(nostril[1] - 0.06)
   })
 
-  it('draws no cloud in front of the nose while breathing in, a violet one while breathing out', () => {
-    const outside = (b: BreathState) => particles.filter((p) => p.b - (1 - b.volume) < 0).map((p) => particleState(p, b, 0, { position: [0, 0, 0], alpha: 0, size: 1 }))
-    expect(outside(state(0.3, 'inhale', 0.3)).every((s) => s.alpha === 0)).toBe(true)
+  it('draws the air in as a funnel that fades in from nothing, and breathes it out as a violet haze', () => {
+    const outside = (b: BreathState) =>
+      particles.filter((p) => p.b - (1 - b.volume) < 0).map((p) => ({ d: 1 - b.volume - p.b, s: particleState(p, b, 0, { position: [0, 0, 0], alpha: 0, size: 1 }) }))
+    const inhaling = outside(state(0.3, 'inhale', 0.3))
+    expect(inhaling.some(({ s }) => s.alpha > 0)).toBe(true)
+    expect(inhaling.filter(({ d }) => d > 0.6).every(({ s }) => s.alpha < 0.002)).toBe(true)
+    expect(outside(state(1, 'holdIn', 0.5)).every(({ s }) => s.alpha === 0)).toBe(true)
     const out = outside(state(0.5, 'exhale', 0.5))
-    expect(out.some((s) => s.alpha > 0)).toBe(true)
+    expect(out.some(({ s }) => s.alpha > 0)).toBe(true)
     expect(usedAir('exhale')).toBe(1)
     expect(usedAir('inhale')).toBe(0)
   })
