@@ -18,9 +18,9 @@ import paths from './airway-paths.json'
 export type V3 = [number, number, number]
 
 /** Share of the route taken by the airways; the rest spreads into the lungs. */
-export const AIRWAY = 0.42
+export const AIRWAY = 0.28
 /** Share of particles that sit in the airways when the lungs are full. */
-const AIRWAY_PARTICLES = 0.3
+const AIRWAY_PARTICLES = 0.2
 
 interface Route {
   points: V3[]
@@ -189,11 +189,12 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
     lung.center[1] + (p.target[1] - lung.center[1]) * grow - 0.025 * rest,
     lung.center[2] + (p.target[2] - lung.center[2]) * grow,
   ]
-  const c = lerp3(end, tgt, smoothstep(0, 1, t))
+  // Fast out of the bronchi, then easing into place, so the lungs fill out quickly.
+  const c = lerp3(end, tgt, 1 - (1 - t) ** 3)
   const w = wobble(0.004 + 0.004 * t, 1.2)
   out.position = [c[0] + w[0], c[1] + w[1], c[2] + w[2]]
-  // Faint where the bronchi end, so the air does not bead up at their tips.
-  out.alpha = (0.1 + 0.16 * smoothstep(0, 0.3, t)) * (1 - 0.3 * rest)
-  out.size = 0.9 + 0.9 * t
+  // A soft, slightly translucent mist; faint where the bronchi end, so the air does not bead up at their tips.
+  out.alpha = (0.04 + 0.05 * smoothstep(0, 0.25, t)) * (1 - 0.3 * rest)
+  out.size = 1.4 + 1.6 * t
   return out
 }
