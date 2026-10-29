@@ -197,7 +197,7 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
   const end = pointOn(route, 0.72 + 0.28 * p.seed)
   const lung = lungs[route.side]
   // Targets move out a little with the lungs as they expand.
-  const grow = 1 + 0.16 * b.volume
+  const grow = 1 + 0.25 * b.volume
   const tgt: V3 = [
     lung.center[0] + (p.target[0] - lung.center[0]) * grow,
     lung.center[1] + (p.target[1] - lung.center[1]) * grow - 0.025 * rest,
