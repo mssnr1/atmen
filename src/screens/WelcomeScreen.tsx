@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { BluePage } from '../components/BluePage'
 import { ArrowRightIcon } from '../components/icons'
+import { WelcomeArt } from '../components/WelcomeArt'
 import { Wordmark } from '../components/Wordmark'
 import { useI18n } from '../i18n'
 import { navigate } from '../lib/route'
@@ -92,6 +93,7 @@ export function WelcomeScreen() {
               aria-hidden={i !== page}
               aria-live={i === page ? 'polite' : undefined}
             >
+              <WelcomeArt index={i} className="mb-10 h-16 w-40 text-white" />
               <h1 className="text-[2.75rem] leading-[1.08] font-normal tracking-[-0.01em] text-balance">{p.title}</h1>
               <p className="mt-10 text-[1.0625rem] leading-relaxed text-white/85">
                 {p.lines.map((line) => (
