@@ -11,7 +11,7 @@ import { vibrationSupported } from '../feedback/haptics'
 import { usePracticeSession } from '../hooks/usePracticeSession'
 import { useI18n, type Messages } from '../i18n'
 import { paceText, presetIndex, rhythmText } from '../lib/exerciseText'
-import { formatClock, formatSeconds } from '../lib/format'
+import { formatClock } from '../lib/format'
 import { navigate } from '../lib/route'
 import { store, useStore } from '../storage/store'
 import { visualizationModes } from '../visualization/modes'
@@ -135,13 +135,11 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           <p className="text-[1.25rem] leading-tight" data-testid="phase-label">
             {phaseLabel(s, t)}
           </p>
-          <p className="text-[1rem] text-muted tabular-nums" data-testid="phase-time">
-            {s.status === 'paused'
-              ? t.paused
-              : active
-                ? t.seconds(formatSeconds(shownPhase(s).durationMs, lang))
-                : `${t.minutes(Math.round(s.plan.totalDurationMs / 60_000))} · ${t.breaths(totalCycles)}`}
-          </p>
+          {s.status !== 'running' && (
+            <p className="text-[1rem] text-muted tabular-nums" data-testid="phase-time">
+              {s.status === 'paused' ? t.paused : `${t.minutes(Math.round(s.plan.totalDurationMs / 60_000))} · ${t.breaths(totalCycles)}`}
+            </p>
+          )}
         </div>
 
         {prefs.showProgress && (
@@ -154,16 +152,6 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
               <span data-testid="remaining">{t.timeLeft(formatClock(s.remainingMs))}</span>
             </div>
           </div>
-        )}
-
-        {s.status === 'idle' && !leadIn && (
-          <Segmented
-            className="mt-4"
-            label={t.duration}
-            options={exercise.durationOptionsMs.map((ms) => ({ value: ms, label: t.minutes(ms / 60_000) }))}
-            value={durationMs}
-            onChange={(ms) => store.setDuration(exercise.id, ms)}
-          />
         )}
 
         <div className="flex items-center justify-between px-3 pt-3">
