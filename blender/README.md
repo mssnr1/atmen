@@ -48,7 +48,7 @@ metres (Blender Z up; the glTF is Y up).
 | `Lung_Left`, `Lung_Right` | `Inhale`: expand in 3D, mostly lower and lateral | lung volume 0–1 |
 | `Diaphragm` | `Inhale`: dome flattens and moves down | lung volume |
 | `Abdomen` | `Inhale`: belly wall moves out, edges fixed | lung volume |
-| `Body_Shell` | `Inhale`: slight chest rise | lung volume |
+| `Body_Shell` | `Inhale`: rib cage widens (lower ribs out, upper ribs forward) and lifts | lung volume |
 | `Heart` | `Beat`: ventricles contract, atria fill | its own illustrative rhythm (not the user's pulse) |
 | `Head`, `Nasal_Cavity`, `Trachea`, `Bronchi` | – | – |
 
