@@ -8,6 +8,7 @@ export const resonanceBreathing: Exercise = {
   text: {
     de: {
       name: 'Resonanzatmung',
+      purpose: ['Ruhiger Geist', 'Ausgeglichenes Nervensystem'],
       tagline: 'Ruhig und gleichmäßig, etwa 5,5 Atemzüge pro Minute',
       summary:
         'Atme 5,5 Sekunden durch die Nase ein und 5,5 Sekunden wieder aus. Dieser ruhige, ausgeglichene Rhythmus ist die Grundlage der Techniken aus „Breath“.',
@@ -18,12 +19,12 @@ export const resonanceBreathing: Exercise = {
         'Setz oder leg dich bequem hin, die Schultern locker.',
         'Atme sanft durch die Nase ein und aus.',
         'Lass beim Einatmen den Bauch weit werden. Du musst dich nicht ganz füllen.',
-        'Folge dem Kreis, den Tönen oder der Vibration.',
+        'Folge der Anzeige, den Tönen oder der Vibration.',
       ],
-      tempoLabels: ['Tief', 'Ruhig', 'Resonanz', 'Zügig'],
     },
     en: {
       name: 'Resonance Breathing',
+      purpose: ['Calm mind', 'Balanced nervous system'],
       tagline: 'Slow, even breaths at about 5.5 per minute',
       summary:
         'Breathe in and out through your nose for 5.5 seconds each. This slow, balanced rhythm is the foundation of the techniques in Breath.',
@@ -34,9 +35,8 @@ export const resonanceBreathing: Exercise = {
         'Sit or lie comfortably with your shoulders relaxed.',
         'Breathe gently through your nose, in and out.',
         'Let the belly expand as you inhale. No need to fill up completely.',
-        'Follow the circle, the tones or the vibrations.',
+        'Follow the guide, the tones or the vibrations.',
       ],
-      tempoLabels: ['Deep', 'Calm', 'Resonance', 'Brisk'],
     },
   },
   pattern: {
@@ -48,6 +48,13 @@ export const resonanceBreathing: Exercise = {
   durationOptionsMs: [2 * minute, 5 * minute, 10 * minute],
   defaultDurationMs: 5 * minute,
   alignToCycles: true,
-  // 8.5 s, 7 s, 5.5 s and 4 s per phase.
-  tempo: { scales: [8500 / phase, 7000 / phase, 1, 4000 / phase], defaultLevel: 2 },
+  // 4 s, 5.5 s and 6 s per phase; in and out stay equal.
+  paces: {
+    options: [
+      { scale: 4000 / phase, label: { de: 'Zügiger', en: 'Brisker' } },
+      { scale: 1, label: { de: 'Standard', en: 'Default' } },
+      { scale: 6000 / phase, label: { de: 'Langsamer', en: 'Slower' } },
+    ],
+    defaultIndex: 1,
+  },
 }

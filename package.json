@@ -11,14 +11,18 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.6",
+    "@react-three/fiber": "^9.4.0",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.3.3",
     "@types/node": "^22.20.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@types/three": "^0.180.0",
     "@vite-pwa/assets-generator": "2.0.0",
     "@vitejs/plugin-react": "6.1.2",
     "tailwindcss": "4.3.3",

@@ -167,7 +167,9 @@ function segmentIndexAt(plan: SessionPlan, ms: number): number {
  * Change the pace from the next phase on. Everything up to and including the
  * phase in progress at `atMs` stays as it was, so a running breath is never
  * cut short or stretched. Turning slow-down on mid-session starts its curve
- * from the next breath.
+ * from the next breath. A session of a chosen duration keeps that duration by
+ * changing how many breaths are left; a session of a set number of breaths
+ * keeps its count.
  */
 export function replan(plan: SessionPlan, atMs: number, pace: Pace): SessionPlan {
   validatePace(pace)
@@ -181,8 +183,20 @@ export function replan(plan: SessionPlan, atMs: number, pace: Pace): SessionPlan
     i = 0
     c++
   }
-  const base = { ...plan, pace, rampFrom }
-  return finish(base, layout(plan.activePhases, kept, c, i, plan.totalCycles, plan.fixedEndMs, pace, rampFrom))
+  const relayout = (totalCycles: number) =>
+    finish({ ...plan, pace, rampFrom, totalCycles }, layout(plan.activePhases, kept, c, i, totalCycles, plan.fixedEndMs, pace, rampFrom))
+
+  // A session of a chosen length keeps that length: re-fit the number of
+  // breaths still to come. Exact cycle counts keep their count instead.
+  const { length } = plan
+  if (length.kind !== 'duration' || length.alignToCycles === false) return relayout(plan.totalCycles)
+  let best = relayout(current.cycleIndex + 1)
+  for (let n = current.cycleIndex + 2; n < 10_000; n++) {
+    const candidate = relayout(n)
+    if (Math.abs(candidate.totalDurationMs - length.durationMs) < Math.abs(best.totalDurationMs - length.durationMs)) best = candidate
+    if (candidate.totalDurationMs > length.durationMs) break
+  }
+  return best
 }
 
 export function positionAt(plan: SessionPlan, elapsedMs: number): SessionPosition {

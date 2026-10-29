@@ -12,6 +12,8 @@ export const scaleFor = (b: BreathState) => MIN_SCALE + (MAX_SCALE - MIN_SCALE) 
 
 interface Props {
   engine: BreathingEngine
+  /** Draw the session ring; off when session progress is hidden. */
+  showProgress: boolean
 }
 
 /**
@@ -19,7 +21,7 @@ interface Props {
  * engine's clock on every animation frame and writes styles directly, so the
  * motion stays in sync with the timer without re-rendering React at 60 fps.
  */
-export function AbstractVisualization({ engine }: Props) {
+export function AbstractVisualization({ engine, showProgress }: Props) {
   const orb = useRef<HTMLDivElement>(null)
   const halo = useRef<HTMLDivElement>(null)
   const ring = useRef<SVGCircleElement>(null)
@@ -43,8 +45,8 @@ export function AbstractVisualization({ engine }: Props) {
 
   return (
     <div className="relative aspect-square h-full max-h-[22rem] max-w-full" data-testid="abstract-visualization">
-      <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90" aria-hidden>
-        <circle cx="50" cy="50" r={RING_RADIUS} fill="none" stroke="currentColor" strokeWidth="1" className="text-white/10" />
+      <svg viewBox="0 0 100 100" className={`absolute inset-0 -rotate-90 ${showProgress ? '' : 'invisible'}`} aria-hidden>
+        <circle cx="50" cy="50" r={RING_RADIUS} fill="none" stroke="currentColor" strokeWidth="1" className="text-surface-2" />
         <circle
           ref={ring}
           cx="50"
@@ -56,15 +58,15 @@ export function AbstractVisualization({ engine }: Props) {
           strokeLinecap="round"
           strokeDasharray={RING_LENGTH}
           strokeDashoffset={RING_LENGTH}
-          className="text-accent"
+          className="text-blue"
         />
       </svg>
       <div className="absolute inset-[6%]">
-        <div ref={halo} className="absolute inset-0 rounded-full bg-accent/30 blur-2xl will-change-transform" />
+        <div ref={halo} className="absolute inset-0 rounded-full bg-blue/20 blur-2xl will-change-transform" />
         <div
           ref={orb}
           data-testid="breathing-orb"
-          className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_40%,#d6faf3_0%,#7ed9cb_45%,#2c8f8a_100%)] shadow-[0_0_60px_-10px_rgba(126,217,203,0.6)] will-change-transform"
+          className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_38%,#dce8ff_0%,#7ea6fa_45%,#2f6bf5_100%)] shadow-[0_0_60px_-10px_rgba(47,107,245,0.45)] will-change-transform"
           style={{ transform: `scale(${MIN_SCALE})` }}
         />
       </div>
