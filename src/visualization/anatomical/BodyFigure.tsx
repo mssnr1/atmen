@@ -1,16 +1,17 @@
 import { useRef, type RefObject } from 'react'
-import { DIAPHRAGM_SPAN, HEAD, HILUM_LEFT, HILUM_RIGHT, VIEW, torsoHalfWidth, type BodyPose, type Ellipse } from './model'
+import { DIAPHRAGM_SPAN, HEAD, HILUM_LEFT, HILUM_RIGHT, VIEW, lungOutline, torsoHalfWidth, type BodyPose, type Ellipse } from './model'
 
 /**
  * The semi-transparent body, drawn in SVG from the anatomical model. Static
- * parts render once; moving parts (torso wall, lungs, diaphragm, abdominal
- * contents) are updated directly by `updateBody` each frame.
+ * parts render once; moving parts (torso wall, lungs, heart, diaphragm,
+ * abdominal contents) are updated directly by `updateBody` each frame.
  */
 
 export interface BodyRefs {
   torso: RefObject<SVGPathElement | null>
-  lungLeft: RefObject<SVGEllipseElement | null>
-  lungRight: RefObject<SVGEllipseElement | null>
+  lungLeft: RefObject<SVGPathElement | null>
+  lungRight: RefObject<SVGPathElement | null>
+  heart: RefObject<SVGEllipseElement | null>
   diaphragm: RefObject<SVGPathElement | null>
   abdomen: RefObject<SVGPathElement | null>
   belly: RefObject<SVGEllipseElement | null>
@@ -21,6 +22,7 @@ export function useBodyRefs(): BodyRefs {
     torso: useRef(null),
     lungLeft: useRef(null),
     lungRight: useRef(null),
+    heart: useRef(null),
     diaphragm: useRef(null),
     abdomen: useRef(null),
     belly: useRef(null),
@@ -62,6 +64,12 @@ function abdomenPath(pose: BodyPose): string {
   return `M${top.join(' L')} L${side.join(' L')} L${otherSide.reverse().join(' L')} Z`
 }
 
+function lungPath(pose: BodyPose, side: 'lungLeft' | 'lungRight'): string {
+  return `M${lungOutline(pose[side], pose)
+    .map(([x, y]) => `${n(x)} ${n(y)}`)
+    .join(' L')} Z`
+}
+
 function setEllipse(el: SVGEllipseElement | null, e: Ellipse) {
   if (!el) return
   el.setAttribute('cx', n(e.cx))
@@ -78,11 +86,18 @@ export function updateBody(refs: BodyRefs, pose: BodyPose, fallbackFill?: number
   // The belly wall pushed forward toward the viewer: a warm swell that grows with the bulge.
   const belly = refs.belly.current
   if (belly) {
-    setEllipse(belly, { cx: 100, cy: 266 + pose.diaphragmDrop * 0.5, rx: 36 + pose.abdomenBulge * 1.6, ry: 24 + pose.abdomenBulge })
+    setEllipse(belly, { cx: 100, cy: 266 + pose.diaphragmDrop * 0.5, rx: 36 + pose.abdomenBulge * 1.4, ry: 24 + pose.abdomenBulge })
     belly.setAttribute('opacity', n(0.35 + pose.abdomenBulge * 0.07))
   }
-  setEllipse(refs.lungLeft.current, pose.lungLeft)
-  setEllipse(refs.lungRight.current, pose.lungRight)
+  refs.lungLeft.current?.setAttribute('d', lungPath(pose, 'lungLeft'))
+  refs.lungRight.current?.setAttribute('d', lungPath(pose, 'lungRight'))
+  // The heart sits on the diaphragm in the left lung's notch and rides down with it.
+  const heart = refs.heart.current
+  if (heart) {
+    const bottom = pose.diaphragmY(107) - 1
+    setEllipse(heart, { cx: 107, cy: bottom - 14, rx: 13, ry: 17 })
+    heart.setAttribute('transform', `rotate(-28 107 ${n(bottom - 14)})`)
+  }
   if (fallbackFill !== undefined) {
     const o = n(0.06 + 0.4 * fallbackFill)
     refs.lungLeft.current?.setAttribute('fill-opacity', o)
@@ -128,8 +143,9 @@ export function BodyFigure({ refs }: { refs: BodyRefs }) {
       />
 
       {/* Lungs, diaphragm, abdominal contents */}
-      <ellipse ref={refs.lungLeft} fill="#7ed9cb" fillOpacity={0.06} stroke="#a6e8dd" strokeOpacity={0.45} strokeWidth={0.8} />
-      <ellipse ref={refs.lungRight} fill="#7ed9cb" fillOpacity={0.06} stroke="#a6e8dd" strokeOpacity={0.45} strokeWidth={0.8} />
+      <ellipse ref={refs.heart} fill="#e58f7f" fillOpacity={0.16} stroke="#e58f7f" strokeOpacity={0.4} strokeWidth={0.6} />
+      <path ref={refs.lungLeft} fill="#7ed9cb" fillOpacity={0.06} stroke="#a6e8dd" strokeOpacity={0.5} strokeWidth={0.8} strokeLinejoin="round" />
+      <path ref={refs.lungRight} fill="#7ed9cb" fillOpacity={0.06} stroke="#a6e8dd" strokeOpacity={0.5} strokeWidth={0.8} strokeLinejoin="round" />
       <path ref={refs.abdomen} fill="url(#abdomen-fill)" stroke="#e9b48a" strokeOpacity={0.14} strokeWidth={0.6} />
       <ellipse ref={refs.belly} fill="url(#belly-swell)" />
       <path ref={refs.diaphragm} fill="none" stroke="#e9b48a" strokeOpacity={0.85} strokeWidth={1.6} strokeLinecap="round" />

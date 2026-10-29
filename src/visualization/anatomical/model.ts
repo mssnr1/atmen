@@ -2,11 +2,14 @@
  * Simplified anatomical model of the upper body, front view, in a 200 × 320
  * unit coordinate space shared by the SVG body and the WebGL air volume.
  *
- * Mechanics: everything moves from a single variable, lung volume. The
- * diaphragm descends in proportion to volume; the lungs' lower edge rests on
- * the diaphragm, so the lungs lengthen by exactly that amount; the abdominal
+ * Mechanics: everything moves from a single variable, lung volume. Breathing
+ * in, the diaphragm contracts: its dome flattens and descends, and the ribs
+ * lift outward. The lungs' base rests on the diaphragm and their outer edge
+ * follows the ribs, so they grow downward and outward with it. The abdominal
  * contents are pushed down and the belly wall out by the same displacement.
- * Air only ever enters the lungs. The abdomen moves because of the diaphragm.
+ * Breathing out, the diaphragm relaxes back up into its dome and the elastic
+ * lungs shrink with it, pressing the air back out. Air only ever enters the
+ * lungs. The abdomen moves because of the diaphragm.
  */
 
 export const VIEW = { width: 200, height: 320 } as const
@@ -41,10 +44,11 @@ export const HILUM_RIGHT: AirwayPoint = { at: [119, 157], s: 1 }
 export const OUTSIDE_IN: Vec2 = [146, 92]
 export const OUTSIDE_OUT: Vec2 = [156, 104]
 
-const DIAPHRAGM_TRAVEL = 11 // downward excursion at full inhale
-const DIAPHRAGM = { left: 42, right: 158, edgeY: 226, dome: 20 } as const
-const LUNG_TOP = 124
-const ABDOMEN_BULGE = 0.9 // belly wall displacement per unit of diaphragm descent
+const DIAPHRAGM_TRAVEL = 24 // downward excursion of the dome's centre at full inhale
+const DIAPHRAGM = { left: 42, right: 158, edgeY: 224, dome: 24 } as const
+const LUNG_APEX = 123
+const ABDOMEN_BULGE = 0.5 // belly wall displacement per unit of diaphragm descent
+const RIB_EXPANSION = 6
 
 export interface Ellipse {
   cx: number
@@ -53,14 +57,101 @@ export interface Ellipse {
   ry: number
 }
 
+/**
+ * One lung, front view. Offsets are distances from the midline (x = 100). The
+ * apex is a rounded point under the collarbone; the outer edge widens down to
+ * the ribs; the inner edge runs beside the mediastinum and, for the left lung,
+ * steps out around the heart (cardiac notch); the base is concave and lies on
+ * the diaphragm, so it is not stored here but read from the pose.
+ */
+export interface Lung {
+  /** -1 on the viewer's left (the right lung), +1 on the viewer's right (the left lung). */
+  side: -1 | 1
+  apexY: number
+  /** Offset of the apex. */
+  apex: number
+  /** Offset of the outer edge once the lung has reached full width. */
+  lateral: number
+  /** Offset of the inner edge, and how far the cardiac notch pushes it out. */
+  medial: number
+  notch: number
+}
+
+/** Height below the apex over which the outer edge reaches full width. */
+const APEX_ROUND = 34
+const NOTCH = { from: 160, to: 194 } as const
+
+const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1)
+const smooth = (a: number, b: number, x: number) => {
+  const t = clamp01((x - a) / (b - a))
+  return t * t * (3 - 2 * t)
+}
+
+export function lungLateral(l: Lung, y: number): number {
+  return l.apex + (l.lateral - l.apex) * Math.sqrt(clamp01((y - l.apexY) / APEX_ROUND))
+}
+
+export function lungMedial(l: Lung, y: number): number {
+  const base = l.medial + l.notch * smooth(NOTCH.from, NOTCH.to, y)
+  return l.apex - (l.apex - base) * Math.sqrt(clamp01((y - l.apexY) / (APEX_ROUND * 1.4)))
+}
+
+/** The lung's base: just above the diaphragm. */
+export const lungBaseY = (pose: BodyPose, x: number) => pose.diaphragmY(x) - 1
+
+/**
+ * Point on a lung edge at fraction `t` from apex (0) to base (1). The base
+ * height depends on x and x on the height, so settle both by iterating.
+ */
+function edgePoint(l: Lung, pose: BodyPose, edge: (l: Lung, y: number) => number, t: number): [number, number] {
+  let y = l.apexY + t * 90
+  let x = 100
+  for (let i = 0; i < 4; i++) {
+    x = 100 + l.side * edge(l, y)
+    y = l.apexY + t * (lungBaseY(pose, x) - l.apexY)
+  }
+  return [x, y]
+}
+
+/** Closed outline of a lung: down the outer edge, along the diaphragm, up the inner edge. */
+export function lungOutline(l: Lung, pose: BodyPose, steps = 24): [number, number][] {
+  const outer: [number, number][] = []
+  const inner: [number, number][] = []
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    outer.push(edgePoint(l, pose, lungLateral, t))
+    inner.push(edgePoint(l, pose, lungMedial, t))
+  }
+  const [x0] = outer[steps]
+  const [x1] = inner[steps]
+  const base: [number, number][] = []
+  for (let i = 1; i < 8; i++) {
+    const x = x0 + ((x1 - x0) * i) / 8
+    base.push([x, lungBaseY(pose, x)])
+  }
+  return [...outer, ...base, ...inner.reverse()]
+}
+
+/** Area of a lung outline, a stand-in for its volume in tests. */
+export function lungArea(l: Lung, pose: BodyPose): number {
+  const pts = lungOutline(l, pose)
+  let a = 0
+  for (let i = 0; i < pts.length; i++) {
+    const [x0, y0] = pts[i]
+    const [x1, y1] = pts[(i + 1) % pts.length]
+    a += x0 * y1 - x1 * y0
+  }
+  return Math.abs(a) / 2
+}
+
 export interface BodyPose {
   volume: number
   /** Diaphragm descent in units. */
   diaphragmDrop: number
   /** Diaphragm height at a given x. */
   diaphragmY: (x: number) => number
-  lungLeft: Ellipse
-  lungRight: Ellipse
+  lungLeft: Lung
+  lungRight: Lung
   /** Outward displacement of the belly wall. The abdominal contents sit directly under the diaphragm. */
   abdomenBulge: number
   /** Rib cage widening per side. */
@@ -80,31 +171,39 @@ export function diaphragmAt(drop: number): (x: number) => number {
   }
 }
 
-function lung(side: -1 | 1, volume: number, ribExpansion: number, diaphragmY: (x: number) => number): Ellipse {
-  const rx = 23 + 2 * volume
-  const cx = 100 + side * (28 + ribExpansion)
-  const bottom = diaphragmY(cx) - 1 // lung base sits on the diaphragm
-  return { cx, cy: (LUNG_TOP + bottom) / 2, rx, ry: (bottom - LUNG_TOP) / 2 }
+function lung(side: -1 | 1, volume: number, ribExpansion: number): Lung {
+  return {
+    side,
+    // The ribs lift a little as they swing out.
+    apexY: LUNG_APEX - 1.5 * volume,
+    apex: 25 + 0.4 * ribExpansion,
+    lateral: 50 + ribExpansion,
+    medial: 7,
+    notch: side === 1 ? 14 : 3,
+  }
 }
 
 export function bodyPose(volume: number): BodyPose {
   const v = Math.min(Math.max(volume, 0), 1)
   const diaphragmDrop = v * DIAPHRAGM_TRAVEL
   const diaphragmY = diaphragmAt(diaphragmDrop)
-  const ribExpansion = 2.5 * v
+  const ribExpansion = RIB_EXPANSION * v
   const abdomenBulge = diaphragmDrop * ABDOMEN_BULGE
   return {
     volume: v,
     diaphragmDrop,
     diaphragmY,
-    lungLeft: lung(-1, v, ribExpansion, diaphragmY),
-    lungRight: lung(1, v, ribExpansion, diaphragmY),
+    lungLeft: lung(-1, v, ribExpansion),
+    lungRight: lung(1, v, ribExpansion),
     abdomenBulge,
     ribExpansion,
   }
 }
 
 export const DIAPHRAGM_SPAN = DIAPHRAGM
+
+/** Shape constants the air shader needs to draw the same lungs. */
+export const LUNG_SHAPE = { apexRound: APEX_ROUND, notchFrom: NOTCH.from, notchTo: NOTCH.to } as const
 
 /** Half-width of the torso at height y, given the pose. Symmetric around x = 100. */
 export function torsoHalfWidth(y: number, pose: BodyPose): number {

@@ -1,4 +1,4 @@
-import { AIRWAY_TRUNK, CARINA, HILUM_LEFT, HILUM_RIGHT, NOSTRILS, VIEW, type AirwayPoint } from './model'
+import { AIRWAY_TRUNK, CARINA, DIAPHRAGM_SPAN, HILUM_LEFT, HILUM_RIGHT, LUNG_SHAPE, NOSTRILS, VIEW, type AirwayPoint } from './model'
 
 /**
  * Fragment shader that renders air as a soft, glowing density field.
@@ -44,8 +44,10 @@ uniform float uDir;       // +1 inhale, -1 exhale, 0 hold
 uniform float uAirway;    // airway density (flow rate)
 uniform vec3 uCloud;      // x, y, radius
 uniform float uCloudDensity;
-uniform vec4 uLungL;      // cx, cy, rx, ry
+uniform vec4 uLungL;      // apex y, apex offset, lateral offset, medial offset (see Lung in model.ts)
 uniform vec4 uLungR;
+uniform vec2 uNotch;      // cardiac notch depth for each lung
+uniform float uDrop;      // diaphragm descent
 
 float hash(vec3 p) {
   p = fract(p * 0.3183099 + 0.1);
@@ -77,12 +79,27 @@ void seg(vec2 p, vec2 a, vec2 b, float s0, float s1, float r, inout float best, 
   if (d / r < best / bestR) { best = d; bestS = mix(s0, s1, h); bestR = r; }
 }
 
-float lungDensity(vec2 p, vec4 lung, vec2 hilum, float warp) {
-  vec2 q = (p - lung.xy) / lung.zw;
-  float e = length(q) + warp * 0.08;
-  float inside = 1.0 - smoothstep(0.82, 1.0, e);
+// Same shapes as the model: the diaphragm dome and the lungs resting on it.
+float diaphragmY(float x) {
+  float halfW = ${f((DIAPHRAGM_SPAN.right - DIAPHRAGM_SPAN.left) / 2)};
+  float u = min(abs(x - ${f((DIAPHRAGM_SPAN.left + DIAPHRAGM_SPAN.right) / 2)}) / halfW, 1.0);
+  return ${f(DIAPHRAGM_SPAN.edgeY)} + 0.3 * uDrop - (${f(DIAPHRAGM_SPAN.dome)} - 0.7 * uDrop) * (1.0 - u * u);
+}
+
+float lungDensity(vec2 p, vec4 lung, float side, float notch, vec2 hilum, float warp) {
+  float d = side * (p.x - 100.0);
+  float grow = sqrt(clamp((p.y - lung.x) / ${f(LUNG_SHAPE.apexRound)}, 0.0, 1.0));
+  float growIn = sqrt(clamp((p.y - lung.x) / ${f(LUNG_SHAPE.apexRound * 1.4)}, 0.0, 1.0));
+  float lat = lung.y + (lung.z - lung.y) * grow;
+  float med = lung.y - (lung.y - lung.w - notch * smoothstep(${f(LUNG_SHAPE.notchFrom)}, ${f(LUNG_SHAPE.notchTo)}, p.y)) * growIn;
+  float base = diaphragmY(p.x) - 1.0;
+  // 0 at the centre of the lung, 1 on its outline.
+  float across = abs(2.0 * (d - med) / max(lat - med, 0.5) - 1.0);
+  float down = abs(2.0 * (p.y - lung.x) / max(base - lung.x, 1.0) - 1.0);
+  float e = max(across, down) + warp * 0.08;
+  float inside = 1.0 - smoothstep(0.8, 1.0, e);
   // Air spreads from the hilum outward as the lungs fill.
-  float reach = length((p - hilum) / vec2(lung.z * 1.7, lung.w * 1.15));
+  float reach = length((p - hilum) / vec2(36.0, 62.0));
   float spread = 1.0 - smoothstep(uFill * 1.05 - 0.05, uFill * 1.05 + 0.25, reach + warp * 0.12);
   return inside * (0.06 + 0.94 * spread * (0.3 + 0.7 * uFill));
 }
@@ -110,7 +127,7 @@ ${trunk}
 
   // Lungs.
   float lw = fbm(vec3(p * 0.07, uTime * 0.2 + uDrift * 0.05)) - 0.5;
-  float lungs = lungDensity(pw, uLungL, ${v2(HILUM_LEFT.at)}, lw) + lungDensity(pw, uLungR, ${v2(HILUM_RIGHT.at)}, lw);
+  float lungs = lungDensity(pw, uLungL, -1.0, uNotch.x, ${v2(HILUM_LEFT.at)}, lw) + lungDensity(pw, uLungR, 1.0, uNotch.y, ${v2(HILUM_RIGHT.at)}, lw);
   lungs *= 0.75 + 0.6 * fbm(vec3(p * 0.11, uTime * 0.35));
 
   // Outside air: a soft cloud joined to the nostrils by a tapering stream.

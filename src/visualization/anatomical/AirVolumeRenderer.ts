@@ -6,7 +6,7 @@ import { fragmentShader, vertexShader } from './airVolumeShader'
 const RESOLUTION_SCALE = 0.5
 const MAX_DPR = 2
 
-const UNIFORMS = ['uRes', 'uTime', 'uDrift', 'uFill', 'uFront', 'uDir', 'uAirway', 'uCloud', 'uCloudDensity', 'uLungL', 'uLungR'] as const
+const UNIFORMS = ['uRes', 'uTime', 'uDrift', 'uFill', 'uFront', 'uDir', 'uAirway', 'uCloud', 'uCloudDensity', 'uLungL', 'uLungR', 'uNotch', 'uDrop'] as const
 type UniformName = (typeof UNIFORMS)[number]
 
 /** Draws the air volume into a canvas with one full-screen WebGL quad. */
@@ -79,8 +79,10 @@ export class AirVolumeRenderer {
     gl.uniform3f(u.uCloud, air.cloud.at[0], air.cloud.at[1], air.cloud.radius)
     gl.uniform1f(u.uCloudDensity, air.cloud.density)
     const { lungLeft: l, lungRight: r } = pose
-    gl.uniform4f(u.uLungL, l.cx, l.cy, l.rx, l.ry)
-    gl.uniform4f(u.uLungR, r.cx, r.cy, r.rx, r.ry)
+    gl.uniform4f(u.uLungL, l.apexY, l.apex, l.lateral, l.medial)
+    gl.uniform4f(u.uLungR, r.apexY, r.apex, r.lateral, r.medial)
+    gl.uniform2f(u.uNotch, l.notch, r.notch)
+    gl.uniform1f(u.uDrop, pose.diaphragmDrop)
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)

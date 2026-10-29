@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { resolvePlan, positionAt, type EngineSnapshot } from '../../engine'
 import { breathState } from '../breathState'
 import { airflowState } from './airflow'
-import { bodyPose } from './model'
+import { bodyPose, lungArea, lungOutline } from './model'
 
 const plan = resolvePlan(
   { phases: [{ type: 'inhale', durationMs: 5500 }, { type: 'exhale', durationMs: 5500 }] },
@@ -27,16 +27,28 @@ describe('body mechanics', () => {
     for (let v = 0; v <= 1; v += 0.1) {
       const pose = bodyPose(v)
       for (const l of [pose.lungLeft, pose.lungRight]) {
-        expect(l.cy + l.ry).toBeCloseTo(pose.diaphragmY(l.cx) - 1, 6)
+        const pts = lungOutline(l, pose)
+        // Nothing of the lung lies below the diaphragm, and its base touches it.
+        for (const [x, y] of pts) expect(y).toBeLessThanOrEqual(pose.diaphragmY(x) - 1 + 1e-3)
+        const lowest = Math.max(...pts.map(([x, y]) => y - (pose.diaphragmY(x) - 1)))
+        expect(lowest).toBeCloseTo(0, 3)
       }
     }
+  })
+
+  it('lungs expand on inhale and contract on exhale, the left one smaller for the heart', () => {
+    const rest = bodyPose(0)
+    const full = bodyPose(1)
+    for (const side of ['lungLeft', 'lungRight'] as const) {
+      expect(lungArea(full[side], full) / lungArea(rest[side], rest)).toBeGreaterThan(1.25)
+    }
+    expect(lungArea(rest.lungRight, rest)).toBeLessThan(lungArea(rest.lungLeft, rest))
   })
 
   it('moves diaphragm, lungs and abdomen together with volume', () => {
     const rest = bodyPose(0)
     const full = bodyPose(1)
     expect(full.diaphragmY(100)).toBeGreaterThan(rest.diaphragmY(100)) // descends (y grows downward)
-    expect(full.lungLeft.ry).toBeGreaterThan(rest.lungLeft.ry)
     expect(full.abdomenBulge).toBeGreaterThan(rest.abdomenBulge)
     expect(rest.abdomenBulge).toBe(0)
     // Belly displacement is proportional to diaphragm descent.
