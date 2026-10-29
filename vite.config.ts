@@ -9,7 +9,8 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['icon.svg'],
+      pwaAssets: { config: true, overrideManifestIcons: true, injectThemeColor: false },
       manifest: {
         name: 'BREATH',
         short_name: 'BREATH',
@@ -19,11 +20,6 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         start_url: '.',
-        icons: [
-          { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],

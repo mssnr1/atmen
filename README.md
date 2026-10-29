@@ -70,4 +70,3 @@ rendered at half resolution because it is soft. Without WebGL, the lungs are tin
 
 - iOS Safari has no Vibration API; the vibration toggle is disabled there. Audio respects the silent switch.
 - Session records already have an optional `feedback` field reserved for before/after ratings.
-- `scripts/icons.mjs` regenerates PWA icons from `public/icon.svg` (needs Playwright).
