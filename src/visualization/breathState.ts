@@ -25,8 +25,13 @@ export interface BreathState {
  */
 export const usedAir = (phase: PhaseType | 'idle'): 0 | 1 => (phase === 'exhale' ? 1 : 0)
 
-/** Breathing feels sinusoidal: slow at the turns, fastest mid-breath. */
-export const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2
+/**
+ * How lung volume follows a breath: it starts and ends even more gently than a
+ * sine (smootherstep), so each breath ramps up softly, as a real one does.
+ */
+export const breathCurve = (t: number) => t * t * t * (t * (6 * t - 15) + 10)
+/** Rate of change of `breathCurve`, normalized to 1 at its peak mid-breath. */
+const breathRate = (t: number) => 16 * t * t * (1 - t) * (1 - t)
 
 const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1)
 
@@ -34,13 +39,13 @@ export function breathState(s: EngineSnapshot): BreathState {
   const elapsedS = s.elapsedMs / 1000
   if (s.status === 'idle') return { volume: 0, direction: 0, flow: 0, phaseProgress: 0, phase: 'idle', elapsedS }
   const p = clamp01(s.phaseProgress)
-  // d/dt of easeInOutSine is proportional to sin(pi t): flow peaks mid-phase and is 0 at the turns.
-  const flow = Math.sin(Math.PI * p)
+  // Flow peaks mid-phase and is 0 at the turns.
+  const flow = breathRate(p)
   switch (s.phase.type) {
     case 'inhale':
-      return { volume: easeInOutSine(p), direction: 1, flow, phaseProgress: p, phase: 'inhale', elapsedS }
+      return { volume: breathCurve(p), direction: 1, flow, phaseProgress: p, phase: 'inhale', elapsedS }
     case 'exhale':
-      return { volume: 1 - easeInOutSine(p), direction: -1, flow, phaseProgress: p, phase: 'exhale', elapsedS }
+      return { volume: 1 - breathCurve(p), direction: -1, flow, phaseProgress: p, phase: 'exhale', elapsedS }
     case 'holdIn':
       return { volume: 1, direction: 0, flow: 0, phaseProgress: p, phase: 'holdIn', elapsedS }
     case 'holdOut':

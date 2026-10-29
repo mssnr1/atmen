@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BottomSheet } from '../components/BottomSheet'
 import { IconButton } from '../components/Button'
 import { CloseIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
@@ -6,7 +6,7 @@ import { Segmented } from '../components/Segmented'
 import { Switch } from '../components/Switch'
 import type { BreathPhase, EngineSnapshot } from '../engine'
 import type { Exercise } from '../exercises'
-import { audioSupported } from '../feedback/audio'
+import { audioCues, audioSupported } from '../feedback/audio'
 import { vibrationSupported } from '../feedback/haptics'
 import { BreathSegments } from '../guide/BreathSegments'
 import { usePracticeSession } from '../hooks/usePracticeSession'
@@ -25,6 +25,9 @@ function shownPhase(s: EngineSnapshot): BreathPhase {
   const before = s.plan.segments.find((g) => g.cycleIndex === s.cycleIndex && g.phaseIndex === s.phaseIndex - 1)
   return before?.phase ?? s.phase
 }
+
+/** The camera turn (see Anatomy3DVisualization) plus a moment of stillness before the first breath. */
+const LEAD_IN_MS = 4200
 
 function phaseLabel(s: EngineSnapshot, t: Messages): string {
   if (s.status === 'idle') return t.ready
@@ -55,7 +58,23 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
     return () => ro.disconnect()
   }, [])
 
+  // In the anatomical view the figure first turns to its 3/4 view, then breathing begins.
+  const [leadIn, setLeadIn] = useState(false)
+  const leadInTimer = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(leadInTimer.current), [])
+  const start = () => {
+    if (prefs.visualizationMode !== 'anatomical') return session.start()
+    // Unlock audio inside the tap; the session itself starts after the turn.
+    void audioCues.unlock()
+    setLeadIn(true)
+    leadInTimer.current = window.setTimeout(() => {
+      setLeadIn(false)
+      session.start()
+    }, LEAD_IN_MS)
+  }
+
   const goHome = () => {
+    window.clearTimeout(leadInTimer.current)
     session.reset()
     navigate({ name: 'home' })
   }
@@ -91,7 +110,13 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       </header>
 
       <section className="relative min-h-0 flex-1" aria-label={t.guide}>
-        <Visualization mode={prefs.visualizationMode} engine={session.engine} showProgress={prefs.showProgress} bottomInset={panelHeight} />
+        <Visualization
+          mode={prefs.visualizationMode}
+          engine={session.engine}
+          showProgress={prefs.showProgress}
+          bottomInset={panelHeight}
+          started={leadIn || s.status !== 'idle'}
+        />
         <div className="absolute top-2 right-4">
           <Segmented
             label={t.visualization}
@@ -133,7 +158,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           </div>
         )}
 
-        {s.status === 'idle' && (
+        {s.status === 'idle' && !leadIn && (
           <Segmented
             className="mt-4"
             label={t.duration}
@@ -164,8 +189,9 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           ) : (
             <button
               type="button"
-              onClick={session.start}
-              className="h-14 rounded-full bg-blue px-10 text-[1.0625rem] text-white transition hover:bg-blue-deep active:scale-95"
+              onClick={start}
+              disabled={leadIn}
+              className="h-14 rounded-full bg-blue px-10 disabled:opacity-50 text-[1.0625rem] text-white transition hover:bg-blue-deep active:scale-95"
               data-testid="start"
             >
               {t.start}
