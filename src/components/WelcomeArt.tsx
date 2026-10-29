@@ -8,12 +8,12 @@ export function WelcomeArt({ index, className = '' }: { index: number; className
   return (
     <svg viewBox="0 0 120 48" className={className} aria-hidden>
       {index === 0 && (
-        // A nose in profile, facing left, with air flowing in at the nostril.
+        // A face in profile, facing left, with air drawn softly in at the nose.
         <g {...stroke}>
-          <path d="M84 2 C82 12 74 22 64 30 C60 33 61 37 66 37 C69 37 71 35 74 36 C77 37 77 41 75 46" />
-          <path d="M6 30 C22 30 34 34 58 35" opacity={0.9} />
-          <path d="M14 39 C28 38 40 37 56 36" opacity={0.55} />
-          <path d="M22 22 C34 24 44 30 56 34" opacity={0.35} />
+          <path d="M90 0 C88 5 85 8 84 11 C81 17 74 23 70 27 C68 29 69 31 72 31 L78 31 C77 33 75 34 76 35.5 C77 36.5 79 36.5 78 38 C77 39.5 76 40 77 41.5 C79 44 82 45 86 46" />
+          <path d="M8 22 C26 22 38 26 60 29" opacity={0.85} strokeDasharray="0.1 4.5" />
+          <path d="M16 34 C32 33 46 31 62 30" opacity={0.5} strokeDasharray="0.1 4.5" />
+          <path d="M28 12 C40 15 50 22 60 28" opacity={0.3} strokeDasharray="0.1 4.5" />
         </g>
       )}
       {index === 1 && (
