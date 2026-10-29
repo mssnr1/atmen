@@ -156,16 +156,6 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           </div>
         )}
 
-        {s.status === 'idle' && !leadIn && (
-          <Segmented
-            className="mt-4"
-            label={t.duration}
-            options={exercise.durationOptionsMs.map((ms) => ({ value: ms, label: t.minutes(ms / 60_000) }))}
-            value={durationMs}
-            onChange={(ms) => store.setDuration(exercise.id, ms)}
-          />
-        )}
-
         <div className="flex items-center justify-between px-3 pt-3">
           <IconButton
             label={t.restart}
