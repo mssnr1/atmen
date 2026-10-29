@@ -16,10 +16,10 @@ const AZIMUTH = THREE.MathUtils.degToRad(28)
 const ELEVATION = THREE.MathUtils.degToRad(6)
 const FOV = 28
 /** Half the width that must be visible, shoulder to shoulder. */
-const HALF_W = 0.17
+const HALF_W = 0.15
 /** Head to the lower lungs fill the part of the view above the controls; diaphragm and belly show through them. */
-const TOP = 1.8
-const BOTTOM = 1.17
+const TOP = 1.77
+const BOTTOM = 1.27
 /** Panning keeps the target inside this box so the model cannot be lost. */
 const PAN_LIMIT = new THREE.Box3(new THREE.Vector3(-0.2, 1.05, -0.15), new THREE.Vector3(0.2, 1.7, 0.2))
 

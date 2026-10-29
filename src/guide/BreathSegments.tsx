@@ -34,7 +34,7 @@ export function BreathSegments({ engine, label }: { engine: BreathingEngine; lab
   return (
     <div className="mx-auto flex max-w-[15rem] justify-center gap-3" role="img" aria-label={label} data-testid="breath-segments">
       {Array.from({ length: SEGMENTS }, (_, i) => (
-        <span key={i} className="relative h-9 flex-1 overflow-hidden rounded-[10px] bg-surface-2">
+        <span key={i} className="relative h-7 flex-1 overflow-hidden rounded-[9px] bg-surface-2/80">
           <span
             ref={(el) => {
               fills.current[i] = el

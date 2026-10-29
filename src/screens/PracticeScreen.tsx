@@ -103,14 +103,14 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
 
       <section
         ref={panel}
-        className="safe-bottom absolute inset-x-0 bottom-0 z-10 rounded-t-[28px] bg-white/60 px-5 pt-5 shadow-[0_-10px_30px_rgb(0_0_0/0.04)] backdrop-blur-[12px]"
+        className="safe-bottom absolute inset-x-0 bottom-0 z-10 rounded-t-[28px] bg-white/35 px-5 pt-4 shadow-[0_-10px_30px_rgb(0_0_0/0.04)] backdrop-blur-[12px]"
       >
         <BreathSegments engine={session.engine} label={t.guide} />
-        <div className="mt-3 text-center" aria-live="polite">
-          <p className="text-[1.375rem] leading-tight" data-testid="phase-label">
+        <div className="mt-2.5 flex items-baseline justify-center gap-2 text-center" aria-live="polite">
+          <p className="text-[1.25rem] leading-tight" data-testid="phase-label">
             {phaseLabel(s, t)}
           </p>
-          <p className="mt-0.5 text-[1.0625rem] text-muted tabular-nums" data-testid="phase-time">
+          <p className="text-[1rem] text-muted tabular-nums" data-testid="phase-time">
             {s.status === 'paused'
               ? t.paused
               : active
@@ -141,32 +141,32 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           />
         )}
 
-        <div className="flex items-center justify-between px-3 pt-4 pb-3">
+        <div className="flex items-center justify-between px-3 pt-3">
           <IconButton
             label={t.restart}
             disabled={!active}
             onClick={session.restart}
-            className="size-14 border border-line"
+            className="size-12 border border-line"
             data-testid="restart"
           >
-            <RestartIcon className="size-6" strokeWidth={1.5} />
+            <RestartIcon className="size-5" strokeWidth={1.5} />
           </IconButton>
           {s.status === 'running' ? (
-            <IconButton label={t.pause} onClick={session.pause} className="size-[4.75rem] bg-surface hover:bg-surface-2" data-testid="pause">
-              <PauseIcon className="size-7" />
+            <IconButton label={t.pause} onClick={session.pause} className="size-16 bg-surface hover:bg-surface-2" data-testid="pause">
+              <PauseIcon className="size-6" />
             </IconButton>
           ) : (
             <IconButton
               label={s.status === 'paused' ? t.resume : t.start}
               onClick={s.status === 'paused' ? session.resume : session.start}
-              className="size-[4.75rem] bg-blue text-white hover:bg-blue-deep"
+              className="size-16 bg-blue text-white hover:bg-blue-deep"
               data-testid={s.status === 'paused' ? 'resume' : 'start'}
             >
-              <PlayIcon className="ml-1 size-7" />
+              <PlayIcon className="ml-1 size-6" />
             </IconButton>
           )}
-          <IconButton label={t.openSettings} onClick={() => setSheetOpen(true)} className="size-14 border border-line" data-testid="open-settings">
-            <SlidersIcon className="size-6" strokeWidth={1.5} />
+          <IconButton label={t.openSettings} onClick={() => setSheetOpen(true)} className="size-12 border border-line" data-testid="open-settings">
+            <SlidersIcon className="size-5" strokeWidth={1.5} />
           </IconButton>
         </div>
       </section>
