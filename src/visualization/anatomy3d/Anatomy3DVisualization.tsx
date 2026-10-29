@@ -94,7 +94,7 @@ function Rig({
   const layout = useRef({ aspect, clear })
   layout.current = { aspect, clear }
   /** A tween of the whole camera pose: from where it was to the default view for the current facing and layout. */
-  const turn = useRef<{ from: THREE.Spherical; fromY: number; t: number } | null>(null)
+  const turn = useRef<{ from: THREE.Spherical; fromTarget: THREE.Vector3; t: number } | null>(null)
   // Default view on mount and on Reset view. A layout change once started (the
   // controls panel shrinks as the exercise starts) eases there, as part of
   // the turn if one is running, so the figure never jumps.
@@ -104,7 +104,7 @@ function Rig({
     // Before the exercise starts (first load, the panel being measured) it just snaps.
     if (lastSignal.current !== null && lastSignal.current === resetSignal && c && startedRef.current) {
       if (turn.current || facing.current !== facingFor(startedRef.current)) return
-      turn.current = { from: new THREE.Spherical().setFromVector3(new THREE.Vector3().subVectors(camera.position, c.target)), fromY: c.target.y, t: 0 }
+      turn.current = { from: new THREE.Spherical().setFromVector3(new THREE.Vector3().subVectors(camera.position, c.target)), fromTarget: c.target.clone(), t: 0 }
       return
     }
     lastSignal.current = resetSignal
@@ -126,7 +126,7 @@ function Rig({
     const want = facingFor(startedRef.current)
     if (want !== facing.current) {
       facing.current = want
-      turn.current = { from: new THREE.Spherical().setFromVector3(offset.copy(camera.position).sub(c.target)), fromY: c.target.y, t: 0 }
+      turn.current = { from: new THREE.Spherical().setFromVector3(offset.copy(camera.position).sub(c.target)), fromTarget: c.target.clone(), t: 0 }
     }
     const tw = turn.current
     if (!tw) return
@@ -135,8 +135,10 @@ function Rig({
     const { aspect: a, clear: cl } = layout.current
     const { distance, target } = fitView(a, cl)
     const mix = (x: number, y: number) => x + (y - x) * k
-    c.target.set(target.x, mix(tw.fromY, target.y), target.z)
-    spherical.set(mix(tw.from.radius, distance), mix(tw.from.phi, Math.PI / 2 - ELEVATION), mix(tw.from.theta, facing.current))
+    // From wherever the user left the camera (turned, zoomed, panned) the shortest way round to the default view.
+    c.target.lerpVectors(tw.fromTarget, target, k)
+    const theta = facing.current + THREE.MathUtils.euclideanModulo(tw.from.theta - facing.current + Math.PI, 2 * Math.PI) - Math.PI
+    spherical.set(mix(tw.from.radius, distance), mix(tw.from.phi, Math.PI / 2 - ELEVATION), mix(theta, facing.current))
     camera.position.copy(c.target).add(offset.setFromSpherical(spherical))
     camera.lookAt(c.target)
     c.update()
