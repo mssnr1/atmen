@@ -48,7 +48,7 @@ body.blue-page {
   padding-top: max(env(safe-area-inset-top), 1rem);
 }
 .safe-bottom {
-  padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
 }
 
 .no-scrollbar::-webkit-scrollbar {
