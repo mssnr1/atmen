@@ -55,6 +55,7 @@ export class AudioCues {
     // On a fresh start, unlocking audio may take a moment; still cue the first breath.
     const from = includeCurrent ? Math.max(0, elapsed - 250) : elapsed + 1
     for (const t of transitionsBetween(plan, from, plan.totalDurationMs)) {
+      if (t.phase.quiet) continue
       this.bell(sessionZero + t.atMs / 1000, PHASE_TONES[t.phase.type], 1.6, 0.35)
     }
     const end = sessionZero + plan.totalDurationMs / 1000

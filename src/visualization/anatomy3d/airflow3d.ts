@@ -140,6 +140,10 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
     out.alpha = 0
     return out
   }
+  // In the rest at the top of the breath the air settles deep in the lungs:
+  // what is left in the airways fades and the rest sinks a little. Breathing
+  // out, it comes back up from there.
+  const rest = b.phase === 'holdIn' ? smoothstep(0, 0.7, b.phaseProgress) : b.phase === 'exhale' ? 1 - smoothstep(0, 0.3, b.phaseProgress) : 0
 
   if (pos < 0) {
     // Outside. Breathing in, nothing is drawn in front of the nose: the air
@@ -159,7 +163,7 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
       start[2] + OUT_DIR[2] * 0.24 * d + p.dir[2] * spread + w[2],
     ]
     const near = 1 - smoothstep(0.1, 1, d)
-    out.alpha = 0.18 * near * (1 - smoothstep(0.8, 1, b.phaseProgress))
+    out.alpha = 0.18 * near * (1 - smoothstep(0.8, 1, b.phaseProgress)) * (1 - rest)
     out.size = 1.3 + 2.2 * d
     return out
   }
@@ -169,7 +173,7 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
     const c = pointOn(route, pos / AIRWAY)
     out.position = [c[0] + w[0], c[1] + w[1], c[2] + w[2]]
     // Air in the airways glows most while it is moving.
-    out.alpha = 0.16 + 0.3 * b.flow
+    out.alpha = (0.16 + 0.3 * b.flow) * (1 - rest)
     out.size = 0.75
     return out
   }
@@ -182,14 +186,14 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
   const grow = 1 + 0.07 * b.volume
   const tgt: V3 = [
     lung.center[0] + (p.target[0] - lung.center[0]) * grow,
-    lung.center[1] + (p.target[1] - lung.center[1]) * grow,
+    lung.center[1] + (p.target[1] - lung.center[1]) * grow - 0.025 * rest,
     lung.center[2] + (p.target[2] - lung.center[2]) * grow,
   ]
   const c = lerp3(end, tgt, smoothstep(0, 1, t))
   const w = wobble(0.004 + 0.004 * t, 1.2)
   out.position = [c[0] + w[0], c[1] + w[1], c[2] + w[2]]
   // Faint where the bronchi end, so the air does not bead up at their tips.
-  out.alpha = 0.1 + 0.16 * smoothstep(0, 0.3, t)
+  out.alpha = (0.1 + 0.16 * smoothstep(0, 0.3, t)) * (1 - 0.3 * rest)
   out.size = 0.9 + 0.9 * t
   return out
 }

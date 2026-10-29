@@ -56,7 +56,7 @@ export function usePracticeSession(exercise: Exercise, durationMs: number, pace:
       const prefs = store.get().preferences
       // The timeline moved, so the cues scheduled ahead are at the wrong times.
       if (event.type === 'plan' && event.snapshot.status === 'running') scheduleAudio(false)
-      if (event.type === 'phase' && prefs.vibrationEnabled) vibrate(event.snapshot.phase.type)
+      if (event.type === 'phase' && prefs.vibrationEnabled && !event.snapshot.phase.quiet) vibrate(event.snapshot.phase.type)
       if (event.type === 'complete') {
         if (prefs.vibrationEnabled) vibrate('complete')
         wakeLock.release()

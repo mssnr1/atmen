@@ -80,6 +80,15 @@ describe('air volume', () => {
     expect(usedAir('inhale')).toBe(0)
   })
 
+  it('lets the air settle in the lungs during the rest at the top of the breath', () => {
+    const at = (b: BreathState) => particles.map((p) => ({ p, s: particleState(p, b, 0, { position: [0, 0, 0], alpha: 0, size: 1 }) }))
+    const inAirways = (b: BreathState) => at(b).filter(({ p }) => p.b - (1 - b.volume) <= AIRWAY && p.b - (1 - b.volume) >= 0)
+    expect(inAirways(state(1, 'inhale', 1)).some(({ s }) => s.alpha > 0)).toBe(true)
+    expect(inAirways(state(1, 'holdIn', 1)).every(({ s }) => s.alpha === 0)).toBe(true)
+    // It comes back up as the exhale gets going.
+    expect(inAirways(state(0.6, 'exhale', 0.5)).some(({ s }) => s.alpha > 0)).toBe(true)
+  })
+
   it('gives the airways a share of the route', () => {
     expect(AIRWAY).toBeGreaterThan(0.2)
     expect(AIRWAY).toBeLessThan(0.6)

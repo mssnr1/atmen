@@ -42,6 +42,8 @@ export const energyBreathing: Exercise = {
   pattern: {
     phases: [
       { type: 'inhale', durationMs: 4000 },
+      // A moment of rest at the top of the breath.
+      { type: 'holdIn', durationMs: 2000, quiet: true },
       { type: 'exhale', durationMs: 6000 },
     ],
   },
