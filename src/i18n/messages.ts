@@ -94,9 +94,10 @@ export interface Messages {
 const de: Messages = {
   appName: 'atmen',
   welcome: [
-    { title: 'Atme dich ruhiger und stärker.', lines: ['Einfache Übungen.', 'Spürbare Wirkung.', 'Auf Basis der Forschung.'] },
-    { title: 'Sieh, wie dein Atem wirkt.', lines: ['Folge der Luft durch Nase,', 'Atemwege und Lunge,', 'Atemzug für Atemzug.'] },
-    { title: 'Ein paar Minuten am Tag.', lines: ['Wähle eine Übung,', 'finde dein Tempo,', 'und bleib dran.'] },
+    { title: 'Atme durch die Nase.', lines: ['Sie filtert, erwärmt und befeuchtet die Luft.', 'Dein natürlicher Atemweg.'] },
+    { title: 'Langsamer atmen. Ruhiger werden.', lines: ['Etwa 5,5 Atemzüge pro Minute können Körper und Geist beruhigen.'] },
+    { title: 'Ausatmen wird unterschätzt.', lines: ['Lass die Luft langsam und entspannt ausströmen.', 'Gib dem Ausatmen bewusst Zeit.'] },
+    { title: 'Weniger ist oft mehr.', lines: ['Nicht möglichst viel oder tief atmen.', 'Sondern sanft, ruhig und gleichmäßig.'] },
   ],
   next: 'Weiter',
   skip: 'Überspringen',
@@ -179,9 +180,10 @@ const de: Messages = {
 const en: Messages = {
   appName: 'atmen',
   welcome: [
-    { title: 'Breathe for a calmer and stronger you.', lines: ['Simple exercises.', 'Real benefits.', 'Grounded in research.'] },
-    { title: 'See what your breath does.', lines: ['Follow the air through nose,', 'airways and lungs,', 'one breath at a time.'] },
-    { title: 'A few minutes a day.', lines: ['Pick an exercise,', 'find your pace,', 'and keep going.'] },
+    { title: 'Breathe through your nose.', lines: ['It filters, warms and moistens the air.', 'Your natural airway.'] },
+    { title: 'Breathe slower. Feel calmer.', lines: ['About 5.5 breaths a minute can calm both body and mind.'] },
+    { title: 'Exhaling is underrated.', lines: ['Let the air flow out slowly and easily.', 'Give your exhale time.'] },
+    { title: 'Less is often more.', lines: ['Not as much or as deeply as you can,', 'but softly, calmly and evenly.'] },
   ],
   next: 'Next',
   skip: 'Skip',
