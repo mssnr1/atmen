@@ -147,6 +147,16 @@ export const ExpandIcon = (p: P) => (
     <path d="M4 12a8 8 0 1 0 8-8M4 4v4h4" />
   </svg>
 )
+export const FullscreenIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />
+  </svg>
+)
+export const FullscreenExitIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" />
+  </svg>
+)
 export const CircleIcon = (p: P) => (
   <svg {...base} {...p}>
     <circle cx="12" cy="12" r="8" />

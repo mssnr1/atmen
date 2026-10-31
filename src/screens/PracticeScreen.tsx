@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BottomSheet } from '../components/BottomSheet'
 import { CrossfadeText } from '../components/CrossfadeText'
+import { FullscreenButton } from '../components/FullscreenButton'
 import { IconButton } from '../components/Button'
 import { CircleIcon, CloseIcon, InfoIcon, LungsIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
 import { Segmented } from '../components/Segmented'
@@ -108,6 +109,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           <CloseIcon className="size-5" strokeWidth={1.5} />
         </IconButton>
         <div className="flex items-center">
+          <FullscreenButton />
           <IconButton label={t.aboutExercise} onClick={() => setInfoOpen(true)} data-testid="exercise-info">
             <InfoIcon className="size-5" strokeWidth={1.5} />
           </IconButton>

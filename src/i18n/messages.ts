@@ -52,6 +52,9 @@ export interface Messages {
   vibration: string
   soundOn: string
   soundOff: string
+  fullscreen: string
+  exitFullscreen: string
+  fullscreenIos: { title: string; steps: string[]; note: string }
   visualization: string
   modes: Record<VisualizationMode, { label: string; description: string }>
   resetView: string
@@ -139,6 +142,13 @@ const de: Messages = {
   vibration: 'Vibration',
   soundOn: 'Töne einschalten',
   soundOff: 'Töne ausschalten',
+  fullscreen: 'Vollbild',
+  exitFullscreen: 'Vollbild beenden',
+  fullscreenIos: {
+    title: 'Vollbild auf dem iPhone',
+    steps: ['Tippe in Safari unten auf das Teilen-Symbol.', 'Wähle „Zum Home-Bildschirm“.', 'Öffne atmen über das neue Symbol auf dem Home-Bildschirm.'],
+    note: 'Safari erlaubt auf dem iPhone kein Vollbild für Webseiten. Vom Home-Bildschirm aus startet atmen aber wie eine App, ganz ohne Adressleiste.',
+  },
   visualization: 'Darstellung',
   modes: {
     abstract: { label: 'Einfach', description: 'Ein Kreis, der mit deinem Atem wächst und schrumpft' },
@@ -228,6 +238,13 @@ const en: Messages = {
   vibration: 'Vibration',
   soundOn: 'Turn sounds on',
   soundOff: 'Turn sounds off',
+  fullscreen: 'Full screen',
+  exitFullscreen: 'Exit full screen',
+  fullscreenIos: {
+    title: 'Full screen on iPhone',
+    steps: ['In Safari, tap the Share icon at the bottom.', 'Choose “Add to Home Screen”.', 'Open atmen from the new icon on your Home Screen.'],
+    note: 'Safari on iPhone does not allow web pages to go full screen. From the Home Screen, though, atmen opens like an app, without the address bar.',
+  },
   visualization: 'View',
   modes: {
     abstract: { label: 'Simple', description: 'A circle that grows and shrinks with your breath' },
