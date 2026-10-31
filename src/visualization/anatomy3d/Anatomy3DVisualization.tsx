@@ -28,15 +28,22 @@ const PAN_LIMIT = new THREE.Box3(new THREE.Vector3(-0.2, 1.05, -0.15), new THREE
  * `clear` fraction is not covered by the controls: head to diaphragm fill that
  * part, and the body continues down behind the controls.
  */
-export function fitView(aspect: number, clear = 1): { distance: number; target: THREE.Vector3 } {
+export function fitView(aspect: number, clear = 1, started = false): { distance: number; target: THREE.Vector3 } {
   const t = Math.tan(THREE.MathUtils.degToRad(FOV) / 2)
   const halfH = Math.max((TOP - BOTTOM) / (2 * clear), HALF_W / aspect)
-  const distance = halfH / t
-  return { distance, target: new THREE.Vector3(TARGET.x, TOP - halfH, TARGET.z) }
+  const target = new THREE.Vector3(TARGET.x, TOP - halfH, TARGET.z)
+  if (!started) return { distance: halfH / t, target }
+  // Once the exercise runs, the camera also moves in closer, toward the lungs.
+  target.y += (LUNG_Y - target.y) * 0.35
+  return { distance: (halfH * RUN_ZOOM) / t, target }
 }
 
-function defaultPosition(aspect: number, clear: number, azimuth = AZIMUTH): THREE.Vector3 {
-  const { distance: d, target } = fitView(aspect, clear)
+/** How much closer the camera is once the exercise runs, and the height of the middle of the lungs it moves toward. */
+const RUN_ZOOM = 0.76
+const LUNG_Y = 1.33
+
+function defaultPosition(aspect: number, clear: number, azimuth = AZIMUTH, started = false): THREE.Vector3 {
+  const { distance: d, target } = fitView(aspect, clear, started)
   return new THREE.Vector3(
     target.x + d * Math.cos(ELEVATION) * Math.sin(azimuth),
     target.y + d * Math.sin(ELEVATION),
@@ -46,7 +53,7 @@ function defaultPosition(aspect: number, clear: number, azimuth = AZIMUTH): THRE
 
 /** Before the exercise starts the figure faces the user; once it starts it turns to the 3/4 view. */
 const facingFor = (started: boolean) => (started ? AZIMUTH : 0)
-/** A slow turn that eases in and out with no jolt at either end (smootherstep). */
+/** A slow turn (and zoom) that eases in and out with no jolt at either end (smootherstep). */
 const TURN_S = 3.4
 const easeInOut = (t: number) => t * t * t * (t * (6 * t - 15) + 10)
 
@@ -110,8 +117,8 @@ function Rig({
     lastSignal.current = resetSignal
     turn.current = null
     facing.current = facingFor(startedRef.current)
-    const { target } = fitView(aspect, clear)
-    camera.position.copy(defaultPosition(aspect, clear, facing.current))
+    const { target } = fitView(aspect, clear, startedRef.current)
+    camera.position.copy(defaultPosition(aspect, clear, facing.current, startedRef.current))
     controls.current?.target.copy(target)
     camera.lookAt(target)
     controls.current?.update()
@@ -133,7 +140,7 @@ function Rig({
     tw.t = Math.min(tw.t + dt / TURN_S, 1)
     const k = easeInOut(tw.t)
     const { aspect: a, clear: cl } = layout.current
-    const { distance, target } = fitView(a, cl)
+    const { distance, target } = fitView(a, cl, startedRef.current)
     const mix = (x: number, y: number) => x + (y - x) * k
     // From wherever the user left the camera (turned, zoomed, panned) the shortest way round to the default view.
     c.target.lerpVectors(tw.fromTarget, target, k)
