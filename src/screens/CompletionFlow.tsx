@@ -135,7 +135,7 @@ function HowDoYouFeel({ value, onChange, onContinue }: { value?: Feeling; onChan
               <span className={`flex size-12 items-center justify-center rounded-full transition ${on ? 'bg-blue text-white' : 'bg-surface text-ink-2'}`}>
                 <FaceIcon mood={level} className="size-7" strokeWidth={1.6} />
               </span>
-              <span className={`text-center text-[0.75rem] leading-tight ${on ? 'text-blue' : 'text-muted'}`}>{t.feelings[level - 1]}</span>
+              <span className={`text-center text-[0.75rem] leading-tight ${on ? 'text-accent' : 'text-muted'}`}>{t.feelings[level - 1]}</span>
             </button>
           )
         })}
@@ -151,7 +151,7 @@ function HowDoYouFeel({ value, onChange, onContinue }: { value?: Feeling; onChan
 
 function Summary({ exercise, summary, scale, feeling, onDone }: { exercise: Exercise; summary: SessionSummary; scale: number; feeling?: Feeling; onDone: () => void }) {
   const { lang, t } = useI18n()
-  const iconClass = 'size-5 shrink-0 text-blue'
+  const iconClass = 'size-5 shrink-0 text-accent'
   const tiles = [
     { icon: <ClockIcon className={iconClass} />, value: formatDuration(summary.durationMs), label: t.breathingTime, id: 'duration' },
     { icon: <LungsIcon className={iconClass} />, value: String(summary.completedCycles), label: t.breathsLabel, id: 'cycles' },

@@ -58,7 +58,7 @@ export function AbstractVisualization({ engine, showProgress }: Props) {
           strokeLinecap="round"
           strokeDasharray={RING_LENGTH}
           strokeDashoffset={RING_LENGTH}
-          className="text-blue"
+          className="text-accent"
         />
       </svg>
       <div className="absolute inset-[6%]">
