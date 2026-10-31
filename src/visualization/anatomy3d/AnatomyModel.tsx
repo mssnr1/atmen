@@ -5,8 +5,8 @@ import * as THREE from 'three'
 import type { BreathingEngine } from '../../engine'
 import { useTheme } from '../../lib/theme'
 import { breathState } from '../breathState'
-import { AirVolume } from './AirVolume'
 import { makeMaterials, type MaterialKind } from './materials'
+import { makeStripeMaterials, STRIPE_PALETTES } from './stripes'
 
 export const MODEL_URL = `${import.meta.env.BASE_URL}models/atmen-anatomy.glb`
 
@@ -49,9 +49,13 @@ const BEAT_S = 60 / 62
 export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   const { scene } = useGLTF(MODEL_URL, false, true)
   const theme = useTheme()
-  const materials = useMemo(() => makeMaterials(theme), [theme])
+  const level = useMemo(() => ({ value: 99 }), [])
+  const lungRange = useRef<[number, number] | null>(null)
+  const materials = useMemo(() => {
+    // Contour-stripe look: the lungs show the breath by lighting up from the bottom as they fill.
+    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level) }
+  }, [theme, level])
   const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat'; gain: number }[]>([])
-  const drift = useRef(0)
   const beat = useRef(0)
 
   const model = useMemo(() => scene.clone(true), [scene])
@@ -68,13 +72,19 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
         mesh.visible = false
         return
       }
-      mesh.material = materials[part.kind]
+      mesh.material = mesh.name === 'Head' || mesh.parent?.name === 'Head' ? materials.head : materials[part.kind]
       mesh.renderOrder = part.order
       const dict = mesh.morphTargetDictionary
       if (dict?.Inhale !== undefined) found.push({ mesh, index: dict.Inhale, kind: 'breath', gain: BREATH_GAIN[mesh.name] ?? BREATH_GAIN[mesh.parent?.name ?? ''] ?? 1 })
       if (dict?.Beat !== undefined) found.push({ mesh, index: dict.Beat, kind: 'beat', gain: 1 })
     })
     morphs.current = found
+    const lungs = new THREE.Box3()
+    model.updateMatrixWorld(true)
+    model.traverse((o) => {
+      if ((o as THREE.Mesh).isMesh && /^Lung_/.test(o.name)) lungs.expandByObject(o)
+    })
+    lungRange.current = lungs.isEmpty() ? null : [lungs.min.y, lungs.max.y]
     return () => Object.values(materials).forEach((m) => m.dispose())
   }, [model, materials])
 
@@ -82,9 +92,12 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
     const snapshot = engine.sample()
     const b = breathState(snapshot)
     const dt = Math.min(delta, 0.1)
-    if (snapshot.status !== 'paused') drift.current += dt
     beat.current = (beat.current + dt / BEAT_S) % 1
     const h = heartbeat(beat.current)
+    if (lungRange.current) {
+      const [lo, hi] = lungRange.current
+      level.value = lo + (hi - lo) * (0.04 + 0.98 * b.volume)
+    }
     for (const m of morphs.current) {
       const influences = m.mesh.morphTargetInfluences
       if (influences) influences[m.index] = m.kind === 'beat' ? h : b.volume * m.gain
@@ -94,7 +107,6 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   return (
     <group>
       <primitive object={model} />
-      <AirVolume engine={engine} drift={drift} />
     </group>
   )
 }
