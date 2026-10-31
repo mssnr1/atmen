@@ -33,28 +33,28 @@
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
-/* Dark theme: the same roles, night greys and a magic violet as the accent.
-   Breathed-out air turns rose here, so it stays apart from the violet. */
+/* Dark theme: warm clay greys for every surface, magic violet as the only colour.
+   Breathed-out air is a pale lavender, so in and out differ by brightness, not hue. */
 :root.dark {
-  --color-paper: #0e0f11;
-  --color-surface: #1a1c20;
-  --color-surface-2: #2a2d33;
-  --color-line: #26292e;
+  --color-paper: #141312;
+  --color-surface: #1f1d1b;
+  --color-surface-2: #2d2a27;
+  --color-line: #2a2724;
   --color-ink: #f2f3f5;
-  --color-ink-2: #c5c9d1;
-  --color-muted: #8d929c;
+  --color-ink-2: #cdc8c2;
+  --color-muted: #958f88;
   --color-blue: #6d3fd6;
   --color-blue-deep: #5b31b8;
-  --color-blue-soft: #1f1736;
-  --color-violet: #e58bd0;
-  --color-card: #17191c;
-  --color-thumb: #3a3d44;
-  --color-blue-page: #24124f;
+  --color-blue-soft: #24211f;
+  --color-violet: #b7a6dc;
+  --color-card: #1a1817;
+  --color-thumb: #3d3935;
+  --color-blue-page: #1c1a18;
   --color-breath: #c3a6ff;
   --color-accent: #b89aff;
-  --color-panel: rgb(26 28 32 / 0.42);
+  --color-panel: rgb(30 28 26 / 0.42);
   --color-air: #9a6bff;
-  --color-air-used: #e58bd0;
+  --color-air-used: #b7a6dc;
   /* The particle aura around the figure, in the night violet (light theme colours live in Aura.tsx). */
   --aura-cool: #3a1f72;
   --aura-warm: #8a5cf5;

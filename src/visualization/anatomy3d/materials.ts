@@ -42,8 +42,8 @@ export function makeMaterials(theme: 'light' | 'dark' = 'light'): Record<Materia
   const body = theme === 'dark' ? 1.1 : 1
   const organs = 0.85 * (theme === 'dark' ? 0.85 * 0.9 : 1)
   return {
-    // On the dark page a pale rim would glow, so the shell turns a dim steel blue.
-    skin: theme === 'dark' ? glass('#2a3242', '#8797b6', 0.06 * body, 0.55 * body) : glass('#f4f6fa', '#b9c4d6', 0.05, 0.62),
+    // On the dark page a pale rim would glow, so the shell turns a dim clay grey.
+    skin: theme === 'dark' ? glass('#2e2a27', '#9a928b', 0.06 * body, 0.55 * body) : glass('#f4f6fa', '#b9c4d6', 0.05, 0.62),
     lung: glass('#f6c9ba', '#e3907b', 0.26 * organs, 0.82 * organs),
     diaphragm: glass('#f7c2ab', '#e8977a', 0.32 * organs, 0.88 * organs),
     airway: glass('#f2ad9c', '#d8735f', 0.42 * organs, 0.92 * organs, { emissive: '#d8735f', emissiveIntensity: 0.25 }),
