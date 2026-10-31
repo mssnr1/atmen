@@ -149,9 +149,9 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       </section>
 
       <section ref={panel} className="safe-bottom pointer-events-none absolute inset-x-0 bottom-0 z-10 mx-auto max-w-md px-3 md:max-w-lg md:pb-6">
-        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-paper/35 px-4 pt-3.5 pb-3 backdrop-blur-[12px]">
+        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-paper/35 px-4 pt-7 pb-4 backdrop-blur-[12px]">
         <div className="flex flex-wrap items-baseline justify-center gap-x-2.5 gap-y-1 text-center" aria-live="polite">
-          <p className="text-[2.5rem] leading-none tracking-tight" data-testid="phase-label">
+          <p className="font-breath text-[2.625rem] leading-[1.1] font-light text-breath [font-variation-settings:'SOFT'_100]" data-testid="phase-label">
             <CrossfadeText text={phaseLabel(s, t)} />
           </p>
           {s.status !== 'running' && (
@@ -173,7 +173,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           </div>
         )}
 
-        <div className="flex items-center justify-between px-3 pt-3">
+        <div className="flex items-center justify-between px-3 pt-7">
           <IconButton
             label={t.restart}
             disabled={!active}
