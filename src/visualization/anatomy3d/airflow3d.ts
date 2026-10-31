@@ -208,8 +208,8 @@ export function particleState(p: Particle, b: BreathState, time: number, out: Pa
   const c = lerp3(end, tgt, 1 - (1 - t) ** 3)
   const w = wobble(0.004 + 0.004 * t, 1.2)
   out.position = [c[0] + w[0], c[1] + w[1], c[2] + w[2]]
-  // A soft, slightly translucent mist; faint where the bronchi end, so the air does not bead up at their tips.
-  out.alpha = (0.016 + 0.022 * smoothstep(0, 0.25, t)) * (1 - 0.3 * rest)
+  // A soft mist that clearly fills the lungs; faint where the bronchi end, so the air does not bead up at their tips.
+  out.alpha = (0.03 + 0.05 * smoothstep(0, 0.25, t)) * (1 - 0.15 * rest)
   out.size = 1.4 + 1.6 * t
   return out
 }
