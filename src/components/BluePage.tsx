@@ -15,7 +15,7 @@ export function BluePage({ children, testId }: { children: ReactNode; testId?: s
   }, [])
   return (
     <main className="safe-area fixed inset-0 overflow-y-auto bg-blue-page text-white" data-testid={testId}>
-      <div className="mx-auto flex min-h-full max-w-md flex-col px-7 md:max-w-xl">{children}</div>
+      <div className="mx-auto flex min-h-full max-w-md flex-col px-7 md:max-w-3xl md:px-14 lg:max-w-5xl">{children}</div>
     </main>
   )
 }

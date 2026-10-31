@@ -10,15 +10,15 @@ export function LearnScreen() {
   const { lang, t } = useI18n()
   return (
     <div className="flex min-h-dvh flex-col bg-paper">
-      <main className="safe-area mx-auto w-full max-w-md flex-1 px-5 md:max-w-xl lg:max-w-6xl lg:px-10">
-        <h1 className="mt-10 text-[1.875rem] font-normal tracking-[-0.01em] md:mt-8 md:text-[2.5rem]">{t.learnTitle}</h1>
-        <p className="mt-2 text-[0.9375rem] text-muted">{t.learnIntro}</p>
+      <main className="safe-area mx-auto w-full max-w-md flex-1 px-5 md:max-w-3xl md:px-14 lg:max-w-6xl lg:px-16">
+        <h1 className="mt-10 text-[1.875rem] font-normal tracking-[-0.01em] md:mt-10 md:text-[3rem]">{t.learnTitle}</h1>
+        <p className="mt-2 text-[0.9375rem] text-muted md:text-[1.0625rem]">{t.learnIntro}</p>
 
         <article className="mt-8 rounded-[22px] bg-blue-page p-6 text-white md:p-8" data-testid="learn-basics">
           <h2 className="text-[0.8125rem] font-medium tracking-wide text-white/70 uppercase">{t.learnBasics}</h2>
-          <div className="mt-5 divide-y divide-white/20 lg:grid lg:grid-cols-2 lg:gap-10 lg:divide-y-0">
+          <div className="mt-5 divide-y divide-white/20 md:grid md:grid-cols-2 md:gap-10 md:divide-y-0">
             {t.welcome.slice(0, 2).map((p, i) => (
-              <section key={p.title} className="py-6 first:pt-0 last:pb-0 lg:py-0">
+              <section key={p.title} className="py-6 first:pt-0 last:pb-0 md:py-0">
                 <WelcomeArt index={i} className="mb-5 h-12 w-32 text-white" />
                 {p.eyebrow && <p className="text-[0.875rem] tracking-[0.08em] text-white/70">{p.eyebrow}</p>}
                 <h3 className="mt-1 text-[1.625rem] leading-tight font-normal tracking-[-0.01em] text-balance">{p.title}</h3>
@@ -37,7 +37,7 @@ export function LearnScreen() {
           {exercises.map((e) => {
             const text = e.text[lang]
             return (
-              <article key={e.id} className="rounded-[22px] bg-surface p-5">
+              <article key={e.id} className="rounded-[22px] bg-surface p-5 md:p-7">
                 <header className="flex items-center justify-between gap-3">
                   <div>
                     <h2 className="text-[1.25rem]">{text.name}</h2>

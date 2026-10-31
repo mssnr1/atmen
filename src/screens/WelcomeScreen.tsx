@@ -65,7 +65,7 @@ export function WelcomeScreen() {
   return (
     <BluePage testId="welcome">
       <header className="flex items-center justify-between pt-4">
-        <Wordmark className="text-[1.0625rem]" />
+        <Wordmark className="text-[1.0625rem] md:text-[1.25rem]" />
         {!last && (
           <button type="button" onClick={finish} className="-mr-2 rounded-full px-3 py-2 text-[0.9375rem] text-white/75 hover:text-white">
             {t.skip}
@@ -75,7 +75,7 @@ export function WelcomeScreen() {
 
       <div
         ref={track}
-        className="-mx-7 flex flex-1 touch-pan-y overflow-hidden select-none"
+        className="-mx-7 flex flex-1 touch-pan-y md:-mx-14 overflow-hidden select-none"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -89,14 +89,17 @@ export function WelcomeScreen() {
           {t.welcome.map((p, i) => (
             <section
               key={i}
-              className="flex w-full shrink-0 flex-col justify-center px-7 py-10"
+              className="flex w-full shrink-0 flex-col justify-center px-7 py-10 md:px-14 lg:grid lg:grid-cols-2 lg:content-center lg:items-center lg:gap-16"
               aria-hidden={i !== page}
               aria-live={i === page ? 'polite' : undefined}
             >
-              <WelcomeArt index={i} className={`${p.closing ? 'mb-7' : 'mb-10'} h-16 w-40 text-white md:h-20 md:w-52`} />
-              {p.eyebrow && <p className="mb-3 text-[0.9375rem] tracking-[0.08em] text-white/70 md:text-[1.0625rem]">{p.eyebrow}</p>}
-              <h1 className={`${p.closing ? 'text-[2.375rem]' : 'text-[2.75rem]'} leading-[1.08] font-normal tracking-[-0.01em] text-balance md:text-[3.75rem]`}>{p.title}</h1>
-              <p className={`${p.closing ? 'mt-6 space-y-3' : 'mt-10'} text-[1.0625rem] leading-relaxed text-white/85 md:text-[1.25rem]`}>
+              <div>
+              <WelcomeArt index={i} className={`${p.closing ? 'mb-7' : 'mb-10'} h-16 w-40 text-white md:h-24 md:w-64`} />
+              {p.eyebrow && <p className="mb-3 text-[0.9375rem] tracking-[0.08em] text-white/70 md:text-[1.1875rem]">{p.eyebrow}</p>}
+              <h1 className={`${p.closing ? 'text-[2.375rem]' : 'text-[2.75rem]'} leading-[1.08] font-normal tracking-[-0.01em] text-balance md:text-[4.5rem] lg:text-[5rem]`}>{p.title}</h1>
+              </div>
+              <div>
+              <p className={`${p.closing ? 'mt-6 space-y-3' : 'mt-10'} max-w-2xl text-[1.0625rem] leading-relaxed text-white/85 md:text-[1.375rem] lg:mt-0`}>
                 {p.lines.map((line) => (
                   <span key={line} className="block">
                     {line}
@@ -104,10 +107,11 @@ export function WelcomeScreen() {
                 ))}
               </p>
               {p.closing && (
-                <p className="mt-6 border-l-2 border-white/45 pl-4 text-[1.0625rem] leading-relaxed text-white md:text-[1.25rem]" data-testid="welcome-closing">
+                <p className="mt-6 border-l-2 border-white/45 pl-4 max-w-2xl text-[1.0625rem] leading-relaxed text-white md:text-[1.375rem]" data-testid="welcome-closing">
                   {p.closing}
                 </p>
               )}
+              </div>
             </section>
           ))}
         </div>
@@ -126,7 +130,7 @@ export function WelcomeScreen() {
           aria-label={t.next}
           data-testid="welcome-next"
           onClick={() => (last ? finish() : setPage(page + 1))}
-          className="flex size-[4.5rem] items-center justify-center rounded-full bg-white text-night shadow-[0_8px_24px_rgb(0_0_0/0.12)] transition active:scale-95"
+          className="flex size-[4.5rem] md:size-20 items-center justify-center rounded-full bg-white text-night shadow-[0_8px_24px_rgb(0_0_0/0.12)] transition active:scale-95"
         >
           <ArrowRightIcon className="size-7" strokeWidth={1.6} />
         </button>

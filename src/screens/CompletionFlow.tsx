@@ -64,7 +64,7 @@ function WellDone({
         aria-pressed={on}
         data-testid={`rate-${r}`}
         onClick={() => onRate(r)}
-        className={`flex size-[3.75rem] items-center justify-center rounded-full border-[1.5px] transition ${on ? 'border-white bg-white text-blue' : 'border-white/70 text-white hover:bg-white/10'}`}
+        className={`flex size-[3.75rem] items-center md:size-[4.5rem] justify-center rounded-full border-[1.5px] transition ${on ? 'border-white bg-white text-blue' : 'border-white/70 text-white hover:bg-white/10'}`}
       >
         {r === 'up' ? <ThumbUpIcon className="size-6" strokeWidth={1.6} /> : <ThumbDownIcon className="size-6" strokeWidth={1.6} />}
       </button>
@@ -73,28 +73,30 @@ function WellDone({
   return (
     <BluePage testId="completion">
       <header className="pt-4">
-        <Wordmark className="text-[1.0625rem]" />
+        <Wordmark className="text-[1.0625rem] md:text-[1.25rem]" />
       </header>
       <section className="flex flex-1 flex-col justify-center py-8">
-        <h1 className="text-[2.75rem] leading-tight font-normal md:text-[3.75rem]">{t.wellDone}</h1>
-        <p className="mt-4 text-[1.125rem] leading-snug text-white/85 md:text-[1.375rem]" data-testid="completion-text">
+        <h1 className="text-[2.75rem] leading-tight font-normal md:text-[4.5rem] lg:text-[5rem]">{t.wellDone}</h1>
+        <p className="mt-4 text-[1.125rem] leading-snug text-white/85 md:mt-5 md:text-[1.625rem]" data-testid="completion-text">
           {t.completed(t.minutesLong(minutes), exercise.text[lang].name)}
         </p>
         <div className="mt-8 border-t border-white/25 pt-7 md:mt-12 md:pt-9" data-testid="completion-reflection">
-          <p className="text-[1.375rem] leading-snug md:text-[1.75rem]">{t.reflection.question}</p>
-          <p className="mt-3 text-[1rem] leading-relaxed text-white/85 md:text-[1.125rem]">{t.reflection.lead}</p>
+          <p className="text-[1.375rem] leading-snug md:text-[2rem]">{t.reflection.question}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-white/85 md:max-w-2xl md:text-[1.1875rem]">{t.reflection.lead}</p>
+          <div className="md:mt-4 md:grid md:grid-cols-2 md:gap-x-10">
           {t.reflection.parts.map(({ title, text }) => (
             <div key={title} className="mt-6">
-              <h2 className="text-[0.6875rem] font-medium tracking-[0.14em] text-white/60 uppercase">{title}</h2>
+              <h2 className="text-[0.6875rem] font-medium tracking-[0.14em] text-white/60 uppercase md:text-[0.8125rem]">{title}</h2>
               <p className="mt-1.5 text-[1rem] leading-relaxed text-white/85 md:text-[1.125rem]">{text}</p>
             </div>
           ))}
+          </div>
         </div>
       </section>
       <footer className="sticky bottom-0 flex items-center gap-3 bg-blue-page pt-3 pb-6 before:pointer-events-none before:absolute before:inset-x-0 before:-top-10 before:h-10 before:bg-linear-to-t before:from-blue-page before:to-transparent after:absolute after:inset-x-0 after:top-full after:h-[max(env(safe-area-inset-bottom),1rem)] after:bg-blue-page">
         {rateButton('up')}
         {rateButton('down')}
-        <Button variant="white" className="ml-auto min-h-[3.75rem]" trailingIcon={<ArrowRightIcon className="size-5" />} onClick={onNext} data-testid="completion-next">
+        <Button variant="white" className="ml-auto min-h-[3.75rem] md:min-h-[4.5rem] md:px-8 md:text-[1.125rem]" trailingIcon={<ArrowRightIcon className="size-5" />} onClick={onNext} data-testid="completion-next">
           {t.next}
         </Button>
       </footer>
@@ -104,9 +106,9 @@ function WellDone({
 
 function WhitePage({ children, testId }: { children: React.ReactNode; testId: string }) {
   return (
-    <main className="safe-area mx-auto flex min-h-dvh max-w-md flex-col bg-paper px-6 md:max-w-lg md:pb-10" data-testid={testId}>
+    <main className="safe-area mx-auto flex min-h-dvh max-w-md flex-col bg-paper px-6 md:max-w-3xl md:px-14 md:pb-10 lg:max-w-5xl" data-testid={testId}>
       <header className="pt-6">
-        <Wordmark className="text-[0.8125rem] text-muted" />
+        <Wordmark className="text-[0.8125rem] text-muted md:text-[1rem]" />
       </header>
       {children}
     </main>
@@ -118,8 +120,8 @@ function HowDoYouFeel({ value, onChange, onContinue }: { value?: Feeling; onChan
   const levels: Feeling[] = [1, 2, 3, 4, 5]
   return (
     <WhitePage testId="feeling">
-      <h1 className="mt-6 text-[2rem] leading-tight font-normal">{t.feelTitle}</h1>
-      <div role="radiogroup" aria-label={t.feelTitle} className="mt-10 grid grid-cols-5 gap-1">
+      <h1 className="mt-6 text-[2rem] leading-tight font-normal md:mt-16 md:text-[3rem]">{t.feelTitle}</h1>
+      <div role="radiogroup" aria-label={t.feelTitle} className="mt-10 grid grid-cols-5 gap-1 md:mt-14 md:gap-4">
         {levels.map((level) => {
           const on = value === level
           return (
@@ -130,12 +132,12 @@ function HowDoYouFeel({ value, onChange, onContinue }: { value?: Feeling; onChan
               aria-checked={on}
               data-testid={`feeling-${level}`}
               onClick={() => onChange(level)}
-              className="flex flex-col items-center gap-2"
+              className="flex flex-col items-center gap-2 md:gap-3"
             >
-              <span className={`flex size-12 items-center justify-center rounded-full transition ${on ? 'bg-blue text-white' : 'bg-surface text-ink-2'}`}>
-                <FaceIcon mood={level} className="size-7" strokeWidth={1.6} />
+              <span className={`flex size-12 items-center justify-center rounded-full transition md:size-24 ${on ? 'bg-blue text-white' : 'bg-surface text-ink-2'}`}>
+                <FaceIcon mood={level} className="size-7 md:size-12" strokeWidth={1.6} />
               </span>
-              <span className={`text-center text-[0.75rem] leading-tight ${on ? 'text-blue' : 'text-muted'}`}>{t.feelings[level - 1]}</span>
+              <span className={`text-center text-[0.75rem] leading-tight md:text-[1rem] ${on ? 'text-blue' : 'text-muted'}`}>{t.feelings[level - 1]}</span>
             </button>
           )
         })}
@@ -160,16 +162,16 @@ function Summary({ exercise, summary, scale, feeling, onDone }: { exercise: Exer
   ]
   return (
     <WhitePage testId="summary">
-      <h1 className="mt-6 text-[2rem] leading-tight font-normal">{t.niceWork}</h1>
-      <p className="mt-1 text-[0.9375rem] text-muted">{exercise.text[lang].name}</p>
-      <dl className="mt-8 grid grid-cols-2 gap-3">
+      <h1 className="mt-6 text-[2rem] leading-tight font-normal md:mt-16 md:text-[3rem]">{t.niceWork}</h1>
+      <p className="mt-1 text-[0.9375rem] text-muted md:text-[1.125rem]">{exercise.text[lang].name}</p>
+      <dl className="mt-8 grid grid-cols-2 gap-3 md:mt-12 md:gap-4">
         {tiles.map(({ icon, value, label, id }) => (
-          <div key={id} className="rounded-[20px] bg-surface p-4">
-            <dd className="flex items-center gap-2 text-[1.125rem] text-ink" data-testid={`summary-${id}`}>
+          <div key={id} className="rounded-[20px] bg-surface p-4 md:p-6">
+            <dd className="flex items-center gap-2 text-[1.125rem] text-ink md:text-[1.5rem]" data-testid={`summary-${id}`}>
               {icon}
               <span className="truncate">{value}</span>
             </dd>
-            <dt className="mt-1 text-[0.75rem] text-muted">{label}</dt>
+            <dt className="mt-1 text-[0.75rem] text-muted md:text-[0.9375rem]">{label}</dt>
           </div>
         ))}
       </dl>
@@ -189,12 +191,12 @@ function NextExercise({ current }: { current: Exercise }) {
   const text = next.text[lang]
   return (
     <WhitePage testId="next-exercise">
-      <h1 className="mt-6 text-[2rem] leading-tight font-normal">{t.keepGoing}</h1>
-      <p className="mt-1 text-[1.0625rem] text-muted">{t.tryAnother}</p>
+      <h1 className="mt-6 text-[2rem] leading-tight font-normal md:mt-16 md:text-[3rem]">{t.keepGoing}</h1>
+      <p className="mt-1 text-[1.0625rem] text-muted md:text-[1.25rem]">{t.tryAnother}</p>
       <button
         type="button"
         onClick={() => startPractice(next.id)}
-        className="mt-8 w-full rounded-[22px] bg-card p-5 text-left shadow-[0_1px_2px_rgb(0_0_0/0.04),0_6px_24px_rgb(0_0_0/0.05)] ring-1 ring-line/60"
+        className="mt-8 w-full rounded-[22px] bg-card p-5 text-left md:mt-12 md:p-7 shadow-[0_1px_2px_rgb(0_0_0/0.04),0_6px_24px_rgb(0_0_0/0.05)] ring-1 ring-line/60"
       >
         <span className="flex items-start justify-between gap-3">
           <span>
