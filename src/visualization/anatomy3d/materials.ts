@@ -37,9 +37,10 @@ function glass(color: string, rim: string, base: number, edge: number, extra: TH
 }
 
 export function makeMaterials(theme: 'light' | 'dark' = 'light'): Record<MaterialKind, THREE.Material> {
-  // On the dark page the body shows a little more and the organs a little less, so the figure reads as a whole.
+  // The organs stay light so the air in them reads clearly; on the dark page the
+  // body shows a little more and the organs a little less, so the figure reads as a whole.
   const body = theme === 'dark' ? 1.1 : 1
-  const organs = theme === 'dark' ? 0.85 : 1
+  const organs = 0.85 * (theme === 'dark' ? 0.85 : 1)
   return {
     // On the dark page a pale rim would glow, so the shell turns a dim steel blue.
     skin: theme === 'dark' ? glass('#2a3242', '#8797b6', 0.06 * body, 0.55 * body) : glass('#f4f6fa', '#b9c4d6', 0.05, 0.62),
