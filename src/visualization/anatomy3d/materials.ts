@@ -37,12 +37,15 @@ function glass(color: string, rim: string, base: number, edge: number, extra: TH
 }
 
 export function makeMaterials(theme: 'light' | 'dark' = 'light'): Record<MaterialKind, THREE.Material> {
+  // On the dark page the body shows a little more and the organs a little less, so the figure reads as a whole.
+  const body = theme === 'dark' ? 1.1 : 1
+  const organs = theme === 'dark' ? 0.85 : 1
   return {
     // On the dark page a pale rim would glow, so the shell turns a dim steel blue.
-    skin: theme === 'dark' ? glass('#2a3242', '#8797b6', 0.06, 0.55) : glass('#f4f6fa', '#b9c4d6', 0.05, 0.62),
-    lung: glass('#f6c9ba', '#e3907b', 0.26, 0.82),
-    diaphragm: glass('#f7c2ab', '#e8977a', 0.32, 0.88),
-    airway: glass('#f2ad9c', '#d8735f', 0.42, 0.92, { emissive: '#d8735f', emissiveIntensity: 0.25 }),
+    skin: theme === 'dark' ? glass('#2a3242', '#8797b6', 0.06 * body, 0.55 * body) : glass('#f4f6fa', '#b9c4d6', 0.05, 0.62),
+    lung: glass('#f6c9ba', '#e3907b', 0.26 * organs, 0.82 * organs),
+    diaphragm: glass('#f7c2ab', '#e8977a', 0.32 * organs, 0.88 * organs),
+    airway: glass('#f2ad9c', '#d8735f', 0.42 * organs, 0.92 * organs, { emissive: '#d8735f', emissiveIntensity: 0.25 }),
     heart: new THREE.MeshStandardMaterial({ color: '#ef7a6a', roughness: 0.42, emissive: '#b8382c', emissiveIntensity: 0.12 }),
   }
 }
