@@ -96,7 +96,7 @@ function WellDone({
       <footer className="sticky bottom-0 flex items-center gap-3 bg-blue-page pt-3 pb-6 before:pointer-events-none before:absolute before:inset-x-0 before:-top-10 before:h-10 before:bg-linear-to-t before:from-blue-page before:to-transparent after:absolute after:inset-x-0 after:top-full after:h-[max(env(safe-area-inset-bottom),1rem)] after:bg-blue-page">
         {rateButton('up')}
         {rateButton('down')}
-        <Button variant="white" className="ml-auto min-h-[3.75rem] md:min-h-[4.5rem] md:px-8 md:text-[1.125rem]" trailingIcon={<ArrowRightIcon className="size-5" />} onClick={onNext} data-testid="completion-next">
+        <Button variant="page" className="ml-auto min-h-[3.75rem] md:min-h-[4.5rem] md:px-8 md:text-[1.125rem]" trailingIcon={<ArrowRightIcon className="size-5" />} onClick={onNext} data-testid="completion-next">
           {t.next}
         </Button>
       </footer>

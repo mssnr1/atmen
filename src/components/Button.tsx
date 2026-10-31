@@ -1,11 +1,13 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'white' | 'ghost'
+type Variant = 'primary' | 'secondary' | 'white' | 'page' | 'ghost'
 
 const styles: Record<Variant, string> = {
   primary: 'bg-blue text-white hover:bg-blue-deep',
   secondary: 'bg-surface text-ink hover:bg-surface-2',
   white: 'bg-white text-night hover:bg-white/90',
+  /** The accent button on the full-colour pages: white in light mode, violet at night. */
+  page: 'bg-page-button text-page-button-ink hover:opacity-90',
   ghost: 'text-ink-2 hover:bg-surface',
 }
 

@@ -8,6 +8,7 @@ import type { BreathingEngine } from '../../engine'
 import { useI18n } from '../../i18n'
 import { AbstractVisualization } from '../abstract/AbstractVisualization'
 import { AnatomyModel } from './AnatomyModel'
+import { Aura } from './Aura'
 
 /** What the camera looks at by default: the middle of the chest. Its height is set per viewport by `fitView`. */
 const TARGET = new THREE.Vector3(0, 1.37, 0.0)
@@ -199,6 +200,7 @@ export function Anatomy3DVisualization({
             <ambientLight intensity={1.4} />
             <directionalLight position={[0.6, 2.2, 1.4]} intensity={1.6} />
             <directionalLight position={[-1, 1.2, -0.6]} intensity={0.5} color="#dfe8ff" />
+            <Aura engine={engine} />
             <AnatomyModel engine={engine} />
             <OrbitControls
               ref={controls}
