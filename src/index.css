@@ -31,6 +31,7 @@
   --color-page-mark: #ffffff;
   --color-page-dot: #ffffff;
   --color-page-button: #ffffff;
+  --color-page-button-ink: #111214;
   /* Fresh air in the 3D lungs. */
   --color-air: #4a82ff;
   --color-air-used: #a855f7;
@@ -57,9 +58,11 @@
   --color-breath: #c3a6ff;
   --color-accent: #b89aff;
   --color-panel: rgb(30 28 26 / 0.42);
-  --color-page-mark: #c3a6ff;
-  --color-page-dot: #b89aff;
-  --color-page-button: #b89aff;
+  /* The deeper violet of the Learn cards, which Jan prefers for drawings. */
+  --color-page-mark: #6d3fd6;
+  --color-page-dot: #6d3fd6;
+  --color-page-button: #6d3fd6;
+  --color-page-button-ink: #ffffff;
   --color-air: #9a6bff;
   --color-air-used: #b7a6dc;
 }
