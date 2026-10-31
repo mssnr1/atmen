@@ -149,8 +149,8 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       </section>
 
       <section ref={panel} className="safe-bottom safe-x pointer-events-none absolute inset-x-0 bottom-0 z-10 md:pb-6">
-        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-panel px-4 pt-9 pb-4 backdrop-blur-[12px]">
-        <div className="mx-auto max-w-lg">
+        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-panel px-5 pt-9 pb-4 backdrop-blur-[12px] md:px-8">
+        <div>
         <div className="flex flex-col items-center gap-1 text-center" aria-live="polite">
           <p className="w-full text-breath" data-testid="phase-label">
             <ParticleWord text={phaseLabel(s, t).toLowerCase()} className="h-[5.5rem]" fontSize={72} />
@@ -174,7 +174,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           </div>
         )}
 
-        <div className="flex items-center justify-between px-3 pt-9">
+        <div className="flex items-center justify-between pt-9">
           <IconButton
             label={t.restart}
             disabled={!active}
@@ -189,7 +189,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
               <PauseIcon className="size-6" />
             </IconButton>
           ) : s.status === 'paused' ? (
-            <IconButton label={t.resume} onClick={session.resume} className="size-16 bg-blue text-white hover:bg-blue-deep" data-testid="resume">
+            <IconButton label={t.resume} onClick={session.resume} className="size-16 border border-line bg-surface hover:bg-surface-2" data-testid="resume">
               <PlayIcon className="ml-1 size-6" />
             </IconButton>
           ) : (
@@ -197,7 +197,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
               type="button"
               onClick={start}
               disabled={leadIn}
-              className="h-14 rounded-full bg-blue px-10 disabled:opacity-50 text-[1.0625rem] text-white transition hover:bg-blue-deep active:scale-95"
+              className="h-14 rounded-full border border-line bg-surface px-10 text-[1.0625rem] text-ink transition hover:bg-surface-2 active:scale-95 disabled:opacity-50"
               data-testid="start"
             >
               {t.start}
