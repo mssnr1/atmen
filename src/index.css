@@ -27,7 +27,7 @@
   --color-accent: #2f6bf5;
   /* The translucent practice panel. */
   --color-panel: rgb(255 255 255 / 0.18);
-  /* Logo, page dots and arrow button on the welcome and completion screens. */
+  /* Drawings, page dots and arrow button on the welcome screens (the logo stays white). */
   --color-page-mark: #ffffff;
   --color-page-dot: #ffffff;
   --color-page-button: #ffffff;

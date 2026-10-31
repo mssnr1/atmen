@@ -6,6 +6,7 @@ import type { BreathingEngine } from '../../engine'
 import { useTheme } from '../../lib/theme'
 import { breathState } from '../breathState'
 import { BreathSpecks } from './BreathSpecks'
+import { withoutFissures } from './fissures'
 import { makeMaterials, type MaterialKind } from './materials'
 import { makeStripeMaterials, STRIPE_PALETTES } from './stripes'
 
@@ -62,6 +63,7 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   const model = useMemo(() => scene.clone(true), [scene])
 
   useEffect(() => {
+    model.updateMatrixWorld(true)
     const found: typeof morphs.current = []
     model.traverse((o) => {
       const mesh = o as THREE.Mesh
@@ -72,6 +74,12 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
       if (part.kind === 'heart') {
         mesh.visible = false
         return
+      }
+      // Only the outer shape of each lung is drawn, not the faces between its lobes.
+      if (part.kind === 'lung' && !mesh.geometry.userData.noFissures) {
+        mesh.geometry.userData.noFissures = true
+        const index = withoutFissures(mesh.geometry, mesh.getWorldScale(new THREE.Vector3()).x)
+        if (index) mesh.geometry.setIndex(index)
       }
       mesh.material = mesh.name === 'Head' || mesh.parent?.name === 'Head' ? materials.head : materials[part.kind]
       mesh.renderOrder = part.order

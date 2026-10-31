@@ -65,7 +65,7 @@ export function WelcomeScreen() {
   return (
     <BluePage testId="welcome">
       <header className="flex items-center justify-between pt-4">
-        <Wordmark className="text-page-mark" />
+        <Wordmark />
         {!last && (
           <button type="button" onClick={finish} className="-mr-2 rounded-full px-3 py-2 text-[0.9375rem] text-white/75 hover:text-white">
             {t.skip}
