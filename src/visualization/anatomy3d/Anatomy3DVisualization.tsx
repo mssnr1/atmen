@@ -8,7 +8,6 @@ import type { BreathingEngine } from '../../engine'
 import { useI18n } from '../../i18n'
 import { AbstractVisualization } from '../abstract/AbstractVisualization'
 import { AnatomyModel } from './AnatomyModel'
-import { Aura } from './Aura'
 
 /** What the camera looks at by default: the middle of the chest. Its height is set per viewport by `fitView`. */
 const TARGET = new THREE.Vector3(0, 1.37, 0.0)
@@ -18,9 +17,9 @@ const ELEVATION = THREE.MathUtils.degToRad(6)
 const FOV = 28
 /** Half the width that must be visible, shoulder to shoulder. */
 const HALF_W = 0.15
-/** Head to the bottom of the lungs and the diaphragm fill the part of the view above the controls. */
+/** Head to the middle of the lungs fill the part of the view above the controls; the lower lungs continue behind them. */
 const TOP = 1.74
-const BOTTOM = 1.05
+const BOTTOM = 1.2
 /** Panning keeps the target inside this box so the model cannot be lost. */
 const PAN_LIMIT = new THREE.Box3(new THREE.Vector3(-0.2, 1.05, -0.15), new THREE.Vector3(0.2, 1.7, 0.2))
 
@@ -193,7 +192,6 @@ export function Anatomy3DVisualization({
             <ambientLight intensity={1.4} />
             <directionalLight position={[0.6, 2.2, 1.4]} intensity={1.6} />
             <directionalLight position={[-1, 1.2, -0.6]} intensity={0.5} color="#dfe8ff" />
-            <Aura engine={engine} />
             <AnatomyModel engine={engine} />
             <OrbitControls
               ref={controls}

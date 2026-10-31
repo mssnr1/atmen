@@ -55,12 +55,6 @@
   --color-panel: rgb(30 28 26 / 0.42);
   --color-air: #9a6bff;
   --color-air-used: #b7a6dc;
-  /* The particle aura around the figure, in the night violet (light theme colours live in Aura.tsx). */
-  --aura-cool: #3a1f72;
-  --aura-warm: #8a5cf5;
-  --aura-rose: #b08cff;
-  --aura-glow: #8a5cf5;
-  --aura-spark: #e8dcff;
 }
 
 html {

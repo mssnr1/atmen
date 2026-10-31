@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import type { BreathingEngine } from '../../engine'
 import { useTheme } from '../../lib/theme'
 import { breathState } from '../breathState'
+import { BreathSpecks } from './BreathSpecks'
 import { makeMaterials, type MaterialKind } from './materials'
 import { makeStripeMaterials, STRIPE_PALETTES } from './stripes'
 
@@ -107,6 +108,7 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   return (
     <group>
       <primitive object={model} />
+      <BreathSpecks engine={engine} />
     </group>
   )
 }
