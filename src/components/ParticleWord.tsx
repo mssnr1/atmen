@@ -20,7 +20,16 @@ type Speck = {
 }
 
 /** Points inside the glyphs of `text`, sampled from an offscreen raster. */
-function samplePoints(text: string, width: number, height: number, size: number, family: string, spacing: number): [number, number][] {
+function samplePoints(
+  text: string,
+  width: number,
+  height: number,
+  size: number,
+  family: string,
+  spacing: number,
+  align: 'center' | 'left',
+  scale: number,
+): [number, number][] {
   const c = document.createElement('canvas')
   c.width = Math.max(1, Math.round(width))
   c.height = Math.max(1, Math.round(height))
@@ -34,7 +43,7 @@ function samplePoints(text: string, width: number, height: number, size: number,
   }
   // Shrink long words so they keep some air at the sides.
   const px = size * Math.min(1, (c.width * 0.86) / measure(size))
-  let x = (c.width - measure(px)) / 2
+  let x = align === 'left' ? 2 : (c.width - measure(px)) / 2
   g.textBaseline = 'middle'
   g.fillStyle = '#000'
   for (const ch of chars) {
@@ -43,10 +52,11 @@ function samplePoints(text: string, width: number, height: number, size: number,
   }
   const data = g.getImageData(0, 0, c.width, c.height).data
   const points: [number, number][] = []
-  const step = 2
+  const step = Math.max(1, Math.round(2 * scale))
+  const jitter = 5 * scale * scale
   for (let y = 0; y < c.height; y += step) {
     for (let x = 0; x < c.width; x += step) {
-      if (data[(y * c.width + x) * 4 + 3] > 120) points.push([x + (Math.random() - 0.5) * 5, y + (Math.random() - 0.5) * 5])
+      if (data[(y * c.width + x) * 4 + 3] > 120) points.push([x + (Math.random() - 0.5) * jitter, y + (Math.random() - 0.5) * jitter])
     }
   }
   return points
@@ -62,12 +72,15 @@ export function ParticleWord({
   className,
   fontSize = 64,
   spacing = 0,
+  align = 'center',
 }: {
   text: string
   className?: string
   fontSize?: number
   /** Extra space between letters, in em. Changing it lets the specks flow apart or together. */
   spacing?: number
+  /** Left aligns the word in its box, e.g. for the small logo in a header. */
+  align?: 'center' | 'left'
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const spacingRef = useRef(spacing)
@@ -79,6 +92,9 @@ export function ParticleWord({
     if (!el) return
     const ctx = el.getContext('2d')
     if (!ctx) return
+    // Small words get fewer, finer specks and a gentler drift so they keep their shape.
+    const scale = Math.min(1, fontSize / 60)
+    const count = Math.max(1200, Math.round(COUNT * scale * scale))
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const specks: Speck[] = []
     let w = 0
@@ -94,22 +110,22 @@ export function ParticleWord({
       current = word
       if (!w || !h) return
       const family = getComputedStyle(el).fontFamily
-      const points = samplePoints(word, w, h, fontSize, family, spacingRef.current)
+      const points = samplePoints(word, w, h, fontSize, family, spacingRef.current, align, scale)
       if (!points.length) return
       // Pick targets and pair them with the specks from left to right, so each speck
       // only flows a short way into the new letters and the word stays readable.
-      const targets = Array.from({ length: COUNT }, () => points[Math.floor(Math.random() * points.length)])
+      const targets = Array.from({ length: count }, () => points[Math.floor(Math.random() * points.length)])
       targets.sort((a, b) => a[0] - b[0])
       if (specks.length === 0) {
         for (const [tx, ty] of targets) {
           specks.push({
-            x: tx + (Math.random() - 0.5) * 30,
-            y: ty + (Math.random() - 0.5) * 20,
+            x: tx + (Math.random() - 0.5) * 30 * scale,
+            y: ty + (Math.random() - 0.5) * 20 * scale,
             tx,
             ty,
             seed: Math.random() * 1000,
             speed: 0.7 + Math.random() * 0.6,
-            size: 0.45 + Math.random() * 0.75,
+            size: (0.45 + Math.random() * 0.75) * Math.max(0.8, scale),
             alpha: 0.3 + Math.random() * 0.55,
             drift: 0,
           })
@@ -155,11 +171,11 @@ export function ParticleWord({
         if (s.drift > 0) {
           // A loose speck rises and drifts to the side, fading out, then rejoins its letter.
           s.drift -= dt
-          s.x += (14 + 10 * Math.sin(s.seed)) * dt
-          s.y -= 6 * dt
+          s.x += (14 + 10 * Math.sin(s.seed)) * scale * dt
+          s.y -= 6 * scale * dt
           if (s.drift <= 0) {
-            s.x = s.tx + (Math.random() - 0.5) * 6
-            s.y = s.ty + (Math.random() - 0.5) * 6
+            s.x = s.tx + (Math.random() - 0.5) * 6 * scale
+            s.y = s.ty + (Math.random() - 0.5) * 6 * scale
           }
         } else {
           // Ease towards the letter, then wander softly around it.
@@ -169,8 +185,8 @@ export function ParticleWord({
           if (!reduced && Math.random() < LOOSE * dt * 0.25) s.drift = 1.2 + Math.random() * 1.6
         }
         const wander = reduced ? 0 : 1
-        const ox = wander * (Math.sin(t * s.speed + s.seed) * 1.3 + Math.sin(t * 0.7 + s.ty * 0.05) * 0.8)
-        const oy = wander * Math.cos(t * s.speed * 1.3 + s.seed * 1.7) * 1.1
+        const ox = wander * scale * (Math.sin(t * s.speed + s.seed) * 1.3 + Math.sin(t * 0.7 + s.ty * 0.05) * 0.8)
+        const oy = wander * scale * Math.cos(t * s.speed * 1.3 + s.seed * 1.7) * 1.1
         const fade = s.drift > 0 ? Math.min(1, s.drift / 1.5) : 1
         ctx.globalAlpha = s.alpha * fade * (0.75 + 0.25 * Math.sin(t * 1.5 + s.seed))
         ctx.beginPath()
@@ -190,7 +206,7 @@ export function ParticleWord({
     }
     // The canvas is set up once; word changes go through `retarget` below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fontSize])
+  }, [fontSize, align])
 
   useEffect(() => {
     state.current?.retarget(text)
