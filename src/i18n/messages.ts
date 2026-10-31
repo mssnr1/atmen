@@ -65,6 +65,8 @@ export interface Messages {
   // Completion flow
   wellDone: string
   completed: (duration: string, exercise: string) => string
+  /** A short reflection under "well done": a question, a line on it, then short labelled thoughts. */
+  reflection: { question: string; lead: string; parts: { title: string; text: string }[] }
   liked: string
   disliked: string
   feelTitle: string
@@ -161,6 +163,20 @@ const de: Messages = {
   progress: 'Fortschritt',
   wellDone: 'Gut gemacht.',
   completed: (d, e) => `Du hast ${d} ${e} abgeschlossen.`,
+  reflection: {
+    question: 'Hast du gesehen, wie groß deine Lunge und dein Zwerchfell sind?',
+    lead: 'Fast alles in deinem Oberkörper ist dafür da, dass du atmen kannst. Im Alltag vergessen wir das leicht.',
+    parts: [
+      {
+        title: 'Wenn der Atem aus dem Takt gerät',
+        text: 'Viele atmen mit der Zeit unbemerkt zu flach und zu schnell. Das kann das Herz unruhiger schlagen lassen und Angstgefühle verstärken.',
+      },
+      {
+        title: 'Was hilft',
+        text: 'Den Atem bewusst wahrnehmen und lenken. Genau das hast du gerade geübt.',
+      },
+    ],
+  },
   liked: 'Hat mir gefallen',
   disliked: 'Hat mir nicht gefallen',
   feelTitle: 'Wie fühlst du dich gerade?',
@@ -257,6 +273,20 @@ const en: Messages = {
   progress: 'Progress',
   wellDone: 'Well done.',
   completed: (d, e) => `You completed ${d} of ${e}.`,
+  reflection: {
+    question: 'Did you see how large your lungs and your diaphragm are?',
+    lead: 'Almost everything in your upper body is there so that you can breathe. In everyday life, that is easy to forget.',
+    parts: [
+      {
+        title: 'When breathing loses its rhythm',
+        text: 'Over time, many people slip into breathing too shallow and too fast without noticing. That can make the heart beat more restlessly and feed anxious feelings.',
+      },
+      {
+        title: 'What helps',
+        text: 'Noticing your breath and guiding it on purpose. That is exactly what you just practised.',
+      },
+    ],
+  },
   liked: 'I liked it',
   disliked: 'I didn’t like it',
   feelTitle: 'How do you feel right now?',

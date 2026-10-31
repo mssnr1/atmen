@@ -75,13 +75,23 @@ function WellDone({
       <header className="pt-4">
         <Wordmark className="text-[1.0625rem]" />
       </header>
-      <section className="flex flex-1 flex-col justify-center py-10">
+      <section className="flex flex-1 flex-col justify-center py-8">
         <h1 className="text-[2.75rem] leading-tight font-normal md:text-[3.75rem]">{t.wellDone}</h1>
-        <p className="mt-6 text-[1.25rem] leading-snug text-white/85 md:text-[1.5rem]" data-testid="completion-text">
+        <p className="mt-4 text-[1.125rem] leading-snug text-white/85 md:text-[1.375rem]" data-testid="completion-text">
           {t.completed(t.minutesLong(minutes), exercise.text[lang].name)}
         </p>
+        <div className="mt-8 border-t border-white/25 pt-7 md:mt-12 md:pt-9" data-testid="completion-reflection">
+          <p className="text-[1.375rem] leading-snug md:text-[1.75rem]">{t.reflection.question}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-white/85 md:text-[1.125rem]">{t.reflection.lead}</p>
+          {t.reflection.parts.map(({ title, text }) => (
+            <div key={title} className="mt-6">
+              <h2 className="text-[0.6875rem] font-medium tracking-[0.14em] text-white/60 uppercase">{title}</h2>
+              <p className="mt-1.5 text-[1rem] leading-relaxed text-white/85 md:text-[1.125rem]">{text}</p>
+            </div>
+          ))}
+        </div>
       </section>
-      <footer className="flex items-center gap-3 pb-6">
+      <footer className="sticky bottom-0 flex items-center gap-3 bg-blue-page pt-3 pb-6 before:pointer-events-none before:absolute before:inset-x-0 before:-top-10 before:h-10 before:bg-linear-to-t before:from-blue-page before:to-transparent after:absolute after:inset-x-0 after:top-full after:h-[max(env(safe-area-inset-bottom),1rem)] after:bg-blue-page">
         {rateButton('up')}
         {rateButton('down')}
         <Button variant="white" className="ml-auto min-h-[3.75rem]" trailingIcon={<ArrowRightIcon className="size-5" />} onClick={onNext} data-testid="completion-next">
