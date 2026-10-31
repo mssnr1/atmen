@@ -13,7 +13,9 @@ export interface Messages {
   /** The app keeps its name in every language. */
   appName: string
   // Welcome
-  welcome: { title: string; lines: string[] }[]
+  splashTagline: string
+  /** The intro cards. `eyebrow` sits small above the title, `closing` stands apart below the lines. */
+  welcome: { eyebrow?: string; title: string; lines: string[]; closing?: string }[]
   next: string
   skip: string
   // Exercise selection and navigation
@@ -100,7 +102,17 @@ export interface Messages {
 
 const de: Messages = {
   appName: 'atmen',
+  splashTagline: 'die vergessene Superpower',
   welcome: [
+    {
+      eyebrow: 'Wusstest du?',
+      title: 'Es könnte am Atem liegen.',
+      lines: [
+        'Stress, Herzklopfen, innere Unruhe: Oft liegt es nicht nur am Kaffee oder an den Kollegen.',
+        'Wer schnell, flach oder durch den Mund atmet, kann genau solche Beschwerden verstärken.',
+      ],
+      closing: 'Hier lernst du, was dir jeden Tag hilft, auch jetzt sofort. Dein Atem ist ein Werkzeug, das du selbst in der Hand hast.',
+    },
     { title: 'Atme durch die Nase.', lines: ['Sie filtert, erwärmt und befeuchtet die Luft.', 'Dein natürlicher Atemweg.'] },
     { title: 'Langsamer atmen. Ruhiger werden.', lines: ['Etwa 5,5 Atemzüge pro Minute können Körper und Geist beruhigen.'] },
     { title: 'Ausatmen wird unterschätzt.', lines: ['Lass die Luft langsam und entspannt ausströmen.', 'Gib dem Ausatmen bewusst Zeit.'] },
@@ -196,7 +208,17 @@ const de: Messages = {
 
 const en: Messages = {
   appName: 'atmen',
+  splashTagline: 'the forgotten superpower',
   welcome: [
+    {
+      eyebrow: 'Did you know?',
+      title: 'It might be your breathing.',
+      lines: [
+        'Stress, a racing heart, restlessness: often it’s not just the coffee or your colleagues.',
+        'Breathing fast, shallow or through the mouth can make exactly these feelings stronger.',
+      ],
+      closing: 'Here you learn what helps every day, and right now. Your breath is a tool you hold in your own hands.',
+    },
     { title: 'Breathe through your nose.', lines: ['It filters, warms and moistens the air.', 'Your natural airway.'] },
     { title: 'Breathe slower. Feel calmer.', lines: ['About 5.5 breaths a minute can calm both body and mind.'] },
     { title: 'Exhaling is underrated.', lines: ['Let the air flow out slowly and easily.', 'Give your exhale time.'] },

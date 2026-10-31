@@ -93,15 +93,21 @@ export function WelcomeScreen() {
               aria-hidden={i !== page}
               aria-live={i === page ? 'polite' : undefined}
             >
-              <WelcomeArt index={i} className="mb-10 h-16 w-40 text-white md:h-20 md:w-52" />
-              <h1 className="text-[2.75rem] leading-[1.08] font-normal tracking-[-0.01em] text-balance md:text-[3.75rem]">{p.title}</h1>
-              <p className="mt-10 text-[1.0625rem] leading-relaxed text-white/85 md:text-[1.25rem]">
+              <WelcomeArt index={i} className={`${p.closing ? 'mb-7' : 'mb-10'} h-16 w-40 text-white md:h-20 md:w-52`} />
+              {p.eyebrow && <p className="mb-3 text-[0.9375rem] tracking-[0.08em] text-white/70 md:text-[1.0625rem]">{p.eyebrow}</p>}
+              <h1 className={`${p.closing ? 'text-[2.375rem]' : 'text-[2.75rem]'} leading-[1.08] font-normal tracking-[-0.01em] text-balance md:text-[3.75rem]`}>{p.title}</h1>
+              <p className={`${p.closing ? 'mt-6 space-y-3' : 'mt-10'} text-[1.0625rem] leading-relaxed text-white/85 md:text-[1.25rem]`}>
                 {p.lines.map((line) => (
                   <span key={line} className="block">
                     {line}
                   </span>
                 ))}
               </p>
+              {p.closing && (
+                <p className="mt-6 border-l-2 border-white/45 pl-4 text-[1.0625rem] leading-relaxed text-white md:text-[1.25rem]" data-testid="welcome-closing">
+                  {p.closing}
+                </p>
+              )}
             </section>
           ))}
         </div>
