@@ -73,7 +73,7 @@ function WellDone({
   return (
     <BluePage testId="completion">
       <header className="pt-4">
-        <Wordmark className="text-[1.0625rem]" />
+        <Wordmark />
       </header>
       <section className="flex flex-1 flex-col justify-center py-8">
         <h1 className="text-[2.75rem] leading-tight font-normal md:text-[3.75rem]">{t.wellDone}</h1>
@@ -106,7 +106,7 @@ function WhitePage({ children, testId }: { children: React.ReactNode; testId: st
   return (
     <main className="safe-area mx-auto flex min-h-dvh max-w-md flex-col bg-paper px-6 md:max-w-lg md:pb-10" data-testid={testId}>
       <header className="pt-6">
-        <Wordmark className="text-[0.8125rem] text-muted" />
+        <Wordmark size={13} className="text-muted" />
       </header>
       {children}
     </main>
