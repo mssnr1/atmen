@@ -1,10 +1,11 @@
 import { TabBar } from '../components/TabBar'
 import { Waveform } from '../components/Waveform'
+import { WelcomeArt } from '../components/WelcomeArt'
 import { exercises } from '../exercises'
 import { useI18n } from '../i18n'
 import { rhythmText } from '../lib/exerciseText'
 
-/** What each exercise is, why it may help and how to do it. */
+/** The basics from the first two intro cards, then what each exercise is, why it may help and how to do it. */
 export function LearnScreen() {
   const { lang, t } = useI18n()
   return (
@@ -13,7 +14,26 @@ export function LearnScreen() {
         <h1 className="mt-10 text-[1.875rem] font-normal tracking-[-0.01em] md:mt-8 md:text-[2.5rem]">{t.learnTitle}</h1>
         <p className="mt-2 text-[0.9375rem] text-muted">{t.learnIntro}</p>
 
-        <div className="mt-8 space-y-4 lg:grid lg:grid-cols-3 lg:items-start lg:gap-5 lg:space-y-0">
+        <article className="mt-8 rounded-[22px] bg-blue-page p-6 text-white md:p-8" data-testid="learn-basics">
+          <h2 className="text-[0.8125rem] font-medium tracking-wide text-white/70 uppercase">{t.learnBasics}</h2>
+          <div className="mt-5 divide-y divide-white/20 lg:grid lg:grid-cols-2 lg:gap-10 lg:divide-y-0">
+            {t.welcome.slice(0, 2).map((p, i) => (
+              <section key={p.title} className="py-6 first:pt-0 last:pb-0 lg:py-0">
+                <WelcomeArt index={i} className="mb-5 h-12 w-32 text-white" />
+                {p.eyebrow && <p className="text-[0.875rem] tracking-[0.08em] text-white/70">{p.eyebrow}</p>}
+                <h3 className="mt-1 text-[1.625rem] leading-tight font-normal tracking-[-0.01em] text-balance">{p.title}</h3>
+                <div className="mt-4 space-y-3 text-[0.9375rem] leading-relaxed text-white/85">
+                  {p.lines.map((line) => (
+                    <p key={line}>{line}</p>
+                  ))}
+                </div>
+                {p.closing && <p className="mt-4 border-l-2 border-white/45 pl-4 text-[0.9375rem] leading-relaxed">{p.closing}</p>}
+              </section>
+            ))}
+          </div>
+        </article>
+
+        <div className="mt-4 space-y-4 lg:mt-5 lg:grid lg:grid-cols-3 lg:items-start lg:gap-5 lg:space-y-0">
           {exercises.map((e) => {
             const text = e.text[lang]
             return (

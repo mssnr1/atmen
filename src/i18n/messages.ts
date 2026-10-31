@@ -88,6 +88,7 @@ export interface Messages {
   // Learn and settings
   learnTitle: string
   learnIntro: string
+  learnBasics: string
   whyItWorks: string
   howTo: string
   inspired: string
@@ -114,6 +115,15 @@ const de: Messages = {
         'Wer schnell, flach oder durch den Mund atmet, kann genau solche Beschwerden verstärken.',
       ],
       closing: 'Hier lernst du, was dir jeden Tag hilft, auch jetzt sofort. Dein Atem ist ein Werkzeug, das du selbst in der Hand hast.',
+    },
+    {
+      eyebrow: 'Stell dir vor',
+      title: 'Dein Körper ist wie ein Auto.',
+      lines: [
+        'Das Herz ist der Motor, das Gehirn das Armaturenbrett mit seinen Warnleuchten. Die Lunge ist die Treibstoffzufuhr: Sie macht alles andere erst möglich.',
+        'Hakt es dort, kann der Motor stottern, und die Warnleuchten gehen an.',
+      ],
+      closing: 'Im vollen Alltag vergessen wir oft nachzutanken. Mit jedem ruhigen Atemzug tust du genau das.',
     },
     { title: 'Atme durch die Nase.', lines: ['Sie filtert, erwärmt und befeuchtet die Luft.', 'Dein natürlicher Atemweg.'] },
     { title: 'Langsamer atmen. Ruhiger werden.', lines: ['Etwa 5,5 Atemzüge pro Minute können Körper und Geist beruhigen.'] },
@@ -207,6 +217,7 @@ const de: Messages = {
   backHome: 'Zur Startseite',
   learnTitle: 'Lernen',
   learnIntro: 'Was hinter den Übungen steckt und wie du sie machst.',
+  learnBasics: 'Grundlagen',
   whyItWorks: 'Warum es wirkt',
   howTo: 'So geht’s',
   inspired: 'Inspiriert von James Nestors „Breath“',
@@ -234,6 +245,15 @@ const en: Messages = {
         'Breathing fast, shallow or through the mouth can make exactly these feelings stronger.',
       ],
       closing: 'Here you learn what helps every day, and right now. Your breath is a tool you hold in your own hands.',
+    },
+    {
+      eyebrow: 'Picture this',
+      title: 'Your body is like a car.',
+      lines: [
+        'The heart is the engine, the brain the dashboard with its warning lights. The lungs are the fuel supply: they make everything else possible.',
+        'If something’s off there, the engine can start to sputter and the warning lights come on.',
+      ],
+      closing: 'In a busy day we often forget to refuel. Every calm breath does exactly that.',
     },
     { title: 'Breathe through your nose.', lines: ['It filters, warms and moistens the air.', 'Your natural airway.'] },
     { title: 'Breathe slower. Feel calmer.', lines: ['About 5.5 breaths a minute can calm both body and mind.'] },
@@ -327,6 +347,7 @@ const en: Messages = {
   backHome: 'Back to Home',
   learnTitle: 'Learn',
   learnIntro: 'What is behind the exercises and how to do them.',
+  learnBasics: 'The basics',
   whyItWorks: 'Why it works',
   howTo: 'How to',
   inspired: 'Inspired by James Nestor’s Breath',
