@@ -65,7 +65,7 @@ export function WelcomeScreen() {
   return (
     <BluePage testId="welcome">
       <header className="flex items-center justify-between pt-4">
-        <Wordmark />
+        <Wordmark className="text-page-mark" />
         {!last && (
           <button type="button" onClick={finish} className="-mr-2 rounded-full px-3 py-2 text-[0.9375rem] text-white/75 hover:text-white">
             {t.skip}
@@ -121,7 +121,7 @@ export function WelcomeScreen() {
         <div className="-ml-2 flex">
           {t.welcome.map((_, i) => (
             <button key={i} type="button" onClick={() => go(i)} aria-label={`${i + 1} / ${count}`} aria-current={i === page ? 'step' : undefined} className="p-2">
-              <span className={`block size-2 rounded-full transition-colors ${i === page ? 'bg-white' : 'bg-white/40'}`} />
+              <span className={`block size-2 rounded-full transition-colors ${i === page ? 'bg-page-dot' : 'bg-page-dot/35'}`} />
             </button>
           ))}
         </div>
@@ -130,7 +130,7 @@ export function WelcomeScreen() {
           aria-label={t.next}
           data-testid="welcome-next"
           onClick={() => (last ? finish() : setPage(page + 1))}
-          className="flex size-[4.5rem] md:size-20 items-center justify-center rounded-full bg-white text-night shadow-[0_8px_24px_rgb(0_0_0/0.12)] transition active:scale-95"
+          className="flex size-[4.5rem] md:size-20 items-center justify-center rounded-full bg-page-button text-night shadow-[0_8px_24px_rgb(0_0_0/0.12)] transition active:scale-95"
         >
           <ArrowRightIcon className="size-7" strokeWidth={1.6} />
         </button>

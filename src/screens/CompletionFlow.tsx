@@ -73,7 +73,7 @@ function WellDone({
   return (
     <BluePage testId="completion">
       <header className="pt-4">
-        <Wordmark />
+        <Wordmark className="text-page-mark" />
       </header>
       <section className="flex flex-1 flex-col justify-center py-8">
         <h1 className="text-[2.75rem] leading-tight font-normal md:text-[4.5rem] lg:text-[5rem]">{t.wellDone}</h1>

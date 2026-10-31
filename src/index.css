@@ -27,6 +27,10 @@
   --color-accent: #2f6bf5;
   /* The translucent practice panel. */
   --color-panel: rgb(255 255 255 / 0.18);
+  /* Logo, page dots and arrow button on the welcome and completion screens. */
+  --color-page-mark: #ffffff;
+  --color-page-dot: #ffffff;
+  --color-page-button: #ffffff;
   /* Fresh air in the 3D lungs. */
   --color-air: #4a82ff;
   --color-air-used: #a855f7;
@@ -53,6 +57,9 @@
   --color-breath: #c3a6ff;
   --color-accent: #b89aff;
   --color-panel: rgb(30 28 26 / 0.42);
+  --color-page-mark: #c3a6ff;
+  --color-page-dot: #b89aff;
+  --color-page-button: #b89aff;
   --color-air: #9a6bff;
   --color-air-used: #b7a6dc;
 }
