@@ -85,10 +85,9 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
 
 export type StripePalette = { line: string; lung: string; lungRim: string; body: string }
 
-export const STRIPE_PALETTES: Record<string, StripePalette> = {
+export const STRIPE_PALETTES: Record<'light' | 'dark', StripePalette> = {
   light: { body: '#7d8798', line: '#2f6bf5', lung: '#2f6bf5', lungRim: '#6f9bff' },
   dark: { body: '#8f877f', line: '#b89aff', lung: '#b89aff', lungRim: '#dccbff' },
-  amber: { body: '#7d8798', line: '#f29a2e', lung: '#f29a2e', lungRim: '#ffc46b' },
 }
 
 export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { value: number }) {

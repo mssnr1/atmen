@@ -19,9 +19,8 @@ const FOV = 28
 /** Half the width that must be visible, shoulder to shoulder. */
 const HALF_W = 0.15
 /** Head to the bottom of the lungs and the diaphragm fill the part of the view above the controls. */
-const STRIPES = new URLSearchParams(window.location.search).has('look')
-const TOP = STRIPES ? 1.8 : 1.77
-const BOTTOM = STRIPES ? 1.0 : 1.1
+const TOP = 1.8
+const BOTTOM = 1.0
 /** Panning keeps the target inside this box so the model cannot be lost. */
 const PAN_LIMIT = new THREE.Box3(new THREE.Vector3(-0.2, 1.05, -0.15), new THREE.Vector3(0.2, 1.7, 0.2))
 

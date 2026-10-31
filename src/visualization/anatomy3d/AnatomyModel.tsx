@@ -5,11 +5,8 @@ import * as THREE from 'three'
 import type { BreathingEngine } from '../../engine'
 import { useTheme } from '../../lib/theme'
 import { breathState } from '../breathState'
-import { AirVolume } from './AirVolume'
 import { makeMaterials, type MaterialKind } from './materials'
 import { makeStripeMaterials, STRIPE_PALETTES } from './stripes'
-
-const STRIPES = new URLSearchParams(window.location.search).get('look')
 
 export const MODEL_URL = `${import.meta.env.BASE_URL}models/atmen-anatomy.glb`
 
@@ -55,13 +52,10 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   const level = useMemo(() => ({ value: 99 }), [])
   const lungRange = useRef<[number, number] | null>(null)
   const materials = useMemo(() => {
-    const base = makeMaterials(theme)
-    if (!STRIPES) return { ...base, head: base.skin }
-    const pal = STRIPE_PALETTES[STRIPES === 'amber' ? 'amber' : theme === 'dark' ? 'dark' : 'light']
-    return { ...base, ...makeStripeMaterials(pal, theme === 'dark', level) }
+    // Contour-stripe look: the lungs show the breath by lighting up from the bottom as they fill.
+    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level) }
   }, [theme, level])
   const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat'; gain: number }[]>([])
-  const drift = useRef(0)
   const beat = useRef(0)
 
   const model = useMemo(() => scene.clone(true), [scene])
@@ -98,7 +92,6 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
     const snapshot = engine.sample()
     const b = breathState(snapshot)
     const dt = Math.min(delta, 0.1)
-    if (snapshot.status !== 'paused') drift.current += dt
     beat.current = (beat.current + dt / BEAT_S) % 1
     const h = heartbeat(beat.current)
     if (lungRange.current) {
@@ -114,7 +107,6 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   return (
     <group>
       <primitive object={model} />
-      {!STRIPES && <AirVolume engine={engine} drift={drift} />}
     </group>
   )
 }
