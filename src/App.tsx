@@ -1,5 +1,6 @@
 import { getExercise } from './exercises'
 import { useRoute } from './lib/route'
+import { useApplyTheme } from './lib/theme'
 import { HomeScreen } from './screens/HomeScreen'
 import { LearnScreen } from './screens/LearnScreen'
 import { PracticeScreen } from './screens/PracticeScreen'
@@ -8,6 +9,7 @@ import { WelcomeScreen } from './screens/WelcomeScreen'
 import { useStore } from './storage/store'
 
 export default function App() {
+  useApplyTheme()
   const route = useRoute()
   const welcomeSeen = useStore((d) => d.preferences.welcomeSeen)
   const exercise = route.name === 'practice' ? getExercise(route.exerciseId) : undefined

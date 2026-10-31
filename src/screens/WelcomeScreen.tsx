@@ -120,7 +120,7 @@ export function WelcomeScreen() {
           aria-label={t.next}
           data-testid="welcome-next"
           onClick={() => (last ? finish() : setPage(page + 1))}
-          className="flex size-[4.5rem] items-center justify-center rounded-full bg-white text-ink shadow-[0_8px_24px_rgb(0_0_0/0.12)] transition active:scale-95"
+          className="flex size-[4.5rem] items-center justify-center rounded-full bg-white text-night shadow-[0_8px_24px_rgb(0_0_0/0.12)] transition active:scale-95"
         >
           <ArrowRightIcon className="size-7" strokeWidth={1.6} />
         </button>

@@ -1,4 +1,5 @@
 import type { Language } from '../i18n/messages'
+import type { ThemePreference } from '../lib/themePreferences'
 import type { VisualizationMode } from '../visualization/modes'
 
 /** How fast an exercise is breathed: a pace preset and the slow-down option. */
@@ -13,6 +14,8 @@ export interface Preferences {
   audioEnabled: boolean
   vibrationEnabled: boolean
   visualizationMode: VisualizationMode
+  /** Light, dark, or follow the system. */
+  theme: ThemePreference
   /** Last chosen session duration per exercise id. */
   durationByExercise: Record<string, number>
   paceByExercise: Record<string, PacePreference>

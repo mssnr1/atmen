@@ -68,7 +68,7 @@ export function BottomSheet({ open, title, closeLabel, onClose, children }: Prop
         aria-label={title}
         tabIndex={-1}
         data-testid="settings-sheet"
-        className="absolute inset-x-0 bottom-0 mx-auto flex max-h-[88dvh] max-w-md animate-[sheet-in_320ms_cubic-bezier(0.2,0.9,0.25,1)] flex-col rounded-t-[28px] bg-white pb-[max(env(safe-area-inset-bottom),1rem)] shadow-[0_-8px_40px_rgb(0_0_0/0.12)] outline-none"
+        className="absolute inset-x-0 bottom-0 mx-auto flex max-h-[88dvh] max-w-md animate-[sheet-in_320ms_cubic-bezier(0.2,0.9,0.25,1)] flex-col rounded-t-[28px] bg-card pb-[max(env(safe-area-inset-bottom),1rem)] shadow-[0_-8px_40px_rgb(0_0_0/0.12)] outline-none"
         style={{ transform: offset ? `translateY(${offset}px)` : undefined, transition: drag.current ? 'none' : 'transform 220ms ease' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

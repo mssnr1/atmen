@@ -15,7 +15,7 @@ export function HomeScreen() {
   const highlighted = exercises.some((e) => e.id === lastId) ? lastId : exercises[0].id
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white">
+    <div className="flex min-h-dvh flex-col bg-paper">
       <main className="safe-area mx-auto w-full max-w-md flex-1 px-5">
         <h1 className="mt-10 mb-7 text-[1.875rem] leading-[1.15] font-normal tracking-[-0.01em]">
           {t.chooseTitle[0]}
@@ -34,7 +34,7 @@ export function HomeScreen() {
                   data-testid={`exercise-${e.id}`}
                   onClick={() => startPractice(e.id)}
                   className={`group relative w-full rounded-[22px] px-5 pt-5 pb-5 text-left transition active:scale-[0.99] ${
-                    on ? 'bg-blue-soft' : 'bg-white shadow-[0_1px_2px_rgb(0_0_0/0.04),0_6px_24px_rgb(0_0_0/0.05)] ring-1 ring-line/60'
+                    on ? 'bg-blue-soft' : 'bg-card shadow-[0_1px_2px_rgb(0_0_0/0.04),0_6px_24px_rgb(0_0_0/0.05)] ring-1 ring-line/60'
                   }`}
                 >
                   <span className="flex items-start justify-between gap-3">

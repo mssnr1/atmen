@@ -5,6 +5,7 @@ import { audioSupported } from '../feedback/audio'
 import { vibrationSupported } from '../feedback/haptics'
 import { languages, useI18n } from '../i18n'
 import { navigate } from '../lib/route'
+import { themePreferences } from '../lib/themePreferences'
 import { store, useStore } from '../storage/store'
 import { visualizationModes } from '../visualization/modes'
 
@@ -15,7 +16,7 @@ export function SettingsScreen() {
   const sessions = useStore((d) => d.sessions.length)
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white">
+    <div className="flex min-h-dvh flex-col bg-paper">
       <main className="safe-area mx-auto w-full max-w-md flex-1 px-5">
         <h1 className="mt-10 text-[1.875rem] font-normal tracking-[-0.01em]">{t.settingsTitle}</h1>
         <p className="mt-2 text-[0.9375rem] text-muted">{t.defaultsHint}</p>
@@ -27,6 +28,16 @@ export function SettingsScreen() {
             options={languages.map((l) => ({ value: l.id, label: l.label }))}
             value={lang}
             onChange={(language) => store.updatePreferences({ language })}
+          />
+        </section>
+
+        <section className="mt-7">
+          <h2 className="mb-2 text-[0.9375rem]">{t.appearance}</h2>
+          <Segmented
+            label={t.appearance}
+            options={themePreferences.map((id) => ({ value: id, label: t.themes[id] }))}
+            value={prefs.theme}
+            onChange={(theme) => store.updatePreferences({ theme })}
           />
         </section>
 

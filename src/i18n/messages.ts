@@ -1,4 +1,5 @@
 import type { PhaseType } from '../engine'
+import type { ThemePreference } from '../lib/themePreferences'
 import type { VisualizationMode } from '../visualization/modes'
 
 export type Language = 'de' | 'en'
@@ -85,6 +86,8 @@ export interface Messages {
   inspired: string
   settingsTitle: string
   language: string
+  appearance: string
+  themes: Record<ThemePreference, string>
   defaultsHint: string
   sessionsCompleted: (n: number) => string
   about: string
@@ -171,6 +174,8 @@ const de: Messages = {
   inspired: 'Inspiriert von James Nestors „Breath“',
   settingsTitle: 'Einstellungen',
   language: 'Sprache',
+  appearance: 'Erscheinungsbild',
+  themes: { light: 'Hell', dark: 'Dunkel', system: 'System' },
   defaultsHint: 'Tempo, Dauer und Fortschritt stellst du während der Übung ein.',
   sessionsCompleted: (n) => (n === 1 ? '1 Übung abgeschlossen' : `${n} Übungen abgeschlossen`),
   about: 'Über atmen',
@@ -258,6 +263,8 @@ const en: Messages = {
   inspired: 'Inspired by James Nestor’s Breath',
   settingsTitle: 'Settings',
   language: 'Language',
+  appearance: 'Appearance',
+  themes: { light: 'Light', dark: 'Dark', system: 'System' },
   defaultsHint: 'Pace, duration and progress are set during an exercise.',
   sessionsCompleted: (n) => (n === 1 ? '1 session completed' : `${n} sessions completed`),
   about: 'About atmen',
