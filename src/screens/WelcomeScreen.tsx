@@ -94,7 +94,7 @@ export function WelcomeScreen() {
               aria-live={i === page ? 'polite' : undefined}
             >
               <div>
-              <WelcomeArt index={i} className={`${p.closing ? 'mb-7' : 'mb-10'} h-16 w-40 text-white md:h-24 md:w-64`} />
+              <WelcomeArt index={i} className={`${p.closing ? 'mb-7' : 'mb-10'} h-16 w-40 text-page-mark md:h-24 md:w-64`} />
               {p.eyebrow && <p className="mb-3 text-[0.9375rem] tracking-[0.08em] text-white/70 md:text-[1.1875rem]">{p.eyebrow}</p>}
               <h1 className={`${p.closing ? 'text-[2.375rem]' : 'text-[2.75rem]'} leading-[1.08] font-normal tracking-[-0.01em] text-balance md:text-[4.5rem] lg:text-[5rem]`}>{p.title}</h1>
               </div>
@@ -121,7 +121,7 @@ export function WelcomeScreen() {
         <div className="-ml-2 flex">
           {t.welcome.map((_, i) => (
             <button key={i} type="button" onClick={() => go(i)} aria-label={`${i + 1} / ${count}`} aria-current={i === page ? 'step' : undefined} className="p-2">
-              <span className={`block size-2 rounded-full transition-colors ${i === page ? 'bg-white' : 'bg-white/40'}`} />
+              <span className={`block size-2 rounded-full transition-colors ${i === page ? 'bg-page-dot' : 'bg-page-dot/35'}`} />
             </button>
           ))}
         </div>
@@ -130,7 +130,7 @@ export function WelcomeScreen() {
           aria-label={t.next}
           data-testid="welcome-next"
           onClick={() => (last ? finish() : setPage(page + 1))}
-          className="flex size-[4.5rem] md:size-20 items-center justify-center rounded-full bg-white text-night shadow-[0_8px_24px_rgb(0_0_0/0.12)] transition active:scale-95"
+          className="flex size-[4.5rem] md:size-20 items-center justify-center rounded-full bg-page-button text-night shadow-[0_8px_24px_rgb(0_0_0/0.12)] transition active:scale-95"
         >
           <ArrowRightIcon className="size-7" strokeWidth={1.6} />
         </button>
