@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BottomSheet } from '../components/BottomSheet'
-import { CrossfadeText } from '../components/CrossfadeText'
+import { ParticleWord } from '../components/ParticleWord'
 import { FullscreenButton } from '../components/FullscreenButton'
 import { IconButton } from '../components/Button'
 import { CircleIcon, CloseIcon, InfoIcon, LungsIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
@@ -149,10 +149,10 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       </section>
 
       <section ref={panel} className="safe-bottom pointer-events-none absolute inset-x-0 bottom-0 z-10 mx-auto max-w-md px-3 md:max-w-lg md:pb-6">
-        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-paper/35 px-4 pt-7 pb-4 backdrop-blur-[12px]">
-        <div className="flex flex-wrap items-baseline justify-center gap-x-2.5 gap-y-1 text-center" aria-live="polite">
-          <p className="font-breath text-[2.625rem] leading-[1.1] font-light text-breath [font-variation-settings:'SOFT'_100]" data-testid="phase-label">
-            <CrossfadeText text={phaseLabel(s, t)} />
+        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-blue-soft/75 px-4 pt-9 pb-4 backdrop-blur-[12px]">
+        <div className="flex flex-col items-center gap-1 text-center" aria-live="polite">
+          <p className="w-full text-breath" data-testid="phase-label">
+            <ParticleWord text={phaseLabel(s, t).toLowerCase()} className="h-[5.5rem]" fontSize={72} />
           </p>
           {s.status !== 'running' && (
             <p className="text-[1rem] text-muted tabular-nums" data-testid="phase-time">
@@ -173,7 +173,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           </div>
         )}
 
-        <div className="flex items-center justify-between px-3 pt-7">
+        <div className="flex items-center justify-between px-3 pt-9">
           <IconButton
             label={t.restart}
             disabled={!active}

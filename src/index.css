@@ -21,9 +21,8 @@
   --color-blue-page: #2f6bf5;
   /* Text on white controls, the same in both themes. */
   --color-night: #111214;
-  /* Phase word on the practice screen: a soft, dusty indigo instead of hard black. */
-  --color-breath: #4a5784;
-  --font-breath: 'Fraunces Variable', Georgia, serif;
+  /* Phase word on the practice screen, drawn as specks of air in the accent blue. */
+  --color-breath: #2f6bf5;
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
@@ -43,7 +42,7 @@
   --color-card: #17191c;
   --color-thumb: #3a3d44;
   --color-blue-page: #1b3c94;
-  --color-breath: #c9d2f2;
+  --color-breath: #7ea2fa;
 }
 
 html {
@@ -122,30 +121,6 @@ body.blue-page {
   }
 }
 
-/* The logo on the splash page widens slowly, like an inhale. The indent
-   matches the spacing so the trailing gap after the last letter is balanced. */
-@keyframes splash-breathe {
-  from {
-    letter-spacing: 0.22em;
-    text-indent: 0.22em;
-  }
-  to {
-    letter-spacing: 0.6em;
-    text-indent: 0.6em;
-  }
-}
-.splash-word {
-  animation:
-    fade-in 900ms ease-out both,
-    splash-breathe 3500ms cubic-bezier(0.37, 0, 0.63, 1) both;
-}
 .splash-tagline {
   animation: fade-in 1000ms ease-out 700ms both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .splash-word {
-    letter-spacing: 0.45em;
-    text-indent: 0.45em;
-    animation: fade-in 900ms ease-out both;
-  }
 }
