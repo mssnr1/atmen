@@ -36,9 +36,10 @@ function glass(color: string, rim: string, base: number, edge: number, extra: TH
   return m
 }
 
-export function makeMaterials(): Record<MaterialKind, THREE.Material> {
+export function makeMaterials(theme: 'light' | 'dark' = 'light'): Record<MaterialKind, THREE.Material> {
   return {
-    skin: glass('#f4f6fa', '#b9c4d6', 0.05, 0.62),
+    // On the dark page a pale rim would glow, so the shell turns a dim steel blue.
+    skin: theme === 'dark' ? glass('#2a3242', '#8797b6', 0.06, 0.55) : glass('#f4f6fa', '#b9c4d6', 0.05, 0.62),
     lung: glass('#f6c9ba', '#e3907b', 0.26, 0.82),
     diaphragm: glass('#f7c2ab', '#e8977a', 0.32, 0.88),
     airway: glass('#f2ad9c', '#d8735f', 0.42, 0.92, { emissive: '#d8735f', emissiveIntensity: 0.25 }),

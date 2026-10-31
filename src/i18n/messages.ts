@@ -1,4 +1,5 @@
 import type { PhaseType } from '../engine'
+import type { ThemePreference } from '../lib/themePreferences'
 import type { VisualizationMode } from '../visualization/modes'
 
 export type Language = 'de' | 'en'
@@ -51,6 +52,9 @@ export interface Messages {
   vibration: string
   soundOn: string
   soundOff: string
+  fullscreen: string
+  exitFullscreen: string
+  fullscreenIos: { title: string; steps: string[]; note: string }
   visualization: string
   modes: Record<VisualizationMode, { label: string; description: string }>
   resetView: string
@@ -85,6 +89,8 @@ export interface Messages {
   inspired: string
   settingsTitle: string
   language: string
+  appearance: string
+  themes: Record<ThemePreference, string>
   defaultsHint: string
   sessionsCompleted: (n: number) => string
   about: string
@@ -136,6 +142,13 @@ const de: Messages = {
   vibration: 'Vibration',
   soundOn: 'Töne einschalten',
   soundOff: 'Töne ausschalten',
+  fullscreen: 'Vollbild',
+  exitFullscreen: 'Vollbild beenden',
+  fullscreenIos: {
+    title: 'Vollbild auf dem iPhone',
+    steps: ['Tippe in Safari unten auf das Teilen-Symbol.', 'Wähle „Zum Home-Bildschirm“.', 'Öffne atmen über das neue Symbol auf dem Home-Bildschirm.'],
+    note: 'Safari erlaubt auf dem iPhone kein Vollbild für Webseiten. Vom Home-Bildschirm aus startet atmen aber wie eine App, ganz ohne Adressleiste.',
+  },
   visualization: 'Darstellung',
   modes: {
     abstract: { label: 'Einfach', description: 'Ein Kreis, der mit deinem Atem wächst und schrumpft' },
@@ -171,6 +184,8 @@ const de: Messages = {
   inspired: 'Inspiriert von James Nestors „Breath“',
   settingsTitle: 'Einstellungen',
   language: 'Sprache',
+  appearance: 'Erscheinungsbild',
+  themes: { light: 'Hell', dark: 'Dunkel', system: 'System' },
   defaultsHint: 'Tempo, Dauer und Fortschritt stellst du während der Übung ein.',
   sessionsCompleted: (n) => (n === 1 ? '1 Übung abgeschlossen' : `${n} Übungen abgeschlossen`),
   about: 'Über atmen',
@@ -223,6 +238,13 @@ const en: Messages = {
   vibration: 'Vibration',
   soundOn: 'Turn sounds on',
   soundOff: 'Turn sounds off',
+  fullscreen: 'Full screen',
+  exitFullscreen: 'Exit full screen',
+  fullscreenIos: {
+    title: 'Full screen on iPhone',
+    steps: ['In Safari, tap the Share icon at the bottom.', 'Choose “Add to Home Screen”.', 'Open atmen from the new icon on your Home Screen.'],
+    note: 'Safari on iPhone does not allow web pages to go full screen. From the Home Screen, though, atmen opens like an app, without the address bar.',
+  },
   visualization: 'View',
   modes: {
     abstract: { label: 'Simple', description: 'A circle that grows and shrinks with your breath' },
@@ -258,6 +280,8 @@ const en: Messages = {
   inspired: 'Inspired by James Nestor’s Breath',
   settingsTitle: 'Settings',
   language: 'Language',
+  appearance: 'Appearance',
+  themes: { light: 'Light', dark: 'Dark', system: 'System' },
   defaultsHint: 'Pace, duration and progress are set during an exercise.',
   sessionsCompleted: (n) => (n === 1 ? '1 session completed' : `${n} sessions completed`),
   about: 'About atmen',

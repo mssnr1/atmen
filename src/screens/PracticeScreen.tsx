@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BottomSheet } from '../components/BottomSheet'
 import { CrossfadeText } from '../components/CrossfadeText'
+import { FullscreenButton } from '../components/FullscreenButton'
 import { IconButton } from '../components/Button'
 import { CircleIcon, CloseIcon, InfoIcon, LungsIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
 import { Segmented } from '../components/Segmented'
@@ -102,12 +103,13 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   const setPace = (patch: { preset?: number; slowDown?: boolean }) => store.setPace(exercise.id, { preset, slowDown, ...patch })
 
   return (
-    <main className="safe-top relative mx-auto flex h-dvh max-w-md flex-col overflow-hidden bg-white" data-testid="practice">
-      <header className="relative z-10 flex items-center justify-between px-3">
+    <main className="safe-top relative flex h-dvh w-full flex-col overflow-hidden bg-paper" data-testid="practice">
+      <header className="relative z-10 flex items-center justify-between px-3 md:px-5">
         <IconButton label={t.close} onClick={goHome} data-testid="practice-close">
           <CloseIcon className="size-5" strokeWidth={1.5} />
         </IconButton>
         <div className="flex items-center">
+          <FullscreenButton />
           <IconButton label={t.aboutExercise} onClick={() => setInfoOpen(true)} data-testid="exercise-info">
             <InfoIcon className="size-5" strokeWidth={1.5} />
           </IconButton>
@@ -130,10 +132,10 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           bottomInset={panelHeight}
           started={leadIn || (s.status !== 'idle' && s.status !== 'completed')}
         />
-        <div className="absolute top-2 right-4">
+        <div className="absolute top-2 right-4 md:right-6">
           <Segmented
             label={t.visualization}
-            className="!rounded-full !bg-white/80 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur [&>button]:!flex [&>button]:!size-10 [&>button]:!min-h-0 [&>button]:!flex-none [&>button]:!items-center [&>button]:!justify-center [&>button]:!rounded-full [&>button]:!p-0"
+            className="!rounded-full !bg-card/80 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur [&>button]:!flex [&>button]:!size-10 [&>button]:!min-h-0 [&>button]:!flex-none [&>button]:!items-center [&>button]:!justify-center [&>button]:!rounded-full [&>button]:!p-0"
             options={visualizationModes.map((m) => ({
               value: m.id,
               label: t.modes[m.id].label,
@@ -146,8 +148,8 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         </div>
       </section>
 
-      <section ref={panel} className="safe-bottom pointer-events-none absolute inset-x-0 bottom-0 z-10 px-3">
-        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-white/35 px-4 pt-3.5 pb-3 backdrop-blur-[12px]">
+      <section ref={panel} className="safe-bottom pointer-events-none absolute inset-x-0 bottom-0 z-10 mx-auto max-w-md px-3 md:max-w-lg md:pb-6">
+        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-paper/35 px-4 pt-3.5 pb-3 backdrop-blur-[12px]">
         <div className="flex flex-wrap items-baseline justify-center gap-x-2.5 gap-y-1 text-center" aria-live="polite">
           <p className="text-[2.5rem] leading-none tracking-tight" data-testid="phase-label">
             <CrossfadeText text={phaseLabel(s, t)} />

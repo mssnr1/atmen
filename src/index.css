@@ -14,7 +14,32 @@
   --color-blue-soft: #e9f0fe;
   /* Used air, breathed out. */
   --color-violet: #8b5cf6;
+  /* Raised surfaces: cards, sheets, the selected segment. */
+  --color-card: #ffffff;
+  --color-thumb: #ffffff;
+  /* The welcome and completion screens. */
+  --color-blue-page: #2f6bf5;
+  /* Text on white controls, the same in both themes. */
+  --color-night: #111214;
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+/* Dark theme: the same roles, night greys and a calmer blue for full pages. */
+:root.dark {
+  --color-paper: #0e0f11;
+  --color-surface: #1a1c20;
+  --color-surface-2: #2a2d33;
+  --color-line: #26292e;
+  --color-ink: #f2f3f5;
+  --color-ink-2: #c5c9d1;
+  --color-muted: #8d929c;
+  --color-blue: #3a76f7;
+  --color-blue-deep: #2f6bf5;
+  --color-blue-soft: #15213b;
+  --color-violet: #a07cf8;
+  --color-card: #17191c;
+  --color-thumb: #3a3d44;
+  --color-blue-page: #1b3c94;
 }
 
 html {
@@ -37,7 +62,7 @@ body {
 }
 
 body.blue-page {
-  background: var(--color-blue);
+  background: var(--color-blue-page);
 }
 
 .safe-area {
@@ -64,6 +89,16 @@ body.blue-page {
   }
   to {
     transform: translateY(0);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 @keyframes fade-in {

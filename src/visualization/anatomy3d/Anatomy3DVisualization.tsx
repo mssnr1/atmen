@@ -230,7 +230,7 @@ export function Anatomy3DVisualization({
         aria-label={t.resetView}
         title={t.resetView}
         data-testid="reset-view"
-        className="absolute top-2 left-4 flex size-12 items-center justify-center rounded-full bg-white/80 text-ink-2 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur"
+        className="absolute top-2 left-4 flex size-12 items-center justify-center rounded-full bg-card/80 text-ink-2 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur"
       >
         <ExpandIcon className="size-5" strokeWidth={1.5} />
       </button>

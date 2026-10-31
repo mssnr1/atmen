@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import type { BreathingEngine } from '../../engine'
+import { useTheme } from '../../lib/theme'
 import { breathState } from '../breathState'
 import { AirVolume } from './AirVolume'
 import { makeMaterials, type MaterialKind } from './materials'
@@ -47,7 +48,8 @@ const BEAT_S = 60 / 62
  */
 export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   const { scene } = useGLTF(MODEL_URL, false, true)
-  const materials = useMemo(() => makeMaterials(), [])
+  const theme = useTheme()
+  const materials = useMemo(() => makeMaterials(theme), [theme])
   const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat'; gain: number }[]>([])
   const drift = useRef(0)
   const beat = useRef(0)

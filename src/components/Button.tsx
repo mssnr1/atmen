@@ -5,7 +5,7 @@ type Variant = 'primary' | 'secondary' | 'white' | 'ghost'
 const styles: Record<Variant, string> = {
   primary: 'bg-blue text-white hover:bg-blue-deep',
   secondary: 'bg-surface text-ink hover:bg-surface-2',
-  white: 'bg-white text-ink hover:bg-white/90',
+  white: 'bg-white text-night hover:bg-white/90',
   ghost: 'text-ink-2 hover:bg-surface',
 }
 
@@ -42,7 +42,7 @@ export function IconButton({ label, pressed, className = '', children, ...rest }
       aria-label={label}
       title={label}
       aria-pressed={pressed}
-      className={`inline-flex size-11 items-center justify-center rounded-full transition hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-blue disabled:opacity-30 ${className}`}
+      className={`inline-flex size-11 items-center justify-center rounded-full transition hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-blue disabled:opacity-30 ${className}`}
       {...rest}
     >
       {children}
