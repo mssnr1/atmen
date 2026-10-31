@@ -1,8 +1,10 @@
+import { useGLTF } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { BreathingEngine, EngineSnapshot } from '../../engine'
 import { breathState } from '../breathState'
+import { MODEL_URL } from './AnatomyModel'
 
 /** Middle of the glow, between head and belly. The billboard turns around it to face the camera. */
 const CENTER = new THREE.Vector3(0, 1.32, 0)
@@ -32,7 +34,7 @@ const vertex = /* glsl */ `
 `
 
 /*
- * A soft glow around the silhouette of head and upper body, drawn as a signed
+ * A soft background glow around the silhouette of head and upper body, drawn as a signed
  * distance field on a camera-facing plane: the glow falls off with the
  * distance to the figure, its reach grows with the level, it swells a little
  * with each inhale, and a slow ripple runs around its edge. Its colour warms
@@ -86,52 +88,70 @@ const fragment = /* glsl */ `
     vec3 core = mix(uCool, uWarm, smoothstep(0.15, 0.85, uLevel));
     vec3 col = mix(core, uRose, smoothstep(0.0, 1.0, outside / max(halo * 1.5, 0.001)) * uLevel);
 
-    float strength = mix(0.62, 0.5, uDark) * smoothstep(0.0, 0.25, uLevel) * (0.55 + 0.45 * uLevel);
+    float strength = mix(0.4, 0.3, uDark) * smoothstep(0.0, 0.25, uLevel) * (0.55 + 0.45 * uLevel);
     float alpha = shape * frame * strength;
     if (alpha < 0.003) discard;
     gl_FragColor = vec4(col, alpha);
   }
 `
 
-const moteVertex = /* glsl */ `
+const sparkVertex = /* glsl */ `
+  attribute vec3 aNormal;
   attribute vec4 aSeed;
   uniform float uTime;
   uniform float uLevel;
+  uniform float uVolume;
   uniform float uScale;
   varying float vAlpha;
+  varying float vSpark;
   void main() {
-    // Each mote rises slowly on its own loop around the figure, fading in and out.
-    float life = fract(aSeed.w + uTime * (0.025 + 0.02 * aSeed.z));
-    float ang = aSeed.x * 6.2832 + uTime * 0.05 * (aSeed.z - 0.5);
-    float r = 0.2 + 0.16 * aSeed.y + 0.03 * sin(uTime * 0.4 + aSeed.x * 20.0);
-    vec3 p = vec3(cos(ang) * r, 1.0 + life * 0.85, sin(ang) * r * 0.7);
-    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    // Each particle sits on a shell a little outside the skin; the shell moves
+    // out as the aura builds and with each inhale.
+    float offset = (0.012 + 0.03 * uLevel) * (0.5 + aSeed.x) + 0.01 * uVolume;
+    vec3 p = position + aNormal * offset;
+    // A slow, small wander of its own, and a gentle rise as it glows and fades.
+    float t = uTime * (0.25 + 0.25 * aSeed.z);
+    float ph = aSeed.w * 6.2832;
+    p += vec3(sin(t + ph), sin(t * 0.8 + ph * 1.7), cos(t * 0.9 + ph)) * 0.006;
+    float life = fract(aSeed.w * 3.7 + uTime * (0.05 + 0.05 * aSeed.x));
+    p.y += life * 0.025;
+    vec4 world = modelMatrix * vec4(p, 1.0);
+    vec4 mv = viewMatrix * world;
     gl_Position = projectionMatrix * mv;
-    gl_PointSize = uScale * (0.6 + aSeed.z) / -mv.z;
-    // More motes appear as the aura builds; few at the start, all at the end.
-    float shown = smoothstep(aSeed.y * 0.9, aSeed.y * 0.9 + 0.1, uLevel - 0.15);
-    vAlpha = sin(life * 3.1416) * shown * smoothstep(1.85, 1.6, p.y);
+    // Mostly small soft glows, every seventh or so a brighter spark.
+    vSpark = step(0.86, aSeed.z);
+    gl_PointSize = uScale * mix(1.0 + aSeed.x, 0.35 + 0.3 * aSeed.x, vSpark) / -mv.z;
+    // Strongest along the outline, faint where the shell faces the viewer, so the organs stay clear.
+    float rim = 1.0 - abs(dot(normalize(aNormal), normalize(cameraPosition - world.xyz)));
+    float edge = mix(0.12, 1.0, pow(rim, 1.4));
+    // More particles join as the aura builds: a few at first, all of them at the end.
+    float shown = smoothstep(aSeed.y, aSeed.y + 0.08, uLevel * 1.08 - 0.04);
+    float twinkle = 0.65 + 0.35 * sin(uTime * (1.0 + 2.0 * aSeed.x) + ph);
+    vAlpha = edge * shown * sin(life * 3.1416) * mix(1.0, twinkle, vSpark) * smoothstep(0.96, 1.08, world.y);
   }
 `
 
-const moteFragment = /* glsl */ `
-  uniform vec3 uColor;
+const sparkFragment = /* glsl */ `
+  uniform vec3 uGlow;
+  uniform vec3 uSpark;
   uniform float uDark;
   varying float vAlpha;
+  varying float vSpark;
   void main() {
     vec2 c = gl_PointCoord - 0.5;
-    float a = exp(-dot(c, c) * 14.0) * vAlpha * mix(0.9, 0.55, uDark);
-    if (a < 0.004) discard;
-    gl_FragColor = vec4(uColor, a);
+    float r = dot(c, c) * 4.0;
+    float a = exp(-r * mix(3.0, 5.0, vSpark)) * vAlpha * mix(mix(0.22, 0.16, uDark), mix(0.95, 0.8, uDark), vSpark);
+    if (a < 0.003) discard;
+    gl_FragColor = vec4(mix(uGlow, uSpark, vSpark), a);
   }
 `
 
-const MOTES = 45
+const PARTICLES = 2200
 
 /** Colours per theme: on white the glow needs more colour to show, on the night page it needs light. */
 const PALETTE = {
-  light: { cool: '#ecd9bd', warm: '#ffcc9c', rose: '#ffb3c6', mote: '#fffaf0' },
-  dark: { cool: '#8a7a66', warm: '#f2b98a', rose: '#d98aa8', mote: '#ffe2bd' },
+  light: { cool: '#ecd9bd', warm: '#ffcc9c', rose: '#ffb3c6', glow: '#ffb27a', spark: '#ffe6c4' },
+  dark: { cool: '#8a7a66', warm: '#f2b98a', rose: '#d98aa8', glow: '#ffbf8a', spark: '#fff1dc' },
 }
 
 /** True while the page shows the dark theme (a `dark` class on <html>). */
@@ -147,19 +167,58 @@ function useDarkPage() {
 }
 
 /**
+ * Points spread over the skin of head and upper body (vertices of the model,
+ * picked with a fixed seed), each with its outward normal, for the particles
+ * of the aura to sit on.
+ */
+function sampleShell(scene: THREE.Object3D, count: number) {
+  scene.updateMatrixWorld(true)
+  const sources: { pos: THREE.BufferAttribute; nrm: THREE.BufferAttribute; m: THREE.Matrix4; n: THREE.Matrix3 }[] = []
+  scene.traverse((o) => {
+    const mesh = o as THREE.Mesh
+    if (!mesh.isMesh || !['Body_Shell', 'Head'].includes(mesh.name)) return
+    const g = mesh.geometry
+    sources.push({
+      pos: g.attributes.position as THREE.BufferAttribute,
+      nrm: g.attributes.normal as THREE.BufferAttribute,
+      m: mesh.matrixWorld,
+      n: new THREE.Matrix3().getNormalMatrix(mesh.matrixWorld),
+    })
+  })
+  const total = sources.reduce((n, src) => n + src.pos.count, 0)
+  const positions = new Float32Array(count * 3)
+  const normals = new Float32Array(count * 3)
+  const seeds = new Float32Array(count * 4)
+  let s = 11
+  const rnd = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646
+  const v = new THREE.Vector3()
+  for (let i = 0; i < count; i++) {
+    let k = Math.floor(rnd() * total)
+    const src = sources.find((x) => (k < x.pos.count ? true : ((k -= x.pos.count), false)))
+    if (!src) continue
+    v.fromBufferAttribute(src.pos, k).applyMatrix4(src.m).toArray(positions, i * 3)
+    v.fromBufferAttribute(src.nrm, k).applyMatrix3(src.n).normalize().toArray(normals, i * 3)
+    for (let j = 0; j < 4; j++) seeds[i * 4 + j] = rnd()
+  }
+  return { positions, normals, seeds }
+}
+
+/**
  * A warm light that builds up around the figure over the session, for the
- * calm and the good feeling that build up with it. It starts once the exercise
- * starts, reaches its full glow near the end, swells gently with each inhale,
- * and stays through the outro. It is drawn behind the body so the glass figure
- * stays in front of it.
+ * calm and the good feeling that build up with it: a cloud of softly glowing,
+ * gently moving particles on a shell just outside the body, over a faint glow
+ * behind it. It starts once the exercise starts, a few particles at first and
+ * more and more of them, reaches its full glow near the end, swells gently
+ * with each inhale, and stays through the outro.
  */
 export function Aura({ engine }: { engine: BreathingEngine }) {
   const dark = useDarkPage()
+  const { scene } = useGLTF(MODEL_URL, false, true)
   const plane = useRef<THREE.Mesh>(null)
   const level = useRef(0)
   const time = useRef(0)
 
-  const { geometry, material, moteGeometry, moteMaterial } = useMemo(() => {
+  const { geometry, material } = useMemo(() => {
     const geometry = new THREE.PlaneGeometry(PLANE_W, PLANE_H)
     const material = new THREE.ShaderMaterial({
       vertexShader: vertex,
@@ -177,24 +236,33 @@ export function Aura({ engine }: { engine: BreathingEngine }) {
       depthWrite: false,
       depthTest: false,
     })
-    const seeds = new Float32Array(MOTES * 4)
-    // A fixed pseudo-random spread, the same every session.
-    let s = 7
-    const rnd = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646
-    for (let i = 0; i < seeds.length; i++) seeds[i] = rnd()
-    const moteGeometry = new THREE.BufferGeometry()
-    moteGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(MOTES * 3), 3))
-    moteGeometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 4))
-    moteGeometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 1.4, 0), 0.7)
-    const moteMaterial = new THREE.ShaderMaterial({
-      vertexShader: moteVertex,
-      fragmentShader: moteFragment,
-      uniforms: { uTime: { value: 0 }, uLevel: { value: 0 }, uScale: { value: 1 }, uColor: { value: new THREE.Color() }, uDark: { value: 0 } },
+    return { geometry, material }
+  }, [])
+
+  const { sparkGeometry, sparkMaterial } = useMemo(() => {
+    const { positions, normals, seeds } = sampleShell(scene, PARTICLES)
+    const sparkGeometry = new THREE.BufferGeometry()
+    sparkGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    sparkGeometry.setAttribute('aNormal', new THREE.BufferAttribute(normals, 3))
+    sparkGeometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 4))
+    sparkGeometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 1.35, 0), 0.7)
+    const sparkMaterial = new THREE.ShaderMaterial({
+      vertexShader: sparkVertex,
+      fragmentShader: sparkFragment,
+      uniforms: {
+        uTime: { value: 0 },
+        uLevel: { value: 0 },
+        uVolume: { value: 0 },
+        uScale: { value: 1 },
+        uGlow: { value: new THREE.Color() },
+        uSpark: { value: new THREE.Color() },
+        uDark: { value: 0 },
+      },
       transparent: true,
       depthWrite: false,
     })
-    return { geometry, material, moteGeometry, moteMaterial }
-  }, [])
+    return { sparkGeometry, sparkMaterial }
+  }, [scene])
 
   useEffect(() => {
     const p = PALETTE[dark ? 'dark' : 'light']
@@ -202,18 +270,27 @@ export function Aura({ engine }: { engine: BreathingEngine }) {
     material.uniforms.uWarm.value.set(p.warm)
     material.uniforms.uRose.value.set(p.rose)
     material.uniforms.uDark.value = dark ? 1 : 0
-    moteMaterial.uniforms.uColor.value.set(p.mote)
-    moteMaterial.uniforms.uDark.value = dark ? 1 : 0
-  }, [dark, material, moteMaterial])
+    sparkMaterial.uniforms.uGlow.value.set(p.glow)
+    sparkMaterial.uniforms.uSpark.value.set(p.spark)
+    sparkMaterial.uniforms.uDark.value = dark ? 1 : 0
+    // Light adds up on the night page; on white it has to tint instead.
+    sparkMaterial.blending = dark ? THREE.AdditiveBlending : THREE.NormalBlending
+    sparkMaterial.needsUpdate = true
+  }, [dark, material, sparkMaterial])
 
   useEffect(
     () => () => {
       geometry.dispose()
       material.dispose()
-      moteGeometry.dispose()
-      moteMaterial.dispose()
     },
-    [geometry, material, moteGeometry, moteMaterial],
+    [geometry, material],
+  )
+  useEffect(
+    () => () => {
+      sparkGeometry.dispose()
+      sparkMaterial.dispose()
+    },
+    [sparkGeometry, sparkMaterial],
   )
 
   const toCamera = useMemo(() => new THREE.Vector3(), [])
@@ -235,15 +312,16 @@ export function Aura({ engine }: { engine: BreathingEngine }) {
     material.uniforms.uLevel.value = level.current
     material.uniforms.uVolume.value = volume
     material.uniforms.uTime.value = time.current
-    moteMaterial.uniforms.uLevel.value = level.current
-    moteMaterial.uniforms.uTime.value = time.current
-    moteMaterial.uniforms.uScale.value = size.height * 0.02
+    sparkMaterial.uniforms.uLevel.value = level.current
+    sparkMaterial.uniforms.uVolume.value = volume
+    sparkMaterial.uniforms.uTime.value = time.current
+    sparkMaterial.uniforms.uScale.value = size.height * 0.03
   })
 
   return (
     <group>
       <mesh ref={plane} geometry={geometry} material={material} renderOrder={-10} frustumCulled={false} />
-      <points geometry={moteGeometry} material={moteMaterial} renderOrder={8} />
+      <points geometry={sparkGeometry} material={sparkMaterial} renderOrder={8} />
     </group>
   )
 }
