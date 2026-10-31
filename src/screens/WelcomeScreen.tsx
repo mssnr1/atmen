@@ -94,7 +94,7 @@ export function WelcomeScreen() {
               aria-live={i === page ? 'polite' : undefined}
             >
               <div>
-              <WelcomeArt index={i} className={`${p.closing ? 'mb-7' : 'mb-10'} h-16 w-40 text-white md:h-24 md:w-64`} />
+              <WelcomeArt index={i} className={`${p.closing ? 'mb-7' : 'mb-10'} h-16 w-40 text-page-mark md:h-24 md:w-64`} />
               {p.eyebrow && <p className="mb-3 text-[0.9375rem] tracking-[0.08em] text-white/70 md:text-[1.1875rem]">{p.eyebrow}</p>}
               <h1 className={`${p.closing ? 'text-[2.375rem]' : 'text-[2.75rem]'} leading-[1.08] font-normal tracking-[-0.01em] text-balance md:text-[4.5rem] lg:text-[5rem]`}>{p.title}</h1>
               </div>

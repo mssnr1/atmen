@@ -19,7 +19,7 @@ export function LearnScreen() {
           <div className="mt-5 divide-y divide-white/20 md:grid md:grid-cols-2 md:gap-10 md:divide-y-0">
             {t.welcome.slice(0, 2).map((p, i) => (
               <section key={p.title} className="py-6 first:pt-0 last:pb-0 md:py-0">
-                <WelcomeArt index={i} className="mb-5 h-12 w-32 text-white" />
+                <WelcomeArt index={i} className="mb-5 h-12 w-32 text-page-mark" />
                 {p.eyebrow && <p className="text-[0.875rem] tracking-[0.08em] text-white/70">{p.eyebrow}</p>}
                 <h3 className="mt-1 text-[1.625rem] leading-tight font-normal tracking-[-0.01em] text-balance">{p.title}</h3>
                 <div className="mt-4 space-y-3 text-[0.9375rem] leading-relaxed text-white/85">
