@@ -73,7 +73,7 @@ function WellDone({
   return (
     <BluePage testId="completion">
       <header className="pt-4">
-        <Wordmark className="text-[1.0625rem] md:text-[1.25rem]" />
+        <Wordmark />
       </header>
       <section className="flex flex-1 flex-col justify-center py-8">
         <h1 className="text-[2.75rem] leading-tight font-normal md:text-[4.5rem] lg:text-[5rem]">{t.wellDone}</h1>
@@ -108,7 +108,7 @@ function WhitePage({ children, testId }: { children: React.ReactNode; testId: st
   return (
     <main className="safe-area mx-auto flex min-h-dvh max-w-md flex-col bg-paper px-6 md:max-w-3xl md:px-14 md:pb-10 lg:max-w-5xl" data-testid={testId}>
       <header className="pt-6">
-        <Wordmark className="text-[0.8125rem] text-muted md:text-[1rem]" />
+        <Wordmark size={13} className="text-muted" />
       </header>
       {children}
     </main>
@@ -137,7 +137,7 @@ function HowDoYouFeel({ value, onChange, onContinue }: { value?: Feeling; onChan
               <span className={`flex size-12 items-center justify-center rounded-full transition md:size-24 ${on ? 'bg-blue text-white' : 'bg-surface text-ink-2'}`}>
                 <FaceIcon mood={level} className="size-7 md:size-12" strokeWidth={1.6} />
               </span>
-              <span className={`text-center text-[0.75rem] leading-tight md:text-[1rem] ${on ? 'text-blue' : 'text-muted'}`}>{t.feelings[level - 1]}</span>
+              <span className={`text-center text-[0.75rem] leading-tight md:text-[1rem] ${on ? 'text-accent' : 'text-muted'}`}>{t.feelings[level - 1]}</span>
             </button>
           )
         })}
@@ -153,7 +153,7 @@ function HowDoYouFeel({ value, onChange, onContinue }: { value?: Feeling; onChan
 
 function Summary({ exercise, summary, scale, feeling, onDone }: { exercise: Exercise; summary: SessionSummary; scale: number; feeling?: Feeling; onDone: () => void }) {
   const { lang, t } = useI18n()
-  const iconClass = 'size-5 shrink-0 text-blue'
+  const iconClass = 'size-5 shrink-0 text-accent'
   const tiles = [
     { icon: <ClockIcon className={iconClass} />, value: formatDuration(summary.durationMs), label: t.breathingTime, id: 'duration' },
     { icon: <LungsIcon className={iconClass} />, value: String(summary.completedCycles), label: t.breathsLabel, id: 'cycles' },

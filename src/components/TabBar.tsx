@@ -28,7 +28,7 @@ export function TabBar({ current }: { current: Tab }) {
                 // Tapping Home again while on it shows the welcome cards once more.
                 onClick={() => navigate(active && id === 'home' ? { name: 'welcome' } : { name: id })}
                 className={`flex w-full flex-col items-center gap-1 pt-2.5 pb-1 text-[0.6875rem] md:flex-row md:gap-2 md:rounded-full md:px-5 md:py-2 md:text-[0.9375rem] md:transition-colors ${
-                  active ? 'text-blue md:bg-thumb md:shadow-[0_1px_3px_rgb(0_0_0/0.08)]' : 'text-muted md:hover:text-ink'
+                  active ? 'text-accent md:bg-thumb md:shadow-[0_1px_3px_rgb(0_0_0/0.08)]' : 'text-muted md:hover:text-ink'
                 }`}
               >
                 <Icon className="size-[22px] md:size-5" strokeWidth={1.5} />

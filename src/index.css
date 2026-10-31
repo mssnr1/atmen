@@ -23,6 +23,10 @@
   --color-night: #111214;
   /* Phase word on the practice screen, drawn as specks of air in the accent blue. */
   --color-breath: #2f6bf5;
+  /* Blue for text and small accents; stays light enough to read on dark pages. */
+  --color-accent: #2f6bf5;
+  /* The translucent practice panel. */
+  --color-panel: rgb(255 255 255 / 0.35);
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
@@ -35,14 +39,16 @@
   --color-ink: #f2f3f5;
   --color-ink-2: #c5c9d1;
   --color-muted: #8d929c;
-  --color-blue: #3a76f7;
-  --color-blue-deep: #2f6bf5;
+  --color-blue: #1f4fc4;
+  --color-blue-deep: #1a43a8;
   --color-blue-soft: #15213b;
   --color-violet: #a07cf8;
   --color-card: #17191c;
   --color-thumb: #3a3d44;
-  --color-blue-page: #1b3c94;
+  --color-blue-page: #102563;
   --color-breath: #7ea2fa;
+  --color-accent: #7ea2fa;
+  --color-panel: rgb(255 255 255 / 0.07);
 }
 
 html {
@@ -77,6 +83,17 @@ body.blue-page {
 }
 .safe-bottom {
   padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
+}
+/* Side gutters that respect the notch / rounded corners in landscape. */
+.safe-x {
+  padding-left: max(env(safe-area-inset-left), 0.75rem);
+  padding-right: max(env(safe-area-inset-right), 0.75rem);
+}
+@media (min-width: 48rem) {
+  .safe-x {
+    padding-left: max(env(safe-area-inset-left), 1.25rem);
+    padding-right: max(env(safe-area-inset-right), 1.25rem);
+  }
 }
 
 .no-scrollbar::-webkit-scrollbar {

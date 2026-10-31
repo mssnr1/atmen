@@ -47,7 +47,7 @@ export function HomeScreen() {
                       </span>
                     </span>
                     <span className="flex items-center gap-3 pt-2 lg:pt-0">
-                      <Waveform phases={e.pattern.phases} className={`h-7 w-20 md:h-10 md:w-28 ${on ? 'text-blue' : 'text-ink-2'}`} />
+                      <Waveform phases={e.pattern.phases} className={`h-7 w-20 md:h-10 md:w-28 ${on ? 'text-accent' : 'text-ink-2'}`} />
                       <ChevronRightIcon className="-mt-5 size-4 text-ink-2 lg:hidden" />
                     </span>
                   </span>
