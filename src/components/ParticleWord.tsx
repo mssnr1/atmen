@@ -20,20 +20,27 @@ type Speck = {
 }
 
 /** Points inside the glyphs of `text`, sampled from an offscreen raster. */
-function samplePoints(text: string, width: number, height: number, size: number, family: string): [number, number][] {
+function samplePoints(text: string, width: number, height: number, size: number, family: string, spacing: number): [number, number][] {
   const c = document.createElement('canvas')
   c.width = Math.max(1, Math.round(width))
   c.height = Math.max(1, Math.round(height))
   const g = c.getContext('2d', { willReadFrequently: true })
   if (!g) return []
-  g.font = `500 ${size}px ${family}`
+  // Letters are placed one by one so the spacing (in em) works in every browser.
+  const chars = [...text]
+  const measure = (px: number) => {
+    g.font = `500 ${px}px ${family}`
+    return chars.reduce((sum, ch) => sum + g.measureText(ch).width, 0) + spacing * px * (chars.length - 1)
+  }
   // Shrink long words so they keep some air at the sides.
-  const fit = Math.min(1, (c.width * 0.86) / g.measureText(text).width)
-  if (fit < 1) g.font = `500 ${size * fit}px ${family}`
-  g.textAlign = 'center'
+  const px = size * Math.min(1, (c.width * 0.86) / measure(size))
+  let x = (c.width - measure(px)) / 2
   g.textBaseline = 'middle'
   g.fillStyle = '#000'
-  g.fillText(text, c.width / 2, c.height / 2)
+  for (const ch of chars) {
+    g.fillText(ch, x, c.height / 2)
+    x += g.measureText(ch).width + spacing * px
+  }
   const data = g.getImageData(0, 0, c.width, c.height).data
   const points: [number, number][] = []
   const step = 2
@@ -50,8 +57,21 @@ function samplePoints(text: string, width: number, height: number, size: number,
  * gently around the letter shapes, a few drift off and come back, and on a new word
  * they flow over into the new letters instead of switching at once.
  */
-export function ParticleWord({ text, className, fontSize = 64 }: { text: string; className?: string; fontSize?: number }) {
+export function ParticleWord({
+  text,
+  className,
+  fontSize = 64,
+  spacing = 0,
+}: {
+  text: string
+  className?: string
+  fontSize?: number
+  /** Extra space between letters, in em. Changing it lets the specks flow apart or together. */
+  spacing?: number
+}) {
   const canvas = useRef<HTMLCanvasElement>(null)
+  const spacingRef = useRef(spacing)
+  spacingRef.current = spacing
   const state = useRef<{ specks: Speck[]; retarget: (text: string) => void } | null>(null)
 
   useEffect(() => {
@@ -74,7 +94,7 @@ export function ParticleWord({ text, className, fontSize = 64 }: { text: string;
       current = word
       if (!w || !h) return
       const family = getComputedStyle(el).fontFamily
-      const points = samplePoints(word, w, h, fontSize, family)
+      const points = samplePoints(word, w, h, fontSize, family, spacingRef.current)
       if (!points.length) return
       // Pick targets and pair them with the specks from left to right, so each speck
       // only flows a short way into the new letters and the word stays readable.
@@ -174,7 +194,7 @@ export function ParticleWord({ text, className, fontSize = 64 }: { text: string;
 
   useEffect(() => {
     state.current?.retarget(text)
-  }, [text])
+  }, [text, spacing])
 
   return (
     <span className={`relative block ${className ?? ''}`}>

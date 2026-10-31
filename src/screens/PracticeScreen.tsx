@@ -152,7 +152,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-blue-soft/75 px-4 pt-9 pb-4 backdrop-blur-[12px]">
         <div className="flex flex-col items-center gap-1 text-center" aria-live="polite">
           <p className="w-full text-breath" data-testid="phase-label">
-            <ParticleWord text={phaseLabel(s, t)} className="h-[5.5rem]" fontSize={72} />
+            <ParticleWord text={phaseLabel(s, t).toLowerCase()} className="h-[5.5rem]" fontSize={72} />
           </p>
           {s.status !== 'running' && (
             <p className="text-[1rem] text-muted tabular-nums" data-testid="phase-time">
