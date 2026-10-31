@@ -48,7 +48,7 @@
   --color-blue-page: #102563;
   --color-breath: #7ea2fa;
   --color-accent: #7ea2fa;
-  --color-panel: rgb(255 255 255 / 0.07);
+  --color-panel: rgb(26 28 32 / 0.85);
 }
 
 html {
@@ -135,6 +135,63 @@ body.blue-page {
   }
   to {
     opacity: 0;
+  }
+}
+
+/* Welcome card drawings: waves breathe, dotted air flows, the gauge needle sways. */
+.art-breathe {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: art-breathe 5.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.art-slow {
+  animation-duration: 11s;
+}
+@keyframes art-breathe {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.78);
+  }
+}
+.art-flow {
+  animation: art-flow 1.8s linear infinite;
+}
+.art-flow-long {
+  animation: art-flow-long 2.6s linear infinite;
+}
+@keyframes art-flow-long {
+  to {
+    stroke-dashoffset: -13;
+  }
+}
+@keyframes art-flow {
+  to {
+    stroke-dashoffset: -9.2;
+  }
+}
+.art-needle {
+  transform-box: view-box;
+  transform-origin: 88px 40px;
+  animation: art-needle 4.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes art-needle {
+  0%,
+  100% {
+    transform: rotate(-6deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .art-breathe,
+  .art-flow,
+  .art-flow-long,
+  .art-needle {
+    animation: none;
   }
 }
 
