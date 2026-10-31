@@ -33,7 +33,8 @@
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
-/* Dark theme: the same roles, night greys and a calmer blue for full pages. */
+/* Dark theme: the same roles, night greys and a magic violet as the accent.
+   Breathed-out air turns rose here, so it stays apart from the violet. */
 :root.dark {
   --color-paper: #0e0f11;
   --color-surface: #1a1c20;
@@ -42,24 +43,24 @@
   --color-ink: #f2f3f5;
   --color-ink-2: #c5c9d1;
   --color-muted: #8d929c;
-  --color-blue: #1f4fc4;
-  --color-blue-deep: #1a43a8;
-  --color-blue-soft: #15213b;
-  --color-violet: #a07cf8;
+  --color-blue: #6d3fd6;
+  --color-blue-deep: #5b31b8;
+  --color-blue-soft: #1f1736;
+  --color-violet: #e58bd0;
   --color-card: #17191c;
   --color-thumb: #3a3d44;
-  --color-blue-page: #102563;
-  --color-breath: #7ea2fa;
-  --color-accent: #7ea2fa;
+  --color-blue-page: #24124f;
+  --color-breath: #c3a6ff;
+  --color-accent: #b89aff;
   --color-panel: rgb(26 28 32 / 0.42);
-  --color-air: #4a82ff;
-  --color-air-used: #a855f7;
-  /* The particle aura around the figure (light theme colours live in Aura.tsx). */
-  --aura-cool: #22407f;
-  --aura-warm: #3a76f7;
-  --aura-rose: #6d95f9;
-  --aura-glow: #3a76f7;
-  --aura-spark: #c2d4ff;
+  --color-air: #9a6bff;
+  --color-air-used: #e58bd0;
+  /* The particle aura around the figure, in the night violet (light theme colours live in Aura.tsx). */
+  --aura-cool: #3a1f72;
+  --aura-warm: #8a5cf5;
+  --aura-rose: #b08cff;
+  --aura-glow: #8a5cf5;
+  --aura-spark: #e8dcff;
 }
 
 html {
