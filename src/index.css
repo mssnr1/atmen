@@ -21,6 +21,9 @@
   --color-blue-page: #2f6bf5;
   /* Text on white controls, the same in both themes. */
   --color-night: #111214;
+  /* Phase word on the practice screen: a soft, dusty indigo instead of hard black. */
+  --color-breath: #4a5784;
+  --font-breath: 'Fraunces Variable', Georgia, serif;
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
@@ -40,6 +43,7 @@
   --color-card: #17191c;
   --color-thumb: #3a3d44;
   --color-blue-page: #1b3c94;
+  --color-breath: #c9d2f2;
 }
 
 html {
