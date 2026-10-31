@@ -76,21 +76,21 @@ export function SettingsScreen() {
           <h2 className="text-[0.9375rem] text-ink">{t.about}</h2>
           <p className="mt-1">{t.inspired}</p>
           <p className="mt-1 text-muted">{t.sessionsCompleted(sessions)}</p>
-          <button type="button" onClick={() => navigate({ name: 'welcome' })} className="mt-3 text-blue">
+          <button type="button" onClick={() => navigate({ name: 'welcome' })} className="mt-3 text-accent">
             {t.welcome[0].title}
           </button>
           <h2 className="mt-5 text-[0.9375rem] text-ink">{t.credits}</h2>
           <p className="mt-1" data-testid="anatomy-credit">
             {t.anatomyCredit}{' '}
-            <a className="text-blue underline-offset-2 hover:underline" href="https://github.com/Z-Anatomy/Models-of-human-anatomy" target="_blank" rel="noreferrer">
+            <a className="text-accent underline-offset-2 hover:underline" href="https://github.com/Z-Anatomy/Models-of-human-anatomy" target="_blank" rel="noreferrer">
               Z-Anatomy
             </a>{' '}
             ·{' '}
-            <a className="text-blue underline-offset-2 hover:underline" href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/" target="_blank" rel="noreferrer">
+            <a className="text-accent underline-offset-2 hover:underline" href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/" target="_blank" rel="noreferrer">
               BodyParts3D
             </a>{' '}
             ·{' '}
-            <a className="text-blue underline-offset-2 hover:underline" href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">
+            <a className="text-accent underline-offset-2 hover:underline" href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">
               CC BY-SA 4.0
             </a>
           </p>

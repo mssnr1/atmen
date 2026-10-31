@@ -148,8 +148,9 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         </div>
       </section>
 
-      <section ref={panel} className="safe-bottom pointer-events-none absolute inset-x-0 bottom-0 z-10 mx-auto max-w-md px-3 md:max-w-lg md:pb-6">
-        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-blue-soft/75 px-4 pt-9 pb-4 backdrop-blur-[12px]">
+      <section ref={panel} className="safe-bottom safe-x pointer-events-none absolute inset-x-0 bottom-0 z-10 md:pb-6">
+        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-panel px-4 pt-9 pb-4 backdrop-blur-[12px]">
+        <div className="mx-auto max-w-lg">
         <div className="flex flex-col items-center gap-1 text-center" aria-live="polite">
           <p className="w-full text-breath" data-testid="phase-label">
             <ParticleWord text={phaseLabel(s, t).toLowerCase()} className="h-[5.5rem]" fontSize={72} />
@@ -205,6 +206,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           <IconButton label={t.openSettings} onClick={() => setSheetOpen(true)} className="size-12 border border-line" data-testid="open-settings">
             <SlidersIcon className="size-5" strokeWidth={1.5} />
           </IconButton>
+        </div>
         </div>
         </Squircle>
       </section>
