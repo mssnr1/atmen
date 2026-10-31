@@ -38,7 +38,7 @@ const vertex = /* glsl */ `
  * distance field on a camera-facing plane: the glow falls off with the
  * distance to the figure, its reach grows with the level, it swells a little
  * with each inhale, and a slow ripple runs around its edge. Its colour warms
- * from a pale champagne to a gentle peach, with a rose edge, as the level rises.
+ * from a pale blue tint to the full accent blue, lighter at the edge, as the level rises.
  */
 const fragment = /* glsl */ `
   uniform float uLevel;
@@ -150,8 +150,9 @@ const PARTICLES = 2200
 
 /** Colours per theme: on white the glow needs more colour to show, on the night page it needs light. */
 const PALETTE = {
-  light: { cool: '#ecd9bd', warm: '#ffcc9c', rose: '#ffb3c6', glow: '#ffb27a', spark: '#ffe6c4' },
-  dark: { cool: '#8a7a66', warm: '#f2b98a', rose: '#d98aa8', glow: '#ffbf8a', spark: '#fff1dc' },
+  // All in the app's accent blue (--color-blue), from a pale tint at the start to the full accent.
+  light: { cool: '#c9d8fd', warm: '#5b8cf7', rose: '#a3bdfb', glow: '#2f6bf5', spark: '#4f84f7' },
+  dark: { cool: '#22407f', warm: '#3a76f7', rose: '#6d95f9', glow: '#3a76f7', spark: '#c2d4ff' },
 }
 
 /** True while the page shows the dark theme (a `dark` class on <html>). */
@@ -204,8 +205,8 @@ function sampleShell(scene: THREE.Object3D, count: number) {
 }
 
 /**
- * A warm light that builds up around the figure over the session, for the
- * calm and the good feeling that build up with it: a cloud of softly glowing,
+ * A blue light that builds up around the figure over the session, for the
+ * calm and the good feeling that build up with it: a cloud of softly glowing blue,
  * gently moving particles on a shell just outside the body, over a faint glow
  * behind it. It starts once the exercise starts, a few particles at first and
  * more and more of them, reaches its full glow near the end, swells gently
