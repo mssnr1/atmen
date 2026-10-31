@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 /** How many specks make up a word. Enough to read clearly, few enough to stay airy. */
 const COUNT = 3000
 /** Share of specks that drift loose and fade like a breath of air before they return. */
-const LOOSE = 0.12
+const LOOSE = 0.2
 
 type Speck = {
   x: number
@@ -39,7 +39,7 @@ function samplePoints(text: string, width: number, height: number, size: number,
   const step = 2
   for (let y = 0; y < c.height; y += step) {
     for (let x = 0; x < c.width; x += step) {
-      if (data[(y * c.width + x) * 4 + 3] > 120) points.push([x + Math.random() * step, y + Math.random() * step])
+      if (data[(y * c.width + x) * 4 + 3] > 120) points.push([x + (Math.random() - 0.5) * 5, y + (Math.random() - 0.5) * 5])
     }
   }
   return points
@@ -90,7 +90,7 @@ export function ParticleWord({ text, className, fontSize = 64 }: { text: string;
             seed: Math.random() * 1000,
             speed: 0.7 + Math.random() * 0.6,
             size: 0.45 + Math.random() * 0.75,
-            alpha: 0.45 + Math.random() * 0.55,
+            alpha: 0.3 + Math.random() * 0.55,
             drift: 0,
           })
         }
@@ -149,8 +149,8 @@ export function ParticleWord({ text, className, fontSize = 64 }: { text: string;
           if (!reduced && Math.random() < LOOSE * dt * 0.25) s.drift = 1.2 + Math.random() * 1.6
         }
         const wander = reduced ? 0 : 1
-        const ox = wander * (Math.sin(t * s.speed + s.seed) * 0.8 + Math.sin(t * 0.7 + s.ty * 0.05) * 0.5)
-        const oy = wander * Math.cos(t * s.speed * 1.3 + s.seed * 1.7) * 0.7
+        const ox = wander * (Math.sin(t * s.speed + s.seed) * 1.3 + Math.sin(t * 0.7 + s.ty * 0.05) * 0.8)
+        const oy = wander * Math.cos(t * s.speed * 1.3 + s.seed * 1.7) * 1.1
         const fade = s.drift > 0 ? Math.min(1, s.drift / 1.5) : 1
         ctx.globalAlpha = s.alpha * fade * (0.75 + 0.25 * Math.sin(t * 1.5 + s.seed))
         ctx.beginPath()
