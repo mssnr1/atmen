@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { detectLanguage, languages } from '../i18n/messages'
+import { themePreferences } from '../lib/themePreferences'
 import { defaultVisualizationMode, visualizationModes } from '../visualization/modes'
 import type { PacePreference, Preferences, SessionFeedback, SessionRecord, StoredData } from './types'
 
@@ -13,6 +14,7 @@ const defaults: StoredData = {
     audioEnabled: true,
     vibrationEnabled: true,
     visualizationMode: defaultVisualizationMode,
+    theme: 'light',
     durationByExercise: {},
     paceByExercise: {},
     showProgress: false,
@@ -32,6 +34,7 @@ function migrate(raw: unknown): StoredData {
     Object.entries(preferences.paceByExercise ?? {}).filter(([, p]) => typeof (p as Partial<PacePreference>).preset === 'number'),
   )
   if (!languages.some((l) => l.id === preferences.language)) preferences.language = defaults.preferences.language
+  if (!themePreferences.includes(preferences.theme)) preferences.theme = defaults.preferences.theme
   return {
     version: 1,
     preferences,

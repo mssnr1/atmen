@@ -94,7 +94,7 @@ function WellDone({
 
 function WhitePage({ children, testId }: { children: React.ReactNode; testId: string }) {
   return (
-    <main className="safe-area mx-auto flex min-h-dvh max-w-md flex-col bg-white px-6" data-testid={testId}>
+    <main className="safe-area mx-auto flex min-h-dvh max-w-md flex-col bg-paper px-6" data-testid={testId}>
       <header className="pt-6">
         <Wordmark className="text-[0.8125rem] text-muted" />
       </header>
@@ -184,7 +184,7 @@ function NextExercise({ current }: { current: Exercise }) {
       <button
         type="button"
         onClick={() => startPractice(next.id)}
-        className="mt-8 w-full rounded-[22px] bg-white p-5 text-left shadow-[0_1px_2px_rgb(0_0_0/0.04),0_6px_24px_rgb(0_0_0/0.05)] ring-1 ring-line/60"
+        className="mt-8 w-full rounded-[22px] bg-card p-5 text-left shadow-[0_1px_2px_rgb(0_0_0/0.04),0_6px_24px_rgb(0_0_0/0.05)] ring-1 ring-line/60"
       >
         <span className="flex items-start justify-between gap-3">
           <span>

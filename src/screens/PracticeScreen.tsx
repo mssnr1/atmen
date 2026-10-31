@@ -102,7 +102,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   const setPace = (patch: { preset?: number; slowDown?: boolean }) => store.setPace(exercise.id, { preset, slowDown, ...patch })
 
   return (
-    <main className="safe-top relative mx-auto flex h-dvh max-w-md flex-col overflow-hidden bg-white" data-testid="practice">
+    <main className="safe-top relative mx-auto flex h-dvh max-w-md flex-col overflow-hidden bg-paper" data-testid="practice">
       <header className="relative z-10 flex items-center justify-between px-3">
         <IconButton label={t.close} onClick={goHome} data-testid="practice-close">
           <CloseIcon className="size-5" strokeWidth={1.5} />
@@ -133,7 +133,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         <div className="absolute top-2 right-4">
           <Segmented
             label={t.visualization}
-            className="!rounded-full !bg-white/80 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur [&>button]:!flex [&>button]:!size-10 [&>button]:!min-h-0 [&>button]:!flex-none [&>button]:!items-center [&>button]:!justify-center [&>button]:!rounded-full [&>button]:!p-0"
+            className="!rounded-full !bg-card/80 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur [&>button]:!flex [&>button]:!size-10 [&>button]:!min-h-0 [&>button]:!flex-none [&>button]:!items-center [&>button]:!justify-center [&>button]:!rounded-full [&>button]:!p-0"
             options={visualizationModes.map((m) => ({
               value: m.id,
               label: t.modes[m.id].label,
@@ -147,7 +147,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       </section>
 
       <section ref={panel} className="safe-bottom pointer-events-none absolute inset-x-0 bottom-0 z-10 px-3">
-        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-white/35 px-4 pt-3.5 pb-3 backdrop-blur-[12px]">
+        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-paper/35 px-4 pt-3.5 pb-3 backdrop-blur-[12px]">
         <div className="flex flex-wrap items-baseline justify-center gap-x-2.5 gap-y-1 text-center" aria-live="polite">
           <p className="text-[2.5rem] leading-none tracking-tight" data-testid="phase-label">
             <CrossfadeText text={phaseLabel(s, t)} />

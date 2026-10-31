@@ -13,7 +13,7 @@ export function TabBar({ current }: { current: Tab }) {
     { id: 'settings', label: t.nav.settings, Icon: GearIcon },
   ]
   return (
-    <nav className="sticky bottom-0 z-10 border-t border-line/70 bg-white/92 pb-[max(env(safe-area-inset-bottom),0.5rem)] backdrop-blur" aria-label="Navigation">
+    <nav className="sticky bottom-0 z-10 border-t border-line/70 bg-paper/92 pb-[max(env(safe-area-inset-bottom),0.5rem)] backdrop-blur" aria-label="Navigation">
       <ul className="mx-auto flex max-w-md">
         {tabs.map(({ id, label, Icon }) => {
           const active = id === current

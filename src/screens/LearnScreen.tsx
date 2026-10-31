@@ -8,7 +8,7 @@ import { rhythmText } from '../lib/exerciseText'
 export function LearnScreen() {
   const { lang, t } = useI18n()
   return (
-    <div className="flex min-h-dvh flex-col bg-white">
+    <div className="flex min-h-dvh flex-col bg-paper">
       <main className="safe-area mx-auto w-full max-w-md flex-1 px-5">
         <h1 className="mt-10 text-[1.875rem] font-normal tracking-[-0.01em]">{t.learnTitle}</h1>
         <p className="mt-2 text-[0.9375rem] text-muted">{t.learnIntro}</p>
