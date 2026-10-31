@@ -17,8 +17,8 @@ export function SettingsScreen() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-paper">
-      <main className="safe-area mx-auto w-full max-w-md flex-1 px-5">
-        <h1 className="mt-10 text-[1.875rem] font-normal tracking-[-0.01em]">{t.settingsTitle}</h1>
+      <main className="safe-area mx-auto w-full max-w-md flex-1 px-5 md:max-w-xl">
+        <h1 className="mt-10 text-[1.875rem] font-normal tracking-[-0.01em] md:mt-8 md:text-[2.5rem]">{t.settingsTitle}</h1>
         <p className="mt-2 text-[0.9375rem] text-muted">{t.defaultsHint}</p>
 
         <section className="mt-8">

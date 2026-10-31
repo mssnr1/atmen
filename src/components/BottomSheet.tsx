@@ -11,9 +11,10 @@ interface Props {
 }
 
 /**
- * An iOS-style sheet rising from the bottom edge. It only overlays what is
- * behind it, so a running exercise keeps going. Closes on a swipe down, a tap
- * outside, the close button or Escape.
+ * An iOS-style sheet rising from the bottom edge; on iPad and desktop a
+ * centred card instead. It only overlays what is behind it, so a running
+ * exercise keeps going. Closes on a swipe down, a tap outside, the close
+ * button or Escape.
  */
 export function BottomSheet({ open, title, closeLabel, onClose, children }: Props) {
   const panel = useRef<HTMLDivElement>(null)
@@ -54,7 +55,7 @@ export function BottomSheet({ open, title, closeLabel, onClose, children }: Prop
   }
 
   return (
-    <div className="fixed inset-0 z-50" role="presentation">
+    <div className="fixed inset-0 z-50 md:flex md:items-center md:justify-center md:p-6" role="presentation">
       <div
         className="absolute inset-0 animate-[fade-in_200ms_ease-out] bg-black/30"
         onClick={onClose}
@@ -68,7 +69,7 @@ export function BottomSheet({ open, title, closeLabel, onClose, children }: Prop
         aria-label={title}
         tabIndex={-1}
         data-testid="settings-sheet"
-        className="absolute inset-x-0 bottom-0 mx-auto flex max-h-[88dvh] max-w-md animate-[sheet-in_320ms_cubic-bezier(0.2,0.9,0.25,1)] flex-col rounded-t-[28px] bg-card pb-[max(env(safe-area-inset-bottom),1rem)] shadow-[0_-8px_40px_rgb(0_0_0/0.12)] outline-none"
+        className="absolute inset-x-0 bottom-0 mx-auto flex max-h-[88dvh] max-w-md animate-[sheet-in_320ms_cubic-bezier(0.2,0.9,0.25,1)] flex-col rounded-t-[28px] bg-card pb-[max(env(safe-area-inset-bottom),1rem)] shadow-[0_-8px_40px_rgb(0_0_0/0.12)] outline-none md:relative md:inset-auto md:mx-0 md:max-h-[85dvh] md:w-full md:max-w-lg md:animate-[pop-in_240ms_cubic-bezier(0.2,0.9,0.25,1)] md:rounded-[28px] md:pb-4 md:shadow-[0_12px_48px_rgb(0_0_0/0.18)]"
         style={{ transform: offset ? `translateY(${offset}px)` : undefined, transition: drag.current ? 'none' : 'transform 220ms ease' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -76,15 +77,15 @@ export function BottomSheet({ open, title, closeLabel, onClose, children }: Prop
         onPointerCancel={onPointerUp}
       >
         <div data-sheet-handle className="touch-none pt-2.5 pb-1">
-          <div className="mx-auto h-[5px] w-10 rounded-full bg-surface-2" />
-          <div className="flex items-center justify-between px-5 pt-3">
+          <div className="mx-auto h-[5px] w-10 rounded-full bg-surface-2 md:hidden" />
+          <div className="flex items-center justify-between px-5 pt-3 md:px-6 md:pt-2">
             <h2 className="text-[1.25rem] font-medium">{title}</h2>
             <IconButton label={closeLabel} onClick={onClose} className="-mr-2">
               <CloseIcon />
             </IconButton>
           </div>
         </div>
-        <div data-sheet-scroll className="no-scrollbar min-h-0 overflow-y-auto overscroll-contain px-5 pb-2">
+        <div data-sheet-scroll className="no-scrollbar min-h-0 overflow-y-auto overscroll-contain px-5 pb-2 md:px-6">
           {children}
         </div>
       </div>
