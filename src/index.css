@@ -26,7 +26,7 @@
   /* Blue for text and small accents; stays light enough to read on dark pages. */
   --color-accent: #2f6bf5;
   /* The translucent practice panel. */
-  --color-panel: rgb(255 255 255 / 0.35);
+  --color-panel: rgb(255 255 255 / 0.18);
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
@@ -48,7 +48,7 @@
   --color-blue-page: #102563;
   --color-breath: #7ea2fa;
   --color-accent: #7ea2fa;
-  --color-panel: rgb(26 28 32 / 0.85);
+  --color-panel: rgb(26 28 32 / 0.42);
 }
 
 html {

@@ -149,7 +149,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       </section>
 
       <section ref={panel} className="safe-bottom safe-x pointer-events-none absolute inset-x-0 bottom-0 z-10 md:pb-6">
-        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-panel px-5 pt-9 pb-4 backdrop-blur-[12px] md:px-8">
+        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-panel px-5 pt-9 pb-4 backdrop-blur-[6px] md:px-8">
         <div>
         <div className="flex flex-col items-center gap-1 text-center" aria-live="polite">
           <p className="w-full text-breath" data-testid="phase-label">
