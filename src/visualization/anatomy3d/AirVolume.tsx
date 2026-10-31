@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
 import type { BreathingEngine } from '../../engine'
 import { breathState, usedAir } from '../breathState'
+import { useDarkPage } from './Aura'
 import { makeParticles, particleState, type ParticleState } from './airflow3d'
 
 const COUNT = 2400
@@ -60,6 +61,14 @@ export function AirVolume({ engine, drift }: { engine: BreathingEngine; drift: R
     const scratch: ParticleState = { position: [0, 0, 0], alpha: 0, size: 1 }
     return { geometry: g, material: m, scratch }
   }, [])
+
+  // Fresh and used air take the theme's colours (--color-air, --color-air-used), so the night theme can tone it down.
+  const dark = useDarkPage()
+  useEffect(() => {
+    const css = getComputedStyle(document.documentElement)
+    material.uniforms.uColor.value.set(css.getPropertyValue('--color-air').trim() || '#4a82ff')
+    material.uniforms.uUsed.value.set(css.getPropertyValue('--color-air-used').trim() || '#a855f7')
+  }, [dark, material])
 
   useEffect(
     () => () => {

@@ -156,7 +156,7 @@ const PALETTE = {
 }
 
 /** True while the page shows the dark theme (a `dark` class on <html>). */
-function useDarkPage() {
+export function useDarkPage() {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
   useEffect(() => {
     const root = document.documentElement
@@ -266,7 +266,12 @@ export function Aura({ engine }: { engine: BreathingEngine }) {
   }, [scene])
 
   useEffect(() => {
-    const p = PALETTE[dark ? 'dark' : 'light']
+    // The night colours come from the stylesheet (--aura-*), so the dark theme can set its own accent.
+    const css = getComputedStyle(document.documentElement)
+    const pick = (key: keyof typeof PALETTE.dark) => css.getPropertyValue(`--aura-${key}`).trim() || PALETTE.dark[key]
+    const p = dark
+      ? { cool: pick('cool'), warm: pick('warm'), rose: pick('rose'), glow: pick('glow'), spark: pick('spark') }
+      : PALETTE.light
     material.uniforms.uCool.value.set(p.cool)
     material.uniforms.uWarm.value.set(p.warm)
     material.uniforms.uRose.value.set(p.rose)

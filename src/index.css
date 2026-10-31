@@ -27,6 +27,9 @@
   --color-accent: #2f6bf5;
   /* The translucent practice panel. */
   --color-panel: rgb(255 255 255 / 0.18);
+  /* Fresh air in the 3D lungs. */
+  --color-air: #4a82ff;
+  --color-air-used: #a855f7;
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
@@ -49,6 +52,14 @@
   --color-breath: #7ea2fa;
   --color-accent: #7ea2fa;
   --color-panel: rgb(26 28 32 / 0.42);
+  --color-air: #4a82ff;
+  --color-air-used: #a855f7;
+  /* The particle aura around the figure (light theme colours live in Aura.tsx). */
+  --aura-cool: #22407f;
+  --aura-warm: #3a76f7;
+  --aura-rose: #6d95f9;
+  --aura-glow: #3a76f7;
+  --aura-spark: #c2d4ff;
 }
 
 html {
