@@ -16,13 +16,13 @@ export function HomeScreen() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-paper">
-      <main className="safe-area mx-auto w-full max-w-md flex-1 px-5">
-        <h1 className="mt-10 mb-7 text-[1.875rem] leading-[1.15] font-normal tracking-[-0.01em]">
+      <main className="safe-area mx-auto w-full max-w-md flex-1 px-5 md:max-w-xl lg:max-w-5xl lg:px-10">
+        <h1 className="mt-10 mb-7 text-[1.875rem] leading-[1.15] font-normal tracking-[-0.01em] md:mt-8 md:mb-9 md:text-[2.5rem]">
           {t.chooseTitle[0]}
           <br />
           {t.chooseTitle[1]}
         </h1>
-        <ul className="space-y-3.5" data-testid="exercise-list">
+        <ul className="space-y-3.5 lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0" data-testid="exercise-list">
           {exercises.map((e) => {
             const text = e.text[lang]
             const scale = e.paces.options[presetIndex(e, paces[e.id]?.preset)].scale
@@ -33,11 +33,11 @@ export function HomeScreen() {
                   type="button"
                   data-testid={`exercise-${e.id}`}
                   onClick={() => startPractice(e.id)}
-                  className={`group relative w-full rounded-[22px] px-5 pt-5 pb-5 text-left transition active:scale-[0.99] ${
+                  className={`group relative flex h-full w-full flex-col rounded-[22px] px-5 pt-5 pb-5 text-left transition active:scale-[0.99] lg:px-6 lg:pt-6 ${
                     on ? 'bg-blue-soft' : 'bg-card shadow-[0_1px_2px_rgb(0_0_0/0.04),0_6px_24px_rgb(0_0_0/0.05)] ring-1 ring-line/60'
                   }`}
                 >
-                  <span className="flex items-start justify-between gap-3">
+                  <span className="flex items-start justify-between gap-3 lg:flex-col-reverse lg:justify-end lg:gap-6">
                     <span>
                       <span className="block text-[1.25rem] font-normal text-ink">{text.name}</span>
                       <span className="mt-1 block text-[0.875rem] leading-snug text-muted">
@@ -46,12 +46,12 @@ export function HomeScreen() {
                         {text.purpose[1]}
                       </span>
                     </span>
-                    <span className="flex items-center gap-3 pt-2">
-                      <Waveform phases={e.pattern.phases} className={`h-7 w-20 ${on ? 'text-blue' : 'text-ink-2'}`} />
-                      <ChevronRightIcon className="-mt-5 size-4 text-ink-2" />
+                    <span className="flex items-center gap-3 pt-2 lg:pt-0">
+                      <Waveform phases={e.pattern.phases} className={`h-7 w-20 lg:h-10 lg:w-28 ${on ? 'text-blue' : 'text-ink-2'}`} />
+                      <ChevronRightIcon className="-mt-5 size-4 text-ink-2 lg:hidden" />
                     </span>
                   </span>
-                  <span className="mt-5 block text-[0.8125rem] text-muted">{rhythmText(e, scale, lang, t)}</span>
+                  <span className="mt-5 block text-[0.8125rem] text-muted lg:mt-auto lg:pt-8">{rhythmText(e, scale, lang, t)}</span>
                 </button>
               </li>
             )

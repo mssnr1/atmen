@@ -9,11 +9,11 @@ export function LearnScreen() {
   const { lang, t } = useI18n()
   return (
     <div className="flex min-h-dvh flex-col bg-paper">
-      <main className="safe-area mx-auto w-full max-w-md flex-1 px-5">
-        <h1 className="mt-10 text-[1.875rem] font-normal tracking-[-0.01em]">{t.learnTitle}</h1>
+      <main className="safe-area mx-auto w-full max-w-md flex-1 px-5 md:max-w-xl lg:max-w-6xl lg:px-10">
+        <h1 className="mt-10 text-[1.875rem] font-normal tracking-[-0.01em] md:mt-8 md:text-[2.5rem]">{t.learnTitle}</h1>
         <p className="mt-2 text-[0.9375rem] text-muted">{t.learnIntro}</p>
 
-        <div className="mt-8 space-y-4">
+        <div className="mt-8 space-y-4 lg:grid lg:grid-cols-3 lg:items-start lg:gap-5 lg:space-y-0">
           {exercises.map((e) => {
             const text = e.text[lang]
             return (

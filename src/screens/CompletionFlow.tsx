@@ -76,8 +76,8 @@ function WellDone({
         <Wordmark className="text-[1.0625rem]" />
       </header>
       <section className="flex flex-1 flex-col justify-center py-10">
-        <h1 className="text-[2.75rem] leading-tight font-normal">{t.wellDone}</h1>
-        <p className="mt-6 text-[1.25rem] leading-snug text-white/85" data-testid="completion-text">
+        <h1 className="text-[2.75rem] leading-tight font-normal md:text-[3.75rem]">{t.wellDone}</h1>
+        <p className="mt-6 text-[1.25rem] leading-snug text-white/85 md:text-[1.5rem]" data-testid="completion-text">
           {t.completed(t.minutesLong(minutes), exercise.text[lang].name)}
         </p>
       </section>
@@ -94,7 +94,7 @@ function WellDone({
 
 function WhitePage({ children, testId }: { children: React.ReactNode; testId: string }) {
   return (
-    <main className="safe-area mx-auto flex min-h-dvh max-w-md flex-col bg-paper px-6" data-testid={testId}>
+    <main className="safe-area mx-auto flex min-h-dvh max-w-md flex-col bg-paper px-6 md:max-w-lg md:pb-10" data-testid={testId}>
       <header className="pt-6">
         <Wordmark className="text-[0.8125rem] text-muted" />
       </header>
