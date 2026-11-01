@@ -1,5 +1,7 @@
 import * as THREE from 'three'
-import { LIPS } from './mouth'
+
+/** The mouth: where the lips meet (world metres) and the half size of the slit between them. */
+export const LIPS = { y: 1.515, z: 0.08, halfWidth: 0.022, halfHeight: 0.007 }
 
 type Hole = { verts: number[]; center: THREE.Vector3; normal: THREE.Vector3; radius: number; aspect: number; length: number }
 

@@ -9,7 +9,6 @@ import { BreathSpecks } from './BreathSpecks'
 import { addCalmMorph } from './face'
 import { withHolesFilled } from './holes'
 import { simplifiedLung } from './lungShape'
-import { mouthCavity } from './mouth'
 import { makeMaterials, type MaterialKind } from './materials'
 import { makeStripeMaterials, STRIPE_PALETTES, type EdgeMap, type Fade } from './stripes'
 
@@ -57,12 +56,33 @@ const BREATH_GAIN: Record<string, number> = { Body_Shell: 2.6, Lung_Left: 1.7, L
  * airway; the bronchi end inside the lungs, which hide their ends).
  */
 const AIRWAY_TOP = 1.4606
+/** Below this height the model's throat (mouth and lower pharynx) is left out; the nose above stays. */
+const NOSE_FLOOR = 1.552
 const CARINA: [number, number, number] = [-0.0005, 1.362, -0.013]
 const AIRWAY_BRANCHES: Branch[] = [
   { points: [[0, AIRWAY_TOP + 0.004, 0.01], [-0.0004, 1.4257, 0.005], [-0.0004, 1.3904, -0.0033], CARINA], r0: 0.0105, r1: 0.0095 },
+  // Up the back of the throat into the back of the nose, so nose and windpipe join without the mouth.
+  { points: [[0, AIRWAY_TOP + 0.004, 0.01], [0, 1.483, 0.02], [0, 1.53, 0.028], [0, 1.568, 0.024]], r0: 0.0105, r1: 0.011 },
   { points: [CARINA, [0.027, 1.335, -0.018], [0.044, 1.321, -0.021], [0.062, 1.306, -0.02]], r0: 0.0078, r1: 0.0058 },
   { points: [CARINA, [-0.014, 1.348, -0.017], [-0.031, 1.318, -0.021], [-0.044, 1.297, -0.026]], r0: 0.0078, r1: 0.0058 },
 ]
+
+/** The geometry with only the triangles whose centre lies above `floor` (world height). */
+function noseOnly(geometry: THREE.BufferGeometry, world: THREE.Matrix4, floor: number): THREE.BufferGeometry {
+  const out = geometry.clone()
+  const index = geometry.index
+  const pos = geometry.attributes.position
+  if (!index) return out
+  const v = new THREE.Vector3()
+  const keep: number[] = []
+  for (let i = 0; i < index.count; i += 3) {
+    let y = 0
+    for (let k = 0; k < 3; k++) y += v.fromBufferAttribute(pos, index.getX(i + k)).applyMatrix4(world).y / 3
+    if (y > floor) keep.push(index.getX(i), index.getX(i + 1), index.getX(i + 2))
+  }
+  out.setIndex(keep)
+  return out
+}
 
 /** A heartbeat shape over one beat (0..1): a strong contraction, then a smaller one. */
 export function heartbeat(phase: number): number {
@@ -156,7 +176,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         mesh.visible = false
         let tree = mesh.geometry.userData.tree as THREE.BufferGeometry | undefined
         if (!tree) {
-          tree = airwayTree(AIRWAY_BRANCHES, { top: AIRWAY_TOP })
+          tree = airwayTree(AIRWAY_BRANCHES, { top: 1.7 })
           tree.applyMatrix4(mesh.parent.matrixWorld.clone().invert())
           mesh.geometry.userData.tree = tree
         }
@@ -166,16 +186,11 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         backs.push([mesh, airway])
         return
       }
-      // The throat gets a mouth cavity that runs forward to the lips, like the nose does.
-      if (mesh.name === 'Nasal_Cavity' && mesh.parent) {
-        const tube = mouthCavity(mesh)
-        if (tube) {
-          tube.applyMatrix4(mesh.parent.matrixWorld.clone().invert())
-          const mouth = new THREE.Mesh(tube, materials.airway)
-          mouth.renderOrder = part.order
-          mouth.userData.lungBack = true
-          backs.push([mesh, mouth])
-        }
+      // Of the nose and throat only the nose is drawn: the throat and mouth below its floor are left
+      // out, and the airway tube above runs up the back of the throat to meet it.
+      if (mesh.name === 'Nasal_Cavity' && !mesh.geometry.userData.noseOnly) {
+        mesh.geometry = noseOnly(mesh.geometry, mesh.matrixWorld, NOSE_FLOOR)
+        mesh.geometry.userData.noseOnly = true
       }
       // Second copies: the inner wall of the head (filling the gaps under the jaw) and the near wall of the neck.
       if (mesh.name === 'Head' || mesh.name === 'Body_Shell') {
