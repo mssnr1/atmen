@@ -6,6 +6,7 @@ import { useTheme } from '../../lib/theme'
 import { breathState, type BreathSource } from '../breathState'
 import { airwayTree, type Branch } from './airwayTree'
 import { BreathSpecks } from './BreathSpecks'
+import { faceLines } from './face'
 import { withHolesFilled } from './holes'
 import { simplifiedLung } from './lungShape'
 import { mouthCavity } from './mouth'
@@ -96,6 +97,12 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     // Contour-stripe look: the lungs show the breath by lighting up from the bottom as they fill.
     return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges, fade) }
   }, [theme, level, edges, fade])
+  // Closed eyes and a smile, drawn on the face once the exercise is done.
+  const faceMaterial = useMemo(
+    () => new THREE.MeshBasicMaterial({ color: STRIPE_PALETTES[theme].line, transparent: true, opacity: 0, depthWrite: false }),
+    [theme],
+  )
+  useEffect(() => () => faceMaterial.dispose(), [faceMaterial])
   const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat'; gain: number }[]>([])
   const beat = useRef(0)
 
@@ -206,6 +213,21 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
       }
     })
     for (const [src, back] of backs) src.parent?.add(back)
+    // The calm face: laid onto the head (holes filled above), in the model's own (world) space.
+    model.updateMatrixWorld(true)
+    let head: THREE.Mesh | undefined
+    model.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      if (!head && mesh.isMesh && !mesh.userData.lungBack && (mesh.name === 'Head' || mesh.parent?.name === 'Head')) head = mesh
+    })
+    if (head) {
+      for (const g of faceLines(head)) {
+        const line = new THREE.Mesh(g, faceMaterial)
+        line.renderOrder = 7
+        line.userData.lungBack = true
+        model.add(line)
+      }
+    }
     morphs.current = found
     const lungs = new THREE.Box3()
     model.updateMatrixWorld(true)
@@ -214,7 +236,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     })
     lungRange.current = lungs.isEmpty() ? null : [lungs.min.y, lungs.max.y]
     return () => Object.values(materials).forEach((m) => m.dispose())
-  }, [model, materials])
+  }, [model, materials, faceMaterial])
 
   useFrame(({ scene, camera }, delta) => {
     const snapshot = engine.sample()
@@ -232,6 +254,10 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
       m.visible = d < 1
     }
     for (const m of [materials.airway, materials.diaphragm]) m.visible = d < 1
+    // The face settles a little after the lungs have begun to fade.
+    const f = Math.min(Math.max((d - 0.35) / 0.65, 0), 1)
+    faceMaterial.opacity = 0.85 * f * f * (3 - 2 * f)
+    faceMaterial.visible = f > 0
     if (lungRange.current) {
       const [lo, hi] = lungRange.current
       level.value = lo + (hi - lo) * (0.04 + 0.98 * b.volume)
