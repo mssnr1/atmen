@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useTheme } from '../../lib/theme'
 import { breathState, type BreathSource } from '../breathState'
+import { airwayTree, type Branch } from './airwayTree'
 import { BreathSpecks } from './BreathSpecks'
 import { withHolesFilled } from './holes'
 import { simplifiedLung } from './lungShape'
@@ -48,6 +49,19 @@ const PARTS: Record<string, { kind: MaterialKind; order: number; hidden?: boolea
  * on a phone screen: the chest wall most, lungs, diaphragm and belly with it.
  */
 const BREATH_GAIN: Record<string, number> = { Body_Shell: 2.6, Lung_Left: 1.7, Lung_Right: 1.7, Diaphragm: 1.25, Abdomen: 1.7 }
+
+/**
+ * Windpipe and main bronchi, drawn as one smooth piece instead of the model's
+ * separate, overlapping trachea and bronchi (world metres, along the model's
+ * airway; the bronchi end inside the lungs, which hide their ends).
+ */
+const AIRWAY_TOP = 1.4606
+const CARINA: [number, number, number] = [-0.0005, 1.362, -0.013]
+const AIRWAY_BRANCHES: Branch[] = [
+  { points: [[0, AIRWAY_TOP + 0.004, 0.01], [-0.0004, 1.4257, 0.005], [-0.0004, 1.3904, -0.0033], CARINA], r0: 0.0105, r1: 0.0095 },
+  { points: [CARINA, [0.027, 1.335, -0.018], [0.044, 1.321, -0.021], [0.062, 1.306, -0.02]], r0: 0.0078, r1: 0.0058 },
+  { points: [CARINA, [-0.014, 1.348, -0.017], [-0.031, 1.318, -0.021], [-0.044, 1.297, -0.026]], r0: 0.0078, r1: 0.0058 },
+]
 
 /** A heartbeat shape over one beat (0..1): a strong contraction, then a smaller one. */
 export function heartbeat(phase: number): number {
@@ -129,6 +143,25 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         }
       }
       mesh.material = mesh.name === 'Head' ? materials.head : materials[part.kind]
+      // Trachea and bronchi give way to one smooth airway with a clean fork (see `airwayTree`).
+      if (mesh.name === 'Bronchi') {
+        mesh.visible = false
+        return
+      }
+      if (mesh.name === 'Trachea' && mesh.parent) {
+        mesh.visible = false
+        let tree = mesh.geometry.userData.tree as THREE.BufferGeometry | undefined
+        if (!tree) {
+          tree = airwayTree(AIRWAY_BRANCHES, { top: AIRWAY_TOP })
+          tree.applyMatrix4(mesh.parent.matrixWorld.clone().invert())
+          mesh.geometry.userData.tree = tree
+        }
+        const airway = new THREE.Mesh(tree, materials.airway)
+        airway.renderOrder = part.order
+        airway.userData.lungBack = true
+        backs.push([mesh, airway])
+        return
+      }
       // The throat gets a mouth cavity that runs forward to the lips, like the nose does.
       if (mesh.name === 'Nasal_Cavity' && mesh.parent) {
         const tube = mouthCavity(mesh)
