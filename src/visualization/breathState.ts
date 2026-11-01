@@ -37,7 +37,8 @@ const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1)
 
 export function breathState(s: EngineSnapshot): BreathState {
   const elapsedS = s.elapsedMs / 1000
-  if (s.status === 'idle') return { volume: 0, direction: 0, flow: 0, phaseProgress: 0, phase: 'idle', elapsedS }
+  // Before the start and once the exercise is done the body is at rest: no breath, no air.
+  if (s.status === 'idle' || s.status === 'completed') return { volume: 0, direction: 0, flow: 0, phaseProgress: 0, phase: 'idle', elapsedS }
   const p = clamp01(s.phaseProgress)
   // Flow peaks mid-phase and is 0 at the turns.
   const flow = breathRate(p)
