@@ -1,5 +1,5 @@
 import { useGLTF } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import type { BreathingEngine } from '../../engine'
@@ -8,7 +8,12 @@ import { breathState } from '../breathState'
 import { BreathSpecks } from './BreathSpecks'
 import { withoutFissures } from './fissures'
 import { makeMaterials, type MaterialKind } from './materials'
-import { makeStripeMaterials, STRIPE_PALETTES } from './stripes'
+import { makeStripeMaterials, STRIPE_PALETTES, type EdgeMap } from './stripes'
+
+/** Layer of the lung copies that only draw the edge map. */
+const EDGE_LAYER = 5
+/** Width of the rim along the edge between the lungs, in CSS pixels (like the outer rim). */
+const EDGE_RIM_PX = 18
 
 export const MODEL_URL = `${import.meta.env.BASE_URL}models/atmen-anatomy.glb`
 
@@ -54,13 +59,16 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   const { scene } = useGLTF(MODEL_URL, false, true)
   const theme = useTheme()
   const level = useMemo(() => ({ value: 99 }), [])
-  // Width of the glow around each lung, in the lung mesh's own units (set from its scale below).
-  const outline = useMemo(() => ({ value: 0 }), [])
+  const { gl } = useThree()
+  // Map of how far away the nearest lung surface is, drawn each frame before the scene.
+  const edgeTarget = useMemo(() => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: true }), [])
+  const edges = useMemo<EdgeMap>(() => ({ map: { value: edgeTarget.texture }, size: { value: new THREE.Vector2(1, 1) }, radius: { value: EDGE_RIM_PX } }), [edgeTarget])
+  useEffect(() => () => edgeTarget.dispose(), [edgeTarget])
   const lungRange = useRef<[number, number] | null>(null)
   const materials = useMemo(() => {
     // Contour-stripe look: the lungs show the breath by lighting up from the bottom as they fill.
-    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, outline) }
-  }, [theme, level, outline])
+    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges) }
+  }, [theme, level, edges])
   const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat'; gain: number }[]>([])
   const beat = useRef(0)
 
@@ -69,7 +77,7 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   useEffect(() => {
     model.updateMatrixWorld(true)
     const found: typeof morphs.current = []
-    // Remove the back-wall and contour copies of a previous theme before adding fresh ones.
+    // Remove the back-wall and edge-map copies of a previous theme before adding fresh ones.
     const stale: THREE.Object3D[] = []
     model.traverse((o) => o.userData.lungBack && stale.push(o))
     stale.forEach((o) => o.removeFromParent())
@@ -102,14 +110,13 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
         back.material = materials.lungBack
         back.renderOrder = part.order - 1
         back.userData.lungBack = true
-        // And a third draws a soft glow along its edge, so the edge between the two lungs reads like the outer one.
-        const edge = mesh.clone(false)
-        edge.material = materials.lungOutline
-        edge.renderOrder = part.order + 0.5
-        edge.userData.lungBack = true
-        outline.value = 0.008 / mesh.getWorldScale(new THREE.Vector3()).x
-        backs.push([mesh, back], [mesh, edge])
-        for (const copy of [back, edge]) if (dict?.Inhale !== undefined) found.push({ mesh: copy, index: dict.Inhale, kind: 'breath', gain })
+        // And one, seen only by the edge map, marks where this lung lies in front of the other.
+        const depth = mesh.clone(false)
+        depth.material = /Left/.test(mesh.name + (mesh.parent?.name ?? '')) ? materials.lungEdgeLeft : materials.lungEdgeRight
+        depth.layers.set(EDGE_LAYER)
+        depth.userData.lungBack = true
+        backs.push([mesh, back], [mesh, depth])
+        for (const copy of [back, depth]) if (dict?.Inhale !== undefined) found.push({ mesh: copy, index: dict.Inhale, kind: 'breath', gain })
       }
     })
     for (const [src, back] of backs) src.parent?.add(back)
@@ -123,7 +130,7 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
     return () => Object.values(materials).forEach((m) => m.dispose())
   }, [model, materials])
 
-  useFrame((_, delta) => {
+  useFrame(({ scene, camera }, delta) => {
     const snapshot = engine.sample()
     const b = breathState(snapshot)
     const dt = Math.min(delta, 0.1)
@@ -137,6 +144,27 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
       const influences = m.mesh.morphTargetInfluences
       if (influences) influences[m.index] = m.kind === 'beat' ? h : b.volume * m.gain
     }
+    // Edge map for the rim between the lungs, from the same camera as the frame about to be drawn.
+    const buffer = gl.getDrawingBufferSize(new THREE.Vector2())
+    const w = Math.max(1, buffer.x)
+    const hgt = Math.max(1, buffer.y)
+    if (edgeTarget.width !== w || edgeTarget.height !== hgt) edgeTarget.setSize(w, hgt)
+    edges.size.value.copy(buffer)
+    edges.radius.value = EDGE_RIM_PX * gl.getPixelRatio()
+    const layers = camera.layers.mask
+    const background = scene.background
+    const clear = gl.getClearColor(new THREE.Color())
+    const clearAlpha = gl.getClearAlpha()
+    camera.layers.set(EDGE_LAYER)
+    scene.background = null
+    gl.setRenderTarget(edgeTarget)
+    gl.setClearColor(0x000000, 0)
+    gl.clear()
+    gl.render(scene, camera)
+    gl.setRenderTarget(null)
+    gl.setClearColor(clear, clearAlpha)
+    scene.background = background
+    camera.layers.mask = layers
   })
 
   return (
