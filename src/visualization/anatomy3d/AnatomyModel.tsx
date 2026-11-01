@@ -54,11 +54,13 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   const { scene } = useGLTF(MODEL_URL, false, true)
   const theme = useTheme()
   const level = useMemo(() => ({ value: 99 }), [])
+  // Width of the glow around each lung, in the lung mesh's own units (set from its scale below).
+  const outline = useMemo(() => ({ value: 0 }), [])
   const lungRange = useRef<[number, number] | null>(null)
   const materials = useMemo(() => {
     // Contour-stripe look: the lungs show the breath by lighting up from the bottom as they fill.
-    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level) }
-  }, [theme, level])
+    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, outline) }
+  }, [theme, level, outline])
   const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat'; gain: number }[]>([])
   const beat = useRef(0)
 
@@ -67,7 +69,7 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   useEffect(() => {
     model.updateMatrixWorld(true)
     const found: typeof morphs.current = []
-    // Remove the back-wall copies of a previous theme before adding fresh ones.
+    // Remove the back-wall and contour copies of a previous theme before adding fresh ones.
     const stale: THREE.Object3D[] = []
     model.traverse((o) => o.userData.lungBack && stale.push(o))
     stale.forEach((o) => o.removeFromParent())
@@ -100,8 +102,14 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
         back.material = materials.lungBack
         back.renderOrder = part.order - 1
         back.userData.lungBack = true
-        backs.push([mesh, back])
-        if (dict?.Inhale !== undefined) found.push({ mesh: back, index: dict.Inhale, kind: 'breath', gain })
+        // And a third draws a soft glow along its edge, so the edge between the two lungs reads like the outer one.
+        const edge = mesh.clone(false)
+        edge.material = materials.lungOutline
+        edge.renderOrder = part.order + 0.5
+        edge.userData.lungBack = true
+        outline.value = 0.008 / mesh.getWorldScale(new THREE.Vector3()).x
+        backs.push([mesh, back], [mesh, edge])
+        for (const copy of [back, edge]) if (dict?.Inhale !== undefined) found.push({ mesh: copy, index: dict.Inhale, kind: 'breath', gain })
       }
     })
     for (const [src, back] of backs) src.parent?.add(back)

@@ -91,6 +91,44 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
   return m
 }
 
+/**
+ * A soft glow along the edge of a shape: its back faces pushed out a little
+ * along the normals, brightest right at the edge and fading outward, like the
+ * rim on the inside of the edge. Where one lung lies in front of the other this
+ * marks the edge between them; inside a lung its own near wall hides it.
+ */
+export function outlineMaterial(color: string, alpha: number, offset: { value: number }): THREE.Material {
+  const m = new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, side: THREE.BackSide })
+  m.onBeforeCompile = (shader) => {
+    shader.uniforms.uOffset = offset
+    shader.uniforms.uAlpha = { value: alpha }
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nuniform float uOffset;\nvarying vec3 vN;\nvarying vec3 vView;')
+      .replace('#include <morphtarget_vertex>', '#include <morphtarget_vertex>\ntransformed += normalize(normal) * uOffset;')
+      // Pulled 7 mm toward the eye (same spot on screen), so the edge is not lost
+      // where the two lungs almost touch.
+      .replace(
+        '#include <project_vertex>',
+        `#include <project_vertex>
+        vN = normalize(normalMatrix * normal);
+        vView = -mvPosition.xyz;
+        mvPosition.xyz *= 1.0 - 0.007 / length(mvPosition.xyz);
+        gl_Position = projectionMatrix * mvPosition;`,
+      )
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform float uAlpha;\nvarying vec3 vN;\nvarying vec3 vView;')
+      .replace(
+        '#include <dithering_fragment>',
+        `#include <dithering_fragment>
+        // Just outside the edge the pushed-out surface still faces away a little; at its own rim it turns edge-on.
+        float f = abs(dot(normalize(vN), normalize(vView)));
+        gl_FragColor.a = pow(smoothstep(0.0, 0.45, f), 1.6) * uAlpha;`,
+      )
+  }
+  m.customProgramCacheKey = () => `outline-${color}-${alpha}`
+  return m
+}
+
 export type StripePalette = { line: string; lung: string; lungRim: string; body: string }
 
 export const STRIPE_PALETTES: Record<'light' | 'dark', StripePalette> = {
@@ -98,7 +136,7 @@ export const STRIPE_PALETTES: Record<'light' | 'dark', StripePalette> = {
   dark: { body: '#8f877f', line: '#b89aff', lung: '#b89aff', lungRim: '#dccbff' },
 }
 
-export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { value: number }) {
+export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { value: number }, outline: { value: number }) {
   return {
     skin: stripeMaterial({ pattern: 'around', density: 120, width: 0.06, line: p.body, fill: p.body, lineAlpha: dark ? 0.6 : 0.55, fillAlpha: 0.0, rim: p.body, rimAlpha: dark ? 0.3 : 0.26, focusTrunk: true }),
     head: stripeMaterial({ pattern: 'around', density: 120, width: 0.0, line: p.body, fill: p.body, lineAlpha: 0.0, fillAlpha: 0.0, rim: p.body, rimAlpha: dark ? 0.32 : 0.28 }),
@@ -107,6 +145,7 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     // a lung no longer show through it; only the lung's own back rings do.
     lungBack: stripeMaterial({ pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: dark ? 0.42 : 0.36, dimAlpha: dark ? 0.1 : 0.08, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.0, level, side: 'back', occlude: true }),
     lung: stripeMaterial({ pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: 1.0, dimAlpha: dark ? 0.22 : 0.18, fillAlpha: dark ? 0.05 : 0.035, rim: p.lungRim, rimAlpha: 0.85, level, occlude: true }),
+    lungOutline: outlineMaterial(dark ? p.lung : p.lungRim, dark ? 0.5 : 0.9, outline),
     diaphragm: stripeMaterial({ pattern: 'level', density: 85, width: 0.06, line: p.lung, fill: p.lung, lineAlpha: 0.3, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.3 }),
     airway: stripeMaterial({ pattern: 'level', density: 160, width: 0.1, line: p.lung, fill: p.lung, lineAlpha: 0.45, fillAlpha: 0.04, rim: p.lungRim, rimAlpha: 0.45 }),
   }
