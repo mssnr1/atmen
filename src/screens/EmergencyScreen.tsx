@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { BreathingBubbles } from "../calm/BreathingBubbles";
+import { BreathField } from '../calm/BreathField'
 import { calmText } from "../calm/texts";
 import { CloseIcon } from "../components/icons";
 import { useI18n } from "../i18n";
@@ -64,7 +64,9 @@ export function EmergencyScreen() {
       className="relative min-h-dvh overflow-hidden bg-paper"
       data-testid="sos"
     >
-      <BreathingBubbles cycleMs={CYCLE_MS} variant="long-out" />
+      <div className="fixed inset-0">
+        <BreathField inMs={IN_MS} outMs={OUT_MS} center={[0.5, 0.4]} />
+      </div>
       <div className="safe-area relative mx-auto flex w-full max-w-md flex-col px-5 md:max-w-xl">
         <header className="flex items-center justify-between">
           <span className="text-[0.9375rem] font-medium text-ink-2">

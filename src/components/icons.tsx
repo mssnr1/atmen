@@ -163,3 +163,16 @@ export const CircleIcon = (p: P) => (
     <circle cx="12" cy="12" r="4" opacity={0.5} />
   </svg>
 )
+export const LeafIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M5 19c0-8 5-13 14-14-.5 9-5.5 14-13 14" />
+    <path d="M5 19c3-4 6-7 9-9" />
+  </svg>
+)
+export const LifebuoyIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <circle cx="12" cy="12" r="3.5" />
+    <path d="M6 6l3.5 3.5M18 6l-3.5 3.5M6 18l3.5-3.5M18 18l-3.5-3.5" />
+  </svg>
+)

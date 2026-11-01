@@ -19,9 +19,42 @@ type Speck = {
   drift: number
   /** How far the speck strays from its letter: 1 for the core, larger for the airy halo. */
   reach: number
+  /** Its letter, and where it sits in it (in font sizes from the letter's start and the middle line). */
+  li: number
+  u: number
+  v: number
 }
 
-/** Points inside the glyphs of `text`, sampled from an offscreen raster. */
+type Layout = { px: number; xs: number[]; cy: number }
+
+/** Where each letter starts and the font size that fits the box, for a letter spacing in em. */
+function layoutWord(
+  g: CanvasRenderingContext2D,
+  chars: string[],
+  width: number,
+  height: number,
+  size: number,
+  family: string,
+  spacing: number,
+  align: 'center' | 'left',
+  fitSpacing = spacing,
+): Layout {
+  const measure = (px: number, sp = spacing) => {
+    g.font = `500 ${px}px ${family}`
+    return chars.reduce((sum, ch) => sum + g.measureText(ch).width, 0) + sp * px * (chars.length - 1)
+  }
+  // Shrink long words so they keep some air at the sides (at the widest spacing, so the letters keep their size).
+  const px = size * Math.min(1, (width * 0.86) / measure(size, Math.max(spacing, fitSpacing)))
+  let x = align === 'left' ? 12 : (width - measure(px)) / 2
+  const xs: number[] = []
+  for (const ch of chars) {
+    xs.push(x)
+    x += g.measureText(ch).width + spacing * px
+  }
+  return { px, xs, cy: height / 2 }
+}
+
+/** Points inside the glyphs of `text`, sampled from an offscreen raster, with the letter each belongs to. */
 function samplePoints(
   text: string,
   width: number,
@@ -31,37 +64,32 @@ function samplePoints(
   spacing: number,
   align: 'center' | 'left',
   scale: number,
-): [number, number][] {
+  fitSpacing: number,
+): { points: [number, number, number][]; layout: Layout; chars: string[]; g: CanvasRenderingContext2D } | null {
   const c = document.createElement('canvas')
   c.width = Math.max(1, Math.round(width))
   c.height = Math.max(1, Math.round(height))
   const g = c.getContext('2d', { willReadFrequently: true })
-  if (!g) return []
+  if (!g) return null
   // Letters are placed one by one so the spacing (in em) works in every browser.
   const chars = [...text]
-  const measure = (px: number) => {
-    g.font = `500 ${px}px ${family}`
-    return chars.reduce((sum, ch) => sum + g.measureText(ch).width, 0) + spacing * px * (chars.length - 1)
-  }
-  // Shrink long words so they keep some air at the sides.
-  const px = size * Math.min(1, (c.width * 0.86) / measure(size))
-  let x = align === 'left' ? 12 : (c.width - measure(px)) / 2
+  const layout = layoutWord(g, chars, c.width, c.height, size, family, spacing, align, fitSpacing)
   g.textBaseline = 'middle'
   g.fillStyle = '#000'
-  for (const ch of chars) {
-    g.fillText(ch, x, c.height / 2)
-    x += g.measureText(ch).width + spacing * px
-  }
-  const data = g.getImageData(0, 0, c.width, c.height).data
-  const points: [number, number][] = []
+  const points: [number, number, number][] = []
   const step = Math.max(1, Math.round(2 * scale))
   const jitter = 5 * scale * scale
-  for (let y = 0; y < c.height; y += step) {
-    for (let x = 0; x < c.width; x += step) {
-      if (data[(y * c.width + x) * 4 + 3] > 120) points.push([x + (Math.random() - 0.5) * jitter, y + (Math.random() - 0.5) * jitter])
+  chars.forEach((ch, li) => {
+    g.clearRect(0, 0, c.width, c.height)
+    g.fillText(ch, layout.xs[li], layout.cy)
+    const data = g.getImageData(0, 0, c.width, c.height).data
+    for (let y = 0; y < c.height; y += step) {
+      for (let x = 0; x < c.width; x += step) {
+        if (data[(y * c.width + x) * 4 + 3] > 120) points.push([x + (Math.random() - 0.5) * jitter, y + (Math.random() - 0.5) * jitter, li])
+      }
     }
-  }
-  return points
+  })
+  return { points, layout, chars, g }
 }
 
 /**
@@ -76,6 +104,7 @@ export function ParticleWord({
   spacing = 0,
   align = 'center',
   halo = 0,
+  fitSpacing = 0,
 }: {
   text: string
   className?: string
@@ -86,6 +115,8 @@ export function ParticleWord({
   align?: 'center' | 'left'
   /** Share of specks (0 to 1) that float loosely around the word instead of forming it. */
   halo?: number
+  /** The widest spacing the word will take; the font is sized for it so letters keep their size while spacing changes. */
+  fitSpacing?: number
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const spacingRef = useRef(spacing)
@@ -111,18 +142,38 @@ export function ParticleWord({
       color = getComputedStyle(el).color || color
     }
 
+    // The last raster, so a new letter spacing can move whole letters instead of reshuffling specks.
+    let sampled: { word: string; chars: string[]; g: CanvasRenderingContext2D; family: string } | null = null
+
+    const respace = () => {
+      if (!sampled) return
+      const { px, xs, cy } = layoutWord(sampled.g, sampled.chars, w, h, fontSize, sampled.family, spacingRef.current, align, fitSpacing)
+      for (const s of specks) {
+        s.tx = xs[s.li] + s.u * px
+        s.ty = cy + s.v * px
+      }
+    }
+
     const retarget = (word: string) => {
       current = word
       if (!w || !h) return
+      if (sampled?.word === word && specks.length) {
+        respace()
+        return
+      }
       const family = getComputedStyle(el).fontFamily
-      const points = samplePoints(word, w, h, fontSize, family, spacingRef.current, align, scale)
-      if (!points.length) return
+      const result = samplePoints(word, w, h, fontSize, family, spacingRef.current, align, scale, fitSpacing)
+      if (!result?.points.length) return
+      const { points, layout } = result
+      sampled = { word, chars: result.chars, g: result.g, family }
       // Pick targets and pair them with the specks from left to right, so each speck
       // only flows a short way into the new letters and the word stays readable.
       const targets = Array.from({ length: count }, () => points[Math.floor(Math.random() * points.length)])
       targets.sort((a, b) => a[0] - b[0])
+      const local = ([tx, ty, li]: [number, number, number]) => ({ li, u: (tx - layout.xs[li]) / layout.px, v: (ty - layout.cy) / layout.px })
       if (specks.length === 0) {
-        for (const [tx, ty] of targets) {
+        for (const p of targets) {
+          const [tx, ty] = p
           specks.push({
             x: tx + (Math.random() - 0.5) * 30 * scale,
             y: ty + (Math.random() - 0.5) * 20 * scale,
@@ -134,6 +185,7 @@ export function ParticleWord({
             alpha: 0.3 + Math.random() * 0.55,
             drift: 0,
             reach: Math.random() < halo ? 4 + Math.random() * 6 : 1,
+            ...local(p),
           })
         }
       } else {
@@ -141,6 +193,7 @@ export function ParticleWord({
         order.forEach((i, n) => {
           specks[i].tx = targets[n][0]
           specks[i].ty = targets[n][1]
+          Object.assign(specks[i], local(targets[n]))
         })
       }
     }
@@ -154,6 +207,7 @@ export function ParticleWord({
       el.height = Math.round(h * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       readColor()
+      sampled = null
       retarget(current)
     }
 
@@ -163,7 +217,10 @@ export function ParticleWord({
     const themeObserver = new MutationObserver(readColor)
     themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
     // Web fonts may arrive after the first raster.
-    document.fonts?.ready.then(() => retarget(current))
+    document.fonts?.ready.then(() => {
+      sampled = null
+      retarget(current)
+    })
 
     let raf = 0
     let last = performance.now()
@@ -212,7 +269,7 @@ export function ParticleWord({
     }
     // The canvas is set up once; word changes go through `retarget` below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fontSize, align, halo])
+  }, [fontSize, align, halo, fitSpacing])
 
   useEffect(() => {
     state.current?.retarget(text)
