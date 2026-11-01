@@ -26,11 +26,10 @@ const PARTS: Record<string, { kind: MaterialKind; order: number; hidden?: boolea
   // airways and diaphragm drawn after them are hidden where a lung covers them.
   Lung_Left: { kind: 'lung', order: 2 },
   Lung_Right: { kind: 'lung', order: 2 },
-  // The airways come before the neck and the head, whose skin writes depth and would hide the trachea.
+  // The airways, nose and throat included, come before the neck and the head, whose skin writes
+  // depth and would otherwise hide them: the whole way from the nose to the lungs stays visible.
   Trachea: { kind: 'airway', order: 2.2 },
   Bronchi: { kind: 'airway', order: 2.2 },
-  // The nose and throat cavities lie inside the head, which hides them anyway; only through the
-  // gaps around the neck would they peek out as stray blue patches. The specks still show the way in.
   Nasal_Cavity: { kind: 'airway', order: 2.2 },
   Diaphragm: { kind: 'diaphragm', order: 4 },
   Abdomen: { kind: 'skin', order: 6 },
