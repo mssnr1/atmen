@@ -8,6 +8,7 @@ import { breathState } from '../breathState'
 import { BreathSpecks } from './BreathSpecks'
 import { withHolesFilled } from './holes'
 import { simplifiedLung } from './lungShape'
+import { mouthCavity } from './mouth'
 import { makeMaterials, type MaterialKind } from './materials'
 import { makeStripeMaterials, STRIPE_PALETTES, type EdgeMap } from './stripes'
 
@@ -122,6 +123,17 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
         }
       }
       mesh.material = mesh.name === 'Head' ? materials.head : materials[part.kind]
+      // The throat gets a mouth cavity that runs forward to the lips, like the nose does.
+      if (mesh.name === 'Nasal_Cavity' && mesh.parent) {
+        const tube = mouthCavity(mesh)
+        if (tube) {
+          tube.applyMatrix4(mesh.parent.matrixWorld.clone().invert())
+          const mouth = new THREE.Mesh(tube, materials.airway)
+          mouth.renderOrder = part.order
+          mouth.userData.lungBack = true
+          backs.push([mesh, mouth])
+        }
+      }
       // Second copies: the inner wall of the head (filling the gaps under the jaw) and the near wall of the neck.
       if (mesh.name === 'Head' || mesh.name === 'Body_Shell') {
         const copy = mesh.clone(false)
