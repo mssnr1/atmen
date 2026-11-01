@@ -1,12 +1,15 @@
-import { transitionsBetween, type PhaseType, type SessionPlan } from '../engine'
+import type { PhaseType, SessionPlan } from '../engine'
+import { createPadBus, fadeOutPad, PAD_RELEASE_S, schedulePad, type PadBus, type PadVoice } from './pads'
 
-/** Tone per phase: rising pitch to breathe in, lower to breathe out. */
-const PHASE_TONES: Record<PhaseType, number> = {
-  inhale: 523.25, // C5
+/** Bell tone for a hold that is announced (not quiet). */
+const HOLD_TONES: Partial<Record<PhaseType, number>> = {
   holdIn: 587.33, // D5
-  exhale: 392.0, // G4
   holdOut: 349.23, // F4
 }
+
+/** How far ahead pads are scheduled, and how often the window is extended. */
+const LOOKAHEAD_S = 120
+const REFILL_MS = 10_000
 
 type AudioContextCtor = typeof AudioContext
 
@@ -18,14 +21,18 @@ function getAudioContextCtor(): AudioContextCtor | undefined {
 export const audioSupported = () => getAudioContextCtor() !== undefined
 
 /**
- * Plays soft bell tones on phase changes. Cues for the rest of the session are
- * scheduled ahead on the Web Audio clock, so they keep exact time even when the
- * screen is off or the tab is throttled.
+ * Plays soft ambient pads that swell with each breath in and out. Cues are
+ * scheduled ahead on the Web Audio clock (two minutes at a time, topped up
+ * regularly), so they keep exact time even when the screen is off or the tab is
+ * throttled.
  */
 export class AudioCues {
   private ctx: AudioContext | null = null
   private master: GainNode | null = null
+  private pads: PadBus | null = null
   private scheduled: OscillatorNode[] = []
+  private voices: PadVoice[] = []
+  private session: { plan: SessionPlan; zero: number; nextIndex: number; timer: number } | null = null
 
   /** Must be called from a user gesture (tap) to unlock audio on mobile. */
   async unlock(): Promise<void> {
@@ -36,6 +43,7 @@ export class AudioCues {
       this.master = this.ctx.createGain()
       this.master.gain.value = 0.5
       this.master.connect(this.ctx.destination)
+      this.pads = createPadBus(this.ctx, this.master)
     }
     if (this.ctx.state !== 'running') await this.ctx.resume().catch(() => {})
   }
@@ -51,18 +59,58 @@ export class AudioCues {
     if (!ctx) return
     const elapsed = getElapsedMs()
     // Map session time onto the audio clock.
-    const sessionZero = ctx.currentTime - elapsed / 1000
+    const zero = ctx.currentTime - elapsed / 1000
     // On a fresh start, unlocking audio may take a moment; still cue the first breath.
-    const from = includeCurrent ? Math.max(0, elapsed - 250) : elapsed + 1
-    for (const t of transitionsBetween(plan, from, plan.totalDurationMs)) {
-      if (t.phase.quiet) continue
-      this.bell(sessionZero + t.atMs / 1000, PHASE_TONES[t.phase.type], 1.6, 0.35)
+    // Otherwise join the breath already under way so resuming isn't silent.
+    const from = includeCurrent ? Math.max(0, elapsed - 250) : elapsed
+    let nextIndex = plan.segments.findIndex((s) => s.startMs + s.durationMs > from)
+    if (nextIndex < 0) nextIndex = plan.segments.length
+    // Skip back over quiet pauses to the breath they belong to.
+    while (nextIndex > 0 && nextIndex < plan.segments.length && isHold(plan.segments[nextIndex].phase.type) && plan.segments[nextIndex].phase.quiet) nextIndex--
+    this.session = { plan, zero, nextIndex, timer: window.setInterval(() => this.fill(), REFILL_MS) }
+    this.fill()
+    this.chime(zero + plan.totalDurationMs / 1000)
+  }
+
+  /** Schedule pads up to the look-ahead horizon. */
+  private fill(): void {
+    const ctx = this.ctx
+    const session = this.session
+    if (!ctx || !this.pads || !session) return
+    const { plan, zero } = session
+    const horizon = ctx.currentTime + LOOKAHEAD_S
+    const segs = plan.segments
+    let i = session.nextIndex
+    while (i < segs.length && zero + segs[i].startMs / 1000 < horizon) {
+      const seg = segs[i]
+      const start = zero + seg.startMs / 1000
+      if (isHold(seg.phase.type)) {
+        // Announced holds keep the gentle bell; quiet ones are covered by the pad before.
+        const tone = HOLD_TONES[seg.phase.type]
+        if (!seg.phase.quiet && tone) this.bell(start, tone, 1.6, 0.2)
+        i++
+        continue
+      }
+      // A pad lingers through the pauses that follow it.
+      let hold = 0
+      let j = i + 1
+      while (j < segs.length && isHold(segs[j].phase.type)) hold += segs[j++].durationMs / 1000
+      if (start + seg.durationMs / 1000 + hold + PAD_RELEASE_S > ctx.currentTime) {
+        const kind = seg.phase.type === 'inhale' ? 'inhale' : 'exhale'
+        this.voices.push(schedulePad(ctx, this.pads, kind, start, seg.durationMs / 1000, hold))
+      }
+      i++
     }
-    const end = sessionZero + plan.totalDurationMs / 1000
-    this.chime(end)
+    session.nextIndex = i
+    const now = ctx.currentTime
+    this.voices = this.voices.filter((v) => v.endsAt > now)
   }
 
   cancel(): void {
+    if (this.session) window.clearInterval(this.session.timer)
+    this.session = null
+    if (this.ctx) for (const v of this.voices) fadeOutPad(this.ctx, v)
+    this.voices = []
     for (const osc of this.scheduled) {
       try {
         osc.stop()
@@ -107,6 +155,7 @@ export class AudioCues {
     this.cancel()
     void this.ctx?.close().catch(() => {})
     this.ctx = null
+    this.pads = null
   }
 
   private chime(at: number) {
@@ -142,6 +191,10 @@ export class AudioCues {
       this.scheduled.push(osc)
     }
   }
+}
+
+function isHold(type: PhaseType): boolean {
+  return type === 'holdIn' || type === 'holdOut'
 }
 
 /**
