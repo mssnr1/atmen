@@ -70,7 +70,15 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
         '#include <project_vertex>',
         `#include <project_vertex>
         vRest = (modelMatrix * vec4(position, 1.0)).xyz;
-        vN = normalize(normalMatrix * normal);
+        // The normal follows the morph targets too (e.g. the calm face), so the rim and line strength follow the shape.
+        vec3 shapedNormal = normal;
+        #ifdef USE_MORPHNORMALS
+        shapedNormal *= morphTargetBaseInfluence;
+        for (int i = 0; i < MORPHTARGETS_COUNT; i++) {
+          if (morphTargetInfluences[i] != 0.0) shapedNormal += getMorph(gl_VertexID, i, 1).xyz * morphTargetInfluences[i];
+        }
+        #endif
+        vN = normalize(normalMatrix * shapedNormal);
         vView = -mvPosition.xyz;`,
       )
     shader.fragmentShader = shader.fragmentShader

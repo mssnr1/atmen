@@ -6,7 +6,7 @@ import { useTheme } from '../../lib/theme'
 import { breathState, type BreathSource } from '../breathState'
 import { airwayTree, type Branch } from './airwayTree'
 import { BreathSpecks } from './BreathSpecks'
-import { faceLines } from './face'
+import { addCalmMorph } from './face'
 import { withHolesFilled } from './holes'
 import { simplifiedLung } from './lungShape'
 import { mouthCavity } from './mouth'
@@ -97,13 +97,8 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     // Contour-stripe look: the lungs show the breath by lighting up from the bottom as they fill.
     return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges, fade) }
   }, [theme, level, edges, fade])
-  // Closed eyes and a smile, drawn on the face once the exercise is done.
-  const faceMaterial = useMemo(
-    () => new THREE.MeshBasicMaterial({ color: STRIPE_PALETTES[theme].line, transparent: true, opacity: 0, depthWrite: false }),
-    [theme],
-  )
-  useEffect(() => () => faceMaterial.dispose(), [faceMaterial])
-  const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat'; gain: number }[]>([])
+  const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat' | 'calm'; gain: number }[]>([])
+  const calm = useRef(0)
   const beat = useRef(0)
 
   const model = useMemo(() => scene.clone(true), [scene])
@@ -146,7 +141,9 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         const filled = withHolesFilled(mesh.geometry, mesh.getWorldScale(new THREE.Vector3()).x)
         if (filled) {
           filled.userData.holesFilled = true
+          addCalmMorph(filled, mesh.matrixWorld)
           mesh.geometry = filled
+          mesh.updateMorphTargets()
         }
       }
       mesh.material = mesh.name === 'Head' ? materials.head : materials[part.kind]
@@ -191,12 +188,15 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         backs.push([mesh, copy])
         const inhale = mesh.morphTargetDictionary?.Inhale
         if (inhale !== undefined) found.push({ mesh: copy, index: inhale, kind: 'breath', gain: BREATH_GAIN[mesh.name] ?? 1 })
+        const calmIndex = mesh.morphTargetDictionary?.Calm
+        if (calmIndex !== undefined) found.push({ mesh: copy, index: calmIndex, kind: 'calm', gain: 1 })
       }
       mesh.renderOrder = part.order
       const dict = mesh.morphTargetDictionary
       const gain = BREATH_GAIN[mesh.name] ?? BREATH_GAIN[mesh.parent?.name ?? ''] ?? 1
       if (dict?.Inhale !== undefined) found.push({ mesh, index: dict.Inhale, kind: 'breath', gain })
       if (dict?.Beat !== undefined) found.push({ mesh, index: dict.Beat, kind: 'beat', gain: 1 })
+      if (dict?.Calm !== undefined) found.push({ mesh, index: dict.Calm, kind: 'calm', gain: 1 })
       // A second copy of each lung draws its far wall: the rings at the back, dimmed.
       if (part.kind === 'lung') {
         const back = mesh.clone(false)
@@ -213,21 +213,6 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
       }
     })
     for (const [src, back] of backs) src.parent?.add(back)
-    // The calm face: laid onto the head (holes filled above), in the model's own (world) space.
-    model.updateMatrixWorld(true)
-    let head: THREE.Mesh | undefined
-    model.traverse((o) => {
-      const mesh = o as THREE.Mesh
-      if (!head && mesh.isMesh && !mesh.userData.lungBack && (mesh.name === 'Head' || mesh.parent?.name === 'Head')) head = mesh
-    })
-    if (head) {
-      for (const g of faceLines(head)) {
-        const line = new THREE.Mesh(g, faceMaterial)
-        line.renderOrder = 7
-        line.userData.lungBack = true
-        model.add(line)
-      }
-    }
     morphs.current = found
     const lungs = new THREE.Box3()
     model.updateMatrixWorld(true)
@@ -236,7 +221,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     })
     lungRange.current = lungs.isEmpty() ? null : [lungs.min.y, lungs.max.y]
     return () => Object.values(materials).forEach((m) => m.dispose())
-  }, [model, materials, faceMaterial])
+  }, [model, materials])
 
   useFrame(({ scene, camera }, delta) => {
     const snapshot = engine.sample()
@@ -254,17 +239,16 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
       m.visible = d < 1
     }
     for (const m of [materials.airway, materials.diaphragm]) m.visible = d < 1
-    // The face settles a little after the lungs have begun to fade.
-    const f = Math.min(Math.max((d - 0.35) / 0.65, 0), 1)
-    faceMaterial.opacity = 0.85 * f * f * (3 - 2 * f)
-    faceMaterial.visible = f > 0
+    // The face settles (eyes close, a smile) a little after the lungs have begun to fade.
+    const f = Math.min(Math.max((d - 0.3) / 0.7, 0), 1)
+    calm.current = f * f * (3 - 2 * f)
     if (lungRange.current) {
       const [lo, hi] = lungRange.current
       level.value = lo + (hi - lo) * (0.04 + 0.98 * b.volume)
     }
     for (const m of morphs.current) {
       const influences = m.mesh.morphTargetInfluences
-      if (influences) influences[m.index] = m.kind === 'beat' ? h : b.volume * m.gain
+      if (influences) influences[m.index] = m.kind === 'beat' ? h : m.kind === 'calm' ? calm.current : b.volume * m.gain
     }
     // Edge map for the rim between the lungs, from the same camera as the frame about to be drawn.
     const buffer = gl.getDrawingBufferSize(new THREE.Vector2())
