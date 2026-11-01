@@ -60,6 +60,8 @@ export interface Messages {
   vibration: string
   soundOn: string
   soundOff: string
+  lightMode: string
+  darkMode: string
   fullscreen: string
   exitFullscreen: string
   fullscreenIos: { title: string; steps: string[]; note: string }
@@ -175,6 +177,8 @@ const de: Messages = {
   vibration: 'Vibration',
   soundOn: 'Töne einschalten',
   soundOff: 'Töne ausschalten',
+  lightMode: 'Helles Design',
+  darkMode: 'Dunkles Design',
   fullscreen: 'Vollbild',
   exitFullscreen: 'Vollbild beenden',
   fullscreenIos: {
@@ -308,6 +312,8 @@ const en: Messages = {
   vibration: 'Vibration',
   soundOn: 'Turn sounds on',
   soundOff: 'Turn sounds off',
+  lightMode: 'Light mode',
+  darkMode: 'Dark mode',
   fullscreen: 'Full screen',
   exitFullscreen: 'Exit full screen',
   fullscreenIos: {

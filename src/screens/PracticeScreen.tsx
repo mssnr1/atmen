@@ -4,7 +4,7 @@ import { BodyInsights } from '../guide/BodyInsights'
 import { ParticleWord } from '../components/ParticleWord'
 import { FullscreenButton } from '../components/FullscreenButton'
 import { IconButton } from '../components/Button'
-import { CircleIcon, CloseIcon, InfoIcon, LungsIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
+import { CircleIcon, CloseIcon, InfoIcon, LungsIcon, MoonIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon, SunIcon } from '../components/icons'
 import { Segmented } from '../components/Segmented'
 import { Squircle } from '../components/Squircle'
 import { Switch } from '../components/Switch'
@@ -17,6 +17,7 @@ import { useI18n, type Messages } from '../i18n'
 import { paceText, presetIndex, rhythmText } from '../lib/exerciseText'
 import { formatClock } from '../lib/format'
 import { navigate } from '../lib/route'
+import { useTheme } from '../lib/theme'
 import { store, useStore } from '../storage/store'
 import { visualizationModes } from '../visualization/modes'
 import { Visualization } from '../visualization/Visualization'
@@ -52,6 +53,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   const pace = useMemo(() => ({ scale, slowDown }), [scale, slowDown])
   const session = usePracticeSession(exercise, durationMs, pace)
   const { snapshot: s, summary } = session
+  const theme = useTheme()
   const [sheetOpen, setSheetOpen] = useState(false)
   const closeSheet = useCallback(() => setSheetOpen(false), [])
   const [infoOpen, setInfoOpen] = useState(false)
@@ -61,6 +63,14 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   const panel = useCallback((el: HTMLElement | null) => {
     if (!el) return
     const ro = new ResizeObserver(() => setPanelHeight(el.offsetHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  // The top bar floats over the figure too, translucent like the panel.
+  const [headerHeight, setHeaderHeight] = useState(0)
+  const header = useCallback((el: HTMLElement | null) => {
+    if (!el) return
+    const ro = new ResizeObserver(() => setHeaderHeight(el.offsetHeight))
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
@@ -104,12 +114,19 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   const setPace = (patch: { preset?: number; slowDown?: boolean }) => store.setPace(exercise.id, { preset, slowDown, ...patch })
 
   return (
-    <main className="safe-top relative flex h-dvh w-full flex-col overflow-hidden bg-paper" data-testid="practice">
-      <header className="relative z-10 flex items-center justify-between px-3 md:px-5">
+    <main className="relative h-dvh w-full overflow-hidden bg-paper" data-testid="practice">
+      <header ref={header} className="safe-top absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-panel px-3 pb-1 backdrop-blur-[6px] md:px-5">
         <IconButton label={t.close} onClick={goHome} data-testid="practice-close">
           <CloseIcon className="size-5" strokeWidth={1.5} />
         </IconButton>
         <div className="flex items-center">
+          <IconButton
+            label={theme === 'dark' ? t.lightMode : t.darkMode}
+            onClick={() => store.updatePreferences({ theme: theme === 'dark' ? 'light' : 'dark' })}
+            data-testid="theme-toggle"
+          >
+            {theme === 'dark' ? <SunIcon className="size-5" strokeWidth={1.5} /> : <MoonIcon className="size-5" strokeWidth={1.5} />}
+          </IconButton>
           <FullscreenButton />
           <IconButton label={t.aboutExercise} onClick={() => setInfoOpen(true)} data-testid="exercise-info">
             <InfoIcon className="size-5" strokeWidth={1.5} />
@@ -125,16 +142,19 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         </div>
       </header>
 
-      <section className="relative min-h-0 flex-1" aria-label={t.guide}>
+      <section className="absolute inset-0" aria-label={t.guide}>
         <Visualization
           mode={prefs.visualizationMode}
           engine={session.engine}
           showProgress={prefs.showProgress}
           bottomInset={panelHeight}
+          topInset={headerHeight}
           started={leadIn || (s.status !== 'idle' && s.status !== 'completed')}
         />
-        <BodyInsights cycleIndex={s.cycleIndex} visible={active} />
-        <div className="absolute top-2 right-4 md:right-6">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0" style={{ top: headerHeight }}>
+          <BodyInsights cycleIndex={s.cycleIndex} visible={active} />
+        </div>
+        <div className="absolute right-4 md:right-6" style={{ top: headerHeight + 8 }}>
           <Segmented
             label={t.visualization}
             className="!rounded-full !bg-card/80 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur [&>button]:!flex [&>button]:!size-10 [&>button]:!min-h-0 [&>button]:!flex-none [&>button]:!items-center [&>button]:!justify-center [&>button]:!rounded-full [&>button]:!p-0"
@@ -151,7 +171,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       </section>
 
       <section ref={panel} className="safe-bottom safe-x pointer-events-none absolute inset-x-0 bottom-0 z-10 md:pb-6">
-        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-panel px-5 pt-9 pb-4 backdrop-blur-[6px] md:px-8">
+        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-panel px-5 pt-[1.125rem] pb-4 backdrop-blur-[6px] md:px-8">
         <div>
         <div className="flex flex-col items-center gap-1 text-center" aria-live="polite">
           <p className="w-full text-breath" data-testid="phase-label">

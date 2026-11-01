@@ -29,10 +29,11 @@ const PAN_LIMIT = new THREE.Box3(new THREE.Vector3(-0.2, 1.05, -0.15), new THREE
  * `clear` fraction is not covered by the controls: head to diaphragm fill that
  * part, and the body continues down behind the controls.
  */
-export function fitView(aspect: number, clear = 1, started = false): { distance: number; target: THREE.Vector3 } {
+export function fitView(aspect: number, clear = 1, started = false, top = 0): { distance: number; target: THREE.Vector3 } {
   const t = Math.tan(THREE.MathUtils.degToRad(FOV) / 2)
   const halfH = Math.max((TOP - BOTTOM) / (2 * clear), HALF_W / aspect)
-  const target = new THREE.Vector3(TARGET.x, TOP - halfH, TARGET.z)
+  // `top` is the share of the view hidden behind the top bar: the figure's head sits just below it.
+  const target = new THREE.Vector3(TARGET.x, TOP - halfH + 2 * halfH * top, TARGET.z)
   if (!started) return { distance: halfH / t, target }
   // Once the exercise runs, the camera also moves in closer, toward the lungs.
   target.y += (LUNG_Y - target.y) * 0.35
@@ -43,8 +44,8 @@ export function fitView(aspect: number, clear = 1, started = false): { distance:
 const RUN_ZOOM = 0.76
 const LUNG_Y = 1.33
 
-function defaultPosition(aspect: number, clear: number, azimuth = AZIMUTH, started = false): THREE.Vector3 {
-  const { distance: d, target } = fitView(aspect, clear, started)
+function defaultPosition(aspect: number, clear: number, azimuth = AZIMUTH, started = false, top = 0): THREE.Vector3 {
+  const { distance: d, target } = fitView(aspect, clear, started, top)
   return new THREE.Vector3(
     target.x + d * Math.cos(ELEVATION) * Math.sin(azimuth),
     target.y + d * Math.sin(ELEVATION),
@@ -83,15 +84,19 @@ function Rig({
   controls,
   resetSignal,
   bottomInset,
+  topInset,
 }: {
   started: boolean
   controls: React.RefObject<OrbitControlsImpl | null>
   resetSignal: number
   bottomInset: number
+  topInset: number
 }) {
   const { camera, size } = useThree()
   const aspect = size.width / Math.max(1, size.height)
-  const clear = Math.min(Math.max(1 - bottomInset / Math.max(1, size.height), 0.4), 1)
+  const H = Math.max(1, size.height)
+  const top = Math.min(Math.max(topInset / H, 0), 0.3)
+  const clear = Math.min(Math.max(1 - bottomInset / H - top, 0.4), 1)
   // Read through a ref so a start turns the camera smoothly instead of resetting it.
   const startedRef = useRef(started)
   useEffect(() => {
@@ -99,8 +104,8 @@ function Rig({
   }, [started])
   const facing = useRef(facingFor(started))
   // The latest default framing, read by the frame loop so a turn can head for it.
-  const layout = useRef({ aspect, clear })
-  layout.current = { aspect, clear }
+  const layout = useRef({ aspect, clear, top })
+  layout.current = { aspect, clear, top }
   /** A tween of the whole camera pose: from where it was to the default view for the current facing and layout. */
   const turn = useRef<{ from: THREE.Spherical; fromTarget: THREE.Vector3; t: number } | null>(null)
   // Default view on mount and on Reset view. A layout change once started (the
@@ -118,12 +123,12 @@ function Rig({
     lastSignal.current = resetSignal
     turn.current = null
     facing.current = facingFor(startedRef.current)
-    const { target } = fitView(aspect, clear, startedRef.current)
-    camera.position.copy(defaultPosition(aspect, clear, facing.current, startedRef.current))
+    const { target } = fitView(aspect, clear, startedRef.current, top)
+    camera.position.copy(defaultPosition(aspect, clear, facing.current, startedRef.current, top))
     controls.current?.target.copy(target)
     camera.lookAt(target)
     controls.current?.update()
-  }, [camera, aspect, clear, controls, resetSignal])
+  }, [camera, aspect, clear, top, controls, resetSignal])
 
   // Turn around the model when the exercise starts (or goes back to the start).
   const spherical = useMemo(() => new THREE.Spherical(), [])
@@ -140,8 +145,8 @@ function Rig({
     if (!tw) return
     tw.t = Math.min(tw.t + dt / TURN_S, 1)
     const k = easeInOut(tw.t)
-    const { aspect: a, clear: cl } = layout.current
-    const { distance, target } = fitView(a, cl, startedRef.current)
+    const { aspect: a, clear: cl, top: tp } = layout.current
+    const { distance, target } = fitView(a, cl, startedRef.current, tp)
     const mix = (x: number, y: number) => x + (y - x) * k
     // From wherever the user left the camera (turned, zoomed, panned) the shortest way round to the default view.
     c.target.lerpVectors(tw.fromTarget, target, k)
@@ -159,11 +164,13 @@ export function Anatomy3DVisualization({
   engine,
   showProgress,
   bottomInset = 0,
+  topInset = 0,
   started = false,
 }: {
   engine: BreathingEngine
   showProgress: boolean
   bottomInset?: number
+  topInset?: number
   started?: boolean
 }) {
   const { t } = useI18n()
@@ -172,7 +179,7 @@ export function Anatomy3DVisualization({
   const [supported] = useState(webglAvailable)
 
   const fallback = (
-    <div className="relative flex h-full w-full flex-col items-center justify-center pt-2" style={{ paddingBottom: bottomInset + 8 }}>
+    <div className="relative flex h-full w-full flex-col items-center justify-center" style={{ paddingTop: topInset + 8, paddingBottom: bottomInset + 8 }}>
       <AbstractVisualization engine={engine} showProgress={showProgress} />
       <p style={{ bottom: bottomInset }} className="absolute px-6 text-center text-[0.8125rem] text-muted" data-testid="model-fallback">
         {t.modelFallback}
@@ -227,7 +234,7 @@ export function Anatomy3DVisualization({
                 }
               }}
             />
-            <Rig started={started} controls={controls} resetSignal={resetSignal} bottomInset={bottomInset} />
+            <Rig started={started} controls={controls} resetSignal={resetSignal} bottomInset={bottomInset} topInset={topInset} />
           </Canvas>
         </Suspense>
       </ModelBoundary>
@@ -237,7 +244,8 @@ export function Anatomy3DVisualization({
         aria-label={t.resetView}
         title={t.resetView}
         data-testid="reset-view"
-        className="absolute top-2 left-4 flex size-12 items-center justify-center rounded-full bg-card/80 text-ink-2 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur"
+        style={{ top: topInset + 8 }}
+        className="absolute left-4 flex size-12 items-center justify-center rounded-full bg-card/80 text-ink-2 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur"
       >
         <ExpandIcon className="size-5" strokeWidth={1.5} />
       </button>
