@@ -30,11 +30,12 @@ export function BodyInsights({ cycleIndex, visible }: { cycleIndex: number; visi
   )
 }
 
-function PinIcon() {
+function TargetIcon() {
   return (
-    <svg viewBox="0 0 12 12" className="size-[0.7rem] flex-none" fill="none" stroke="currentColor" strokeWidth={1.3} aria-hidden>
-      <path d="M6 10.8S2.4 7.6 2.4 4.9a3.6 3.6 0 0 1 7.2 0C9.6 7.6 6 10.8 6 10.8Z" />
-      <circle cx="6" cy="4.9" r="1.2" />
+    <svg viewBox="0 0 12 12" className="size-[0.7rem] flex-none" fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" aria-hidden>
+      <circle cx="6" cy="6" r="3.9" />
+      <path d="M6 0.6v2.6M6 8.8v2.6M0.6 6h2.6M8.8 6h2.6" />
+      <circle cx="6" cy="6" r="0.6" fill="currentColor" stroke="none" />
     </svg>
   )
 }
@@ -73,7 +74,7 @@ function Column({ items, labels, className }: { items: BodyInsight[]; labels: { 
           {/* Where it happens. */}
           <div className="px-2.5 pt-2 pb-1.5 md:px-4 md:pt-3 md:pb-2.5">
             <div className="flex items-center justify-between gap-2">
-              <Label icon={<PinIcon />}>{labels.place}</Label>
+              <Label icon={<TargetIcon />}>{labels.place}</Label>
               <span className="hud-dot" aria-hidden />
             </div>
             <p className="mt-1 text-[0.8125rem] leading-tight break-words text-ink [hyphens:auto] md:mt-1.5 md:text-[1rem]">{it.place}</p>
