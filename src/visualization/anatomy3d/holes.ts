@@ -73,7 +73,8 @@ export function withHolesFilled(geometry: THREE.BufferGeometry, scale: number): 
   }
   const out = new THREE.BufferGeometry()
   // Where the closed holes were (local space), e.g. for the closed eyes and smile drawn after the exercise.
-  out.userData.holes = loops.map(({ center, normal, radius, aspect, length }) => ({ center, normal, radius, aspect, length }))
+  out.userData.holes = loops.map(({ verts, center, normal, radius, aspect, length }) => ({ verts, center, normal, radius, aspect, length }))
+  out.userData.baseCount = n
   out.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
   out.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3))
   out.setIndex(indices)
