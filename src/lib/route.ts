@@ -2,12 +2,12 @@ import { useSyncExternalStore } from 'react'
 import { audioCues } from '../feedback/audio'
 
 /** Minimal hash router: "#/practice/resonance" -> ["practice", "resonance"]. */
-export type Route = { name: 'home' } | { name: 'learn' } | { name: 'settings' } | { name: 'welcome' } | { name: 'practice'; exerciseId: string }
+export type Route = { name: 'home' } | { name: 'learn' } | { name: 'settings' } | { name: 'welcome' } | { name: 'sos' } | { name: 'practice'; exerciseId: string }
 
 function parse(hash: string): Route {
   const [name, id] = hash.replace(/^#\/?/, '').split('/')
   if (name === 'practice' && id) return { name: 'practice', exerciseId: id }
-  if (name === 'learn' || name === 'settings' || name === 'welcome') return { name }
+  if (name === 'learn' || name === 'settings' || name === 'welcome' || name === 'sos') return { name }
   return { name: 'home' }
 }
 

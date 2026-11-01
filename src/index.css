@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @theme {
   /* Light system from the concept: white, soft greys, one blue. */
@@ -37,12 +37,28 @@
   /* Fresh air in the 3D lungs. */
   --color-air: #4a82ff;
   --color-air-used: #a855f7;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  /* The red of the acute-help button. */
+  --color-alert: #e5484d;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter",
+    "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
 
 /* Dark theme: warm clay greys for every surface, magic violet as the only colour.
    Breathed-out air is a pale lavender, so in and out differ by brightness, not hue. */
+:root {
+  /* The breathing bubbles behind the start and acute-help screens. */
+  --bubble-air: rgb(74 130 255 / 0.16);
+  --bubble-air-core: rgb(140 178 255 / 0.32);
+  --bubble-used: rgb(168 85 247 / 0.1);
+  --bubble-used-core: rgb(196 150 255 / 0.2);
+}
+
 :root.dark {
+  --bubble-air: rgb(122 72 230 / 0.22);
+  --bubble-air-core: rgb(170 130 255 / 0.3);
+  --bubble-used: rgb(183 166 220 / 0.1);
+  --bubble-used-core: rgb(210 196 240 / 0.16);
   --color-paper: #141312;
   --color-surface: #1f1d1b;
   --color-surface-2: #2d2a27;
@@ -68,6 +84,7 @@
   --color-page-button-ink: #ffffff;
   --color-air: #9a6bff;
   --color-air-used: #b7a6dc;
+  --color-alert: #e5534b;
   /* The particle aura around the figure, in the night violet (light theme colours live in Aura.tsx). */
   --aura-cool: #3a1f72;
   --aura-warm: #8a5cf5;
@@ -222,6 +239,72 @@ body.blue-page {
 
 .splash-tagline {
   animation: fade-in 1000ms ease-out 700ms both;
+}
+
+/* Start screen: the three ways in appear once the logo has breathed in. */
+.start-choices {
+  animation: fade-up 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 1400ms both;
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Breathing bubbles: all grow on the inhale and shrink on the exhale, each drifting on its own. */
+.bubble {
+  will-change: transform, translate;
+}
+@keyframes bubble-breathe {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+}
+/* 4 s in, 6 s out: the peak sits at 40 %. */
+@keyframes bubble-breathe-long-out {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  40% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+}
+@keyframes bubble-drift {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  33% {
+    translate: 3vw -3vh;
+  }
+  66% {
+    translate: -2.5vw 2vh;
+  }
+}
+.sos-fade {
+  animation: fade-in 900ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bubble {
+    animation: none !important;
+  }
+  .start-choices {
+    animation-duration: 1ms;
+  }
 }
 
 /* Body insight cards drift in like the breath: fade, rise a little, come into focus. */
