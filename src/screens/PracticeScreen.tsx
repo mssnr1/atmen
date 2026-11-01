@@ -8,7 +8,7 @@ import { ArrowRightIcon, CircleIcon, CloseIcon, InfoIcon, LungsIcon, MoonIcon, P
 import { Segmented } from '../components/Segmented'
 import { Squircle } from '../components/Squircle'
 import { Switch } from '../components/Switch'
-import { BreathingEngine, type BreathPhase, type EngineSnapshot } from '../engine'
+import type { BreathPhase, EngineSnapshot } from '../engine'
 import type { Exercise } from '../exercises'
 import { audioCues, audioSupported } from '../feedback/audio'
 import { vibrationSupported } from '../feedback/haptics'
@@ -19,7 +19,6 @@ import { formatClock } from '../lib/format'
 import { navigate } from '../lib/route'
 import { useTheme } from '../lib/theme'
 import { store, useStore } from '../storage/store'
-import type { BreathSource } from '../visualization/breathState'
 import { visualizationModes } from '../visualization/modes'
 import { Visualization } from '../visualization/Visualization'
 import { CompletionFlow } from './CompletionFlow'
@@ -33,8 +32,6 @@ function shownPhase(s: EngineSnapshot): BreathPhase {
 
 /** The camera zoom (see Anatomy3DVisualization) plus a moment of stillness before the first breath. */
 const LEAD_IN_MS = 4200
-/** Breaths the figure keeps taking, quietly, while "well done" shows. */
-const AFTERGLOW_CYCLES = 600
 
 function phaseLabel(s: EngineSnapshot, t: Messages): string {
   if (s.status === 'idle') return t.ready
@@ -91,27 +88,9 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
     }, LEAD_IN_MS)
   }
 
-  // When the exercise ends the figure stays: it keeps breathing calmly in the same rhythm,
-  // without sound, the air keeps flowing and the aura stays full, with "well done" in the panel.
+  // When the exercise ends the figure stays, at rest: it no longer breathes and no air flows,
+  // only the aura keeps moving around it, with "well done" in the panel.
   const completed = s.status === 'completed'
-  const scaleRef = useRef(scale)
-  scaleRef.current = scale
-  const afterglow = useMemo(
-    () =>
-      completed
-        ? new BreathingEngine({ pattern: exercise.pattern, length: { kind: 'cycles', count: AFTERGLOW_CYCLES }, pace: { scale: scaleRef.current, slowDown: false } })
-        : null,
-    [completed, exercise],
-  )
-  useEffect(() => {
-    if (!afterglow) return
-    afterglow.start()
-    return () => afterglow.dispose()
-  }, [afterglow])
-  const breath = useMemo<BreathSource>(
-    () => (afterglow ? { sample: () => ({ ...afterglow.sample(), status: 'completed', progress: 1 }) } : session.engine),
-    [afterglow, session.engine],
-  )
   // "Next" leads on to the rest of the completion flow.
   const [showFlow, setShowFlow] = useState(false)
   useEffect(() => {
@@ -164,7 +143,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       <section className="absolute inset-0" aria-label={t.guide}>
         <Visualization
           mode={prefs.visualizationMode}
-          engine={breath}
+          engine={session.engine}
           showProgress={prefs.showProgress}
           bottomInset={panelHeight}
           topInset={headerHeight}
