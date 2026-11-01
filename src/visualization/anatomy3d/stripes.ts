@@ -218,6 +218,8 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     diaphragm: stripeMaterial({ show: inner, pattern: 'level', density: 85, width: 0.06, line: p.lung, fill: p.lung, lineAlpha: 0.3, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.3 }),
     // Both walls: the throat is open toward the mouth, and through that opening the eye sees the inside
     // of its back wall, which one-sided drawing would leave blank.
-    airway: stripeMaterial({ show: inner, pattern: 'level', density: 160, width: 0.1, line: p.lung, fill: p.lung, lineAlpha: 0.45, fillAlpha: 0.04, rim: p.lungRim, rimAlpha: 0.45, side: 'both' }),
+    // Nose, mouth, throat and windpipe stay as quiet as a lung at rest: never lit by the breath
+    // (their level stays below them), so during the exercise only the lungs brighten.
+    airway: stripeMaterial({ show: inner, pattern: 'level', density: 160, width: 0.1, line: p.lung, fill: p.lung, lineAlpha: 0.45, dimAlpha: dark ? 0.16 : 0.13, fillAlpha: dark ? 0.03 : 0.02, rim: p.lungRim, rimAlpha: 0.6, side: 'both', level: { value: -99 } }),
   }
 }
