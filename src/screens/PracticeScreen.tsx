@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BottomSheet } from '../components/BottomSheet'
+import { BodyInsights } from '../guide/BodyInsights'
 import { ParticleWord } from '../components/ParticleWord'
 import { FullscreenButton } from '../components/FullscreenButton'
 import { IconButton } from '../components/Button'
@@ -132,6 +133,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           bottomInset={panelHeight}
           started={leadIn || (s.status !== 'idle' && s.status !== 'completed')}
         />
+        <BodyInsights cycleIndex={s.cycleIndex} visible={active} />
         <div className="absolute top-2 right-4 md:right-6">
           <Segmented
             label={t.visualization}
