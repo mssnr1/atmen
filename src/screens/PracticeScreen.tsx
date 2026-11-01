@@ -147,7 +147,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           showProgress={prefs.showProgress}
           bottomInset={panelHeight}
           topInset={headerHeight}
-          started={leadIn || (s.status !== 'idle' && s.status !== 'completed')}
+          framing={completed ? 'done' : leadIn || s.status !== 'idle' ? 'run' : 'idle'}
         />
         <div className="pointer-events-none absolute inset-x-0 bottom-0" style={{ top: headerHeight }}>
           <BodyInsights cycleIndex={s.cycleIndex} visible={active} />

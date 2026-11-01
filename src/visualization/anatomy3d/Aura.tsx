@@ -102,19 +102,22 @@ const sparkVertex = /* glsl */ `
   uniform float uLevel;
   uniform float uVolume;
   uniform float uScale;
+  uniform float uMotion;
   varying float vAlpha;
   varying float vSpark;
   void main() {
     // Each particle sits on a shell a little outside the skin; the shell moves
     // out as the aura builds and with each inhale.
+    float life = fract(aSeed.w * 3.7 + uTime * (0.05 + 0.05 * aSeed.x));
     float offset = (0.012 + 0.03 * uLevel) * (0.5 + aSeed.x) + 0.01 * uVolume;
+    // After the exercise (uMotion) the particles drift outward as they rise and fade, so the aura flows.
+    offset += 0.03 * uMotion * life;
     vec3 p = position + aNormal * offset;
     // A slow, small wander of its own, and a gentle rise as it glows and fades.
     float t = uTime * (0.25 + 0.25 * aSeed.z);
     float ph = aSeed.w * 6.2832;
-    p += vec3(sin(t + ph), sin(t * 0.8 + ph * 1.7), cos(t * 0.9 + ph)) * 0.006;
-    float life = fract(aSeed.w * 3.7 + uTime * (0.05 + 0.05 * aSeed.x));
-    p.y += life * 0.025;
+    p += vec3(sin(t + ph), sin(t * 0.8 + ph * 1.7), cos(t * 0.9 + ph)) * 0.006 * (1.0 + 1.5 * uMotion);
+    p.y += life * (0.025 + 0.045 * uMotion);
     vec4 world = modelMatrix * vec4(p, 1.0);
     vec4 mv = viewMatrix * world;
     gl_Position = projectionMatrix * mv;
@@ -218,6 +221,8 @@ export function Aura({ engine }: { engine: BreathSource }) {
   const plane = useRef<THREE.Mesh>(null)
   const level = useRef(0)
   const time = useRef(0)
+  // 0 while breathing, eases to 1 after the exercise: the aura then moves more and faster.
+  const motion = useRef(0)
 
   const { geometry, material } = useMemo(() => {
     const geometry = new THREE.PlaneGeometry(PLANE_W, PLANE_H)
@@ -255,6 +260,7 @@ export function Aura({ engine }: { engine: BreathSource }) {
         uLevel: { value: 0 },
         uVolume: { value: 0 },
         uScale: { value: 1 },
+        uMotion: { value: 0 },
         uGlow: { value: new THREE.Color() },
         uSpark: { value: new THREE.Color() },
         uDark: { value: 0 },
@@ -304,7 +310,8 @@ export function Aura({ engine }: { engine: BreathSource }) {
     const snapshot = engine.sample()
     const dt = Math.min(delta, 0.1)
     level.current += (auraLevel(snapshot) - level.current) * (1 - Math.exp(-dt / LEVEL_TAU))
-    if (snapshot.status !== 'paused') time.current += dt
+    motion.current += ((snapshot.status === 'completed' ? 1 : 0) - motion.current) * (1 - Math.exp(-dt / LEVEL_TAU))
+    if (snapshot.status !== 'paused') time.current += dt * (1 + 1.6 * motion.current)
     const volume = breathState(snapshot).volume
 
     const mesh = plane.current
@@ -321,6 +328,7 @@ export function Aura({ engine }: { engine: BreathSource }) {
     sparkMaterial.uniforms.uLevel.value = level.current
     sparkMaterial.uniforms.uVolume.value = volume
     sparkMaterial.uniforms.uTime.value = time.current
+    sparkMaterial.uniforms.uMotion.value = motion.current
     sparkMaterial.uniforms.uScale.value = size.height * 0.03
   })
 
