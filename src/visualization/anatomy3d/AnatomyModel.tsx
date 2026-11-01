@@ -104,7 +104,6 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
   const { scene } = useGLTF(MODEL_URL, false, true)
   const theme = useTheme()
   const level = useMemo(() => ({ value: 99 }), [])
-  const floor = useMemo(() => ({ value: -99 }), [])
   const { gl } = useThree()
   // Map of how far away the nearest lung surface is, drawn each frame before the scene.
   const edgeTarget = useMemo(() => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: true }), [])
@@ -116,8 +115,8 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
   const fade = useMemo<Fade>(() => ({ inner: { value: 1 }, skin: { value: 1 } }), [])
   const materials = useMemo(() => {
     // Contour-stripe look: the lungs show the breath by lighting up from the bottom as they fill.
-    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges, fade, floor) }
-  }, [theme, level, edges, fade, floor])
+    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges, fade) }
+  }, [theme, level, edges, fade])
   const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat' | 'calm'; gain: number }[]>([])
   const calm = useRef(0)
   const beat = useRef(0)
@@ -260,15 +259,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     calm.current = f * f * (3 - 2 * f)
     if (lungRange.current) {
       const [lo, hi] = lungRange.current
-      // Breathing in, the lines light up from the bottom; breathing out, they go dark from the
-      // bottom up, as if the air leaves the lungs through the top.
-      if (b.phase === 'exhale') {
-        level.value = hi + 1
-        floor.value = hi - (hi - lo) * (0.04 + 0.98 * b.volume)
-      } else {
-        level.value = lo + (hi - lo) * (0.04 + 0.98 * b.volume)
-        floor.value = -99
-      }
+      level.value = lo + (hi - lo) * (0.04 + 0.98 * b.volume)
     }
     for (const m of morphs.current) {
       const influences = m.mesh.morphTargetInfluences
