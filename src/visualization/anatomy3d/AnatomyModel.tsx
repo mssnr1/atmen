@@ -9,12 +9,16 @@ import { withHolesFilled } from './holes'
 import { simplifiedLung } from './lungShape'
 import { mouthCavity } from './mouth'
 import { makeMaterials, type MaterialKind } from './materials'
-import { makeStripeMaterials, STRIPE_PALETTES, type EdgeMap } from './stripes'
+import { makeStripeMaterials, STRIPE_PALETTES, type EdgeMap, type Fade } from './stripes'
 
 /** Layer of the lung copies that only draw the edge map. */
 const EDGE_LAYER = 5
 /** Width of the rim along the edge between the lungs, in CSS pixels (like the outer rim). */
 const EDGE_RIM_PX = 18
+/** Seconds the lungs take to fade out (and the skin to brighten) after the exercise; about three times this until it settles. */
+const FADE_TAU = 1.1
+/** How much more the skin shows once the lungs have faded out. */
+const SKIN_BOOST = 0.1
 
 export const MODEL_URL = `${import.meta.env.BASE_URL}models/atmen-anatomy.glb`
 
@@ -71,10 +75,13 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
   const edges = useMemo<EdgeMap>(() => ({ map: { value: edgeTarget.texture }, size: { value: new THREE.Vector2(1, 1) }, radius: { value: EDGE_RIM_PX } }), [edgeTarget])
   useEffect(() => () => edgeTarget.dispose(), [edgeTarget])
   const lungRange = useRef<[number, number] | null>(null)
+  // 0 while breathing; eases to 1 once the exercise is done: the lungs fade out, the skin glows a little more.
+  const done = useRef(0)
+  const fade = useMemo<Fade>(() => ({ inner: { value: 1 }, skin: { value: 1 } }), [])
   const materials = useMemo(() => {
     // Contour-stripe look: the lungs show the breath by lighting up from the bottom as they fill.
-    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges) }
-  }, [theme, level, edges])
+    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges, fade) }
+  }, [theme, level, edges, fade])
   const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat'; gain: number }[]>([])
   const beat = useRef(0)
 
@@ -182,6 +189,16 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     const dt = Math.min(delta, 0.1)
     beat.current = (beat.current + dt / BEAT_S) % 1
     const h = heartbeat(beat.current)
+    done.current += ((snapshot.status === 'completed' ? 1 : 0) - done.current) * (1 - Math.exp(-dt / FADE_TAU))
+    const d = done.current < 0.001 ? 0 : done.current > 0.999 ? 1 : done.current
+    fade.inner.value = 1 - d
+    fade.skin.value = 1 + SKIN_BOOST * d
+    // While they fade the lungs stop hiding what lies behind them, and once gone they are not drawn at all.
+    for (const m of [materials.lung, materials.lungBack]) {
+      m.depthWrite = d === 0
+      m.visible = d < 1
+    }
+    for (const m of [materials.airway, materials.diaphragm]) m.visible = d < 1
     if (lungRange.current) {
       const [lo, hi] = lungRange.current
       level.value = lo + (hi - lo) * (0.04 + 0.98 * b.volume)
