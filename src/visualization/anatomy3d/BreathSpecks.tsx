@@ -125,6 +125,8 @@ export function BreathSpecks({ engine }: { engine: BreathingEngine }) {
       uniforms: { uColor: { value: new THREE.Color('#2f6bf5') }, uSize: { value: 3 } },
       transparent: true,
       depthWrite: false,
+      // Drawn over the lungs, which now write depth: the air is seen inside them.
+      depthTest: false,
     })
     return { geometry: g, material: m }
   }, [])
