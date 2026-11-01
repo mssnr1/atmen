@@ -22,15 +22,15 @@ export function BodyInsights({ cycleIndex, visible }: { cycleIndex: number; visi
       role="list"
       data-testid="body-insights"
     >
-      <Column items={left} className="left-3 top-2 md:left-5" />
-      <Column items={right} className="right-3 top-14 md:right-5" />
+      <Column items={left} impactLabel={t.insightImpact} className="left-3 top-2 md:left-5" />
+      <Column items={right} impactLabel={t.insightImpact} className="right-3 top-14 md:right-5" />
     </div>
   )
 }
 
-function Column({ items, className }: { items: BodyInsight[]; className: string }) {
+function Column({ items, impactLabel, className }: { items: BodyInsight[]; impactLabel: string; className: string }) {
   return (
-    <div className={`absolute flex w-[clamp(6.5rem,20%,15rem)] flex-col gap-2 ${className}`}>
+    <div className={`absolute flex w-[clamp(6.75rem,20%,15rem)] flex-col gap-2 ${className}`}>
       {items.map((it) => (
         <Squircle
           key={it.id}
@@ -40,9 +40,17 @@ function Column({ items, className }: { items: BodyInsight[]; className: string 
           className="insight-in bg-panel px-2.5 py-2 shadow-[0_1px_8px_rgb(0_0_0/0.05)] ring-1 ring-line/60 backdrop-blur-[6px] md:px-4 md:py-3"
           data-testid={`insight-${it.id}`}
         >
-          <p className="text-[0.5625rem] leading-tight tracking-[0.04em] [hyphens:auto] text-accent uppercase md:text-[0.6875rem]">{it.term}</p>
-          <p className="mt-1 text-[0.8125rem] leading-snug text-ink md:hidden">{it.short}</p>
+          <p className="hud-glow flex items-start gap-1.5 text-[0.5625rem] leading-tight tracking-[0.06em] text-accent uppercase [hyphens:auto] md:text-[0.6875rem]">
+            <span className="hud-dot mt-[0.2em] md:mt-[0.25em]" aria-hidden />
+            <span className="min-w-0">{it.term}</span>
+          </p>
           <p className="mt-1 hidden text-[0.875rem] leading-snug text-ink md:block">{it.title}</p>
+          <p className="mt-1 flex flex-wrap md:mt-1.5 items-center gap-x-1.5 gap-y-0.5">
+            <span className="rounded-full border border-accent/40 px-1.5 py-px text-[0.5rem] leading-tight tracking-[0.08em] text-accent uppercase md:text-[0.5625rem]">
+              {impactLabel}
+            </span>
+            <span className="hud-glow text-[0.8125rem] leading-snug text-accent md:text-[0.75rem] md:leading-tight">{it.impact}</span>
+          </p>
           {it.value && <p className="mt-1 hidden text-[0.75rem] leading-tight text-muted tabular-nums md:block">{it.value}</p>}
         </Squircle>
       ))}

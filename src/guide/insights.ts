@@ -1,38 +1,39 @@
 import type { Language } from '../i18n'
 
 /**
- * Small cards that appear beside the head during a session and name what slow
- * breathing does in the body. Wording stays cautious ("kann", "hilft"): these
- * are well-described mechanisms, not promises about any single session.
- * Values are rough textbook ranges, shown only where they are well established.
+ * Small heads-up cards that appear beside the head during a session and name
+ * what slow breathing does in the body. Jan wants them assertive and
+ * motivating (present tense, "senkt" not "kann senken"); they name real,
+ * well-described mechanisms. Values are rough textbook ranges only.
  */
 export interface BodyInsight {
   id: string
   /** The technical term, shown small above the title. */
   term: string
+  /** Shown from tablet width; phones show the term and the impact only. */
   title: string
-  /** A few words for narrow phone screens. */
-  short: string
+  /** The positive result, shown with a small "Wirkung" label. */
+  impact: string
   /** An optional rough reference value. */
   value?: string
 }
 
 export const bodyInsights: Record<Language, BodyInsight[]> = {
   de: [
-    { id: 'diaphragm', term: 'Diaphragma', title: 'Das Zwerchfell senkt sich, die Lunge füllt sich von unten', short: 'Zwerchfell senkt sich', value: 'ruhig ≈ 1–2 cm · tief bis ≈ 7 cm' },
-    { id: 'oxygen', term: 'Alveolärer Gasaustausch', title: 'Sauerstoff wandert aus den Lungenbläschen ins Blut', short: 'Sauerstoff geht ins Blut', value: 'SpO₂ in Ruhe meist 95–99 %' },
-    { id: 'co2', term: 'Bohr-Effekt', title: 'CO₂ hilft dem Blut, Sauerstoff ans Gewebe abzugeben', short: 'CO₂ löst Sauerstoff', value: 'pCO₂ normal ≈ 35–45 mmHg' },
-    { id: 'hrv', term: 'Respiratorische Sinusarrhythmie', title: 'Dein Herzschlag schwingt mit dem Atem mit', short: 'Herz schwingt mit', value: 'am stärksten bei ≈ 6 Atemzügen/min' },
-    { id: 'vagus', term: 'Nervus vagus · Acetylcholin', title: 'Langes Ausatmen bremst den Herzschlag sanft', short: 'Herzschlag wird ruhiger' },
-    { id: 'cortisol', term: 'Parasympathikus · Cortisol', title: 'Der Körper kann auf Ruhe umschalten, Stresssignale lassen nach', short: 'Stress kann nachlassen' },
+    { id: 'diaphragm', term: 'Diaphragma', title: 'Das Zwerchfell senkt sich, die Lunge füllt sich bis tief nach unten', impact: 'Mehr Atemvolumen', value: 'ruhig ≈ 1–2 cm · tief bis ≈ 7 cm' },
+    { id: 'oxygen', term: 'Alveolärer Gasaustausch', title: 'Sauerstoff strömt aus den Lungenbläschen in dein Blut', impact: 'Blut wird angereichert', value: 'SpO₂ in Ruhe 95–99 %' },
+    { id: 'co2', term: 'Bohr-Effekt', title: 'CO₂ bleibt im Gleichgewicht und löst Sauerstoff ins Gewebe', impact: 'Zellen werden versorgt', value: 'pCO₂ ≈ 35–45 mmHg' },
+    { id: 'hrv', term: 'Respiratorische Sinusarrhythmie', title: 'Dein Herzschlag schwingt im Takt deines Atems', impact: 'Herzrhythmus in Resonanz', value: 'Resonanz bei ≈ 6 Atemzügen/min' },
+    { id: 'vagus', term: 'Nervus vagus\u00a0· Acetylcholin', title: 'Der Vagusnerv schüttet Acetylcholin aus und bremst den Herzschlag', impact: 'Puls sinkt' },
+    { id: 'cortisol', term: 'Parasympathikus\u00a0· Cortisol', title: 'Dein Körper schaltet auf Ruhe um, das Stresslevel senkt sich', impact: 'Stress sinkt' },
   ],
   en: [
-    { id: 'diaphragm', term: 'Diaphragm', title: 'Your diaphragm moves down, the lungs fill from below', short: 'Diaphragm moves down', value: 'quiet ≈ 1–2 cm · deep up to ≈ 7 cm' },
-    { id: 'oxygen', term: 'Alveolar gas exchange', title: 'Oxygen passes from the air sacs into your blood', short: 'Oxygen enters the blood', value: 'SpO₂ at rest usually 95–99 %' },
-    { id: 'co2', term: 'Bohr effect', title: 'CO₂ helps your blood release oxygen to the tissues', short: 'CO₂ frees oxygen', value: 'pCO₂ normal ≈ 35–45 mmHg' },
-    { id: 'hrv', term: 'Respiratory sinus arrhythmia', title: 'Your heartbeat rises and falls with your breath', short: 'Heart sways along', value: 'strongest at ≈ 6 breaths/min' },
-    { id: 'vagus', term: 'Vagus nerve · acetylcholine', title: 'A long exhale gently slows the heartbeat', short: 'Heartbeat slows' },
-    { id: 'cortisol', term: 'Parasympathetic · cortisol', title: 'Your body can shift towards rest, stress signals ease', short: 'Stress can ease' },
+    { id: 'diaphragm', term: 'Diaphragm', title: 'Your diaphragm moves down, the lungs fill deep from below', impact: 'More breathing volume', value: 'quiet ≈ 1–2 cm · deep up to ≈ 7 cm' },
+    { id: 'oxygen', term: 'Alveolar gas exchange', title: 'Oxygen flows from the air sacs into your blood', impact: 'Blood is enriched', value: 'SpO₂ at rest 95–99 %' },
+    { id: 'co2', term: 'Bohr effect', title: 'CO₂ stays in balance and releases oxygen to your tissues', impact: 'Cells are supplied', value: 'pCO₂ ≈ 35–45 mmHg' },
+    { id: 'hrv', term: 'Respiratory sinus arrhythmia', title: 'Your heartbeat sways in time with your breath', impact: 'Heart rhythm in resonance', value: 'resonance at ≈ 6 breaths/min' },
+    { id: 'vagus', term: 'Vagus nerve\u00a0· acetylcholine', title: 'Your vagus nerve releases acetylcholine and slows the heartbeat', impact: 'Pulse drops' },
+    { id: 'cortisol', term: 'Parasympathetic\u00a0· cortisol', title: 'Your body shifts into rest, your stress level goes down', impact: 'Stress drops' },
   ],
 }
 
