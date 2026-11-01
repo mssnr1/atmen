@@ -15,12 +15,14 @@ export const MODEL_URL = `${import.meta.env.BASE_URL}models/atmen-anatomy.glb`
 /** Which look and draw order each object of the model gets. */
 const PARTS: Record<string, { kind: MaterialKind; order: number }> = {
   Heart: { kind: 'heart', order: 0 },
-  Trachea: { kind: 'airway', order: 1 },
-  Bronchi: { kind: 'airway', order: 1 },
-  Nasal_Cavity: { kind: 'airway', order: 1 },
-  Diaphragm: { kind: 'diaphragm', order: 2 },
-  Lung_Left: { kind: 'lung', order: 4 },
-  Lung_Right: { kind: 'lung', order: 4 },
+  // The lungs go first and write depth (back wall at order 1, see below), so the
+  // airways and diaphragm drawn after them are hidden where a lung covers them.
+  Lung_Left: { kind: 'lung', order: 2 },
+  Lung_Right: { kind: 'lung', order: 2 },
+  Trachea: { kind: 'airway', order: 3 },
+  Bronchi: { kind: 'airway', order: 3 },
+  Nasal_Cavity: { kind: 'airway', order: 3 },
+  Diaphragm: { kind: 'diaphragm', order: 4 },
   Abdomen: { kind: 'skin', order: 6 },
   Body_Shell: { kind: 'skin', order: 6 },
   Head: { kind: 'skin', order: 6 },
@@ -65,6 +67,11 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   useEffect(() => {
     model.updateMatrixWorld(true)
     const found: typeof morphs.current = []
+    // Remove the back-wall copies of a previous theme before adding fresh ones.
+    const stale: THREE.Object3D[] = []
+    model.traverse((o) => o.userData.lungBack && stale.push(o))
+    stale.forEach((o) => o.removeFromParent())
+    const backs: [THREE.Mesh, THREE.Mesh][] = []
     model.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
@@ -84,9 +91,20 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
       mesh.material = mesh.name === 'Head' || mesh.parent?.name === 'Head' ? materials.head : materials[part.kind]
       mesh.renderOrder = part.order
       const dict = mesh.morphTargetDictionary
-      if (dict?.Inhale !== undefined) found.push({ mesh, index: dict.Inhale, kind: 'breath', gain: BREATH_GAIN[mesh.name] ?? BREATH_GAIN[mesh.parent?.name ?? ''] ?? 1 })
+      const gain = BREATH_GAIN[mesh.name] ?? BREATH_GAIN[mesh.parent?.name ?? ''] ?? 1
+      if (dict?.Inhale !== undefined) found.push({ mesh, index: dict.Inhale, kind: 'breath', gain })
       if (dict?.Beat !== undefined) found.push({ mesh, index: dict.Beat, kind: 'beat', gain: 1 })
+      // A second copy of each lung draws its far wall: the rings at the back, dimmed.
+      if (part.kind === 'lung') {
+        const back = mesh.clone(false)
+        back.material = materials.lungBack
+        back.renderOrder = part.order - 1
+        back.userData.lungBack = true
+        backs.push([mesh, back])
+        if (dict?.Inhale !== undefined) found.push({ mesh: back, index: dict.Inhale, kind: 'breath', gain })
+      }
     })
+    for (const [src, back] of backs) src.parent?.add(back)
     morphs.current = found
     const lungs = new THREE.Box3()
     model.updateMatrixWorld(true)

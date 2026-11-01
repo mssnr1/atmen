@@ -26,10 +26,18 @@ export type StripeOptions = {
   /** Shared world height up to which the lines are lit (the breath filling up); lines above stay at `dimAlpha`. */
   level?: { value: number }
   dimAlpha?: number
+  /** Draw the inside (back faces) instead of the outside, e.g. the far wall of a lung seen through its near wall. */
+  side?: 'front' | 'back'
+  /** Write depth so whatever lies behind this surface is hidden instead of showing through. */
+  occlude?: boolean
 }
 
 export function stripeMaterial(o: StripeOptions): THREE.Material {
-  const m = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, side: THREE.FrontSide })
+  const m = new THREE.MeshBasicMaterial({
+    transparent: true,
+    depthWrite: o.occlude ?? false,
+    side: o.side === 'back' ? THREE.BackSide : THREE.FrontSide,
+  })
   m.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, {
       uLine: { value: new THREE.Color(o.line) },
@@ -94,7 +102,11 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
   return {
     skin: stripeMaterial({ pattern: 'around', density: 120, width: 0.06, line: p.body, fill: p.body, lineAlpha: dark ? 0.6 : 0.55, fillAlpha: 0.0, rim: p.body, rimAlpha: dark ? 0.3 : 0.26, focusTrunk: true }),
     head: stripeMaterial({ pattern: 'around', density: 120, width: 0.0, line: p.body, fill: p.body, lineAlpha: 0.0, fillAlpha: 0.0, rim: p.body, rimAlpha: dark ? 0.32 : 0.28 }),
-    lung: stripeMaterial({ pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: 1.0, dimAlpha: dark ? 0.22 : 0.18, fillAlpha: dark ? 0.05 : 0.035, rim: p.lungRim, rimAlpha: 0.85, level }),
+    // The lungs are drawn as a solid volume: first their far wall (the rings at the back, dimmed),
+    // then their near wall. Both write depth, so the other lung and the airways behind or inside
+    // a lung no longer show through it; only the lung's own back rings do.
+    lungBack: stripeMaterial({ pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: dark ? 0.42 : 0.36, dimAlpha: dark ? 0.1 : 0.08, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.0, level, side: 'back', occlude: true }),
+    lung: stripeMaterial({ pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: 1.0, dimAlpha: dark ? 0.22 : 0.18, fillAlpha: dark ? 0.05 : 0.035, rim: p.lungRim, rimAlpha: 0.85, level, occlude: true }),
     diaphragm: stripeMaterial({ pattern: 'level', density: 85, width: 0.06, line: p.lung, fill: p.lung, lineAlpha: 0.3, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.3 }),
     airway: stripeMaterial({ pattern: 'level', density: 160, width: 0.1, line: p.lung, fill: p.lung, lineAlpha: 0.45, fillAlpha: 0.04, rim: p.lungRim, rimAlpha: 0.45 }),
   }
