@@ -6,7 +6,7 @@ import type { BreathingEngine } from '../../engine'
 import { useTheme } from '../../lib/theme'
 import { breathState } from '../breathState'
 import { BreathSpecks } from './BreathSpecks'
-import { withoutFissures } from './fissures'
+import { simplifiedLung } from './lungShape'
 import { makeMaterials, type MaterialKind } from './materials'
 import { makeStripeMaterials, STRIPE_PALETTES, type EdgeMap } from './stripes'
 
@@ -92,11 +92,21 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
         mesh.visible = false
         return
       }
-      // Only the outer shape of each lung is drawn, not the faces between its lobes.
-      if (part.kind === 'lung' && !mesh.geometry.userData.noFissures) {
-        mesh.geometry.userData.noFissures = true
-        const index = withoutFissures(mesh.geometry, mesh.getWorldScale(new THREE.Vector3()).x)
-        if (index) mesh.geometry.setIndex(index)
+      // Each lung is drawn as a simplified smooth body, not with its lobes, borders and notches,
+      // so its contour lines run calm and even.
+      if (part.kind === 'lung' && !mesh.geometry.userData.simplified) {
+        const at = mesh.getWorldPosition(new THREE.Vector3())
+        const scale = mesh.getWorldScale(new THREE.Vector3()).x
+        const side = Math.sign(at.x) || 1
+        const smooth = simplifiedLung(mesh.geometry, {
+          // Body midline at world x = 0; keep 3 mm off it, flattening over about 3 cm.
+          midline: { x: -at.x / scale, side, gap: 0.003 / scale, soft: 0.03 / scale, gain: BREATH_GAIN[mesh.name] ?? 1 },
+        })
+        if (smooth) {
+          smooth.userData.simplified = true
+          mesh.geometry = smooth
+          mesh.updateMorphTargets()
+        }
       }
       mesh.material = mesh.name === 'Head' || mesh.parent?.name === 'Head' ? materials.head : materials[part.kind]
       mesh.renderOrder = part.order

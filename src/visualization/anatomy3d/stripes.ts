@@ -32,6 +32,8 @@ export type StripeOptions = {
   occlude?: boolean
   /** Screen-space map of how far away the nearest lung surface is, to draw the rim where this surface lies in front of another (see `edgeDepthMaterial`). */
   edges?: EdgeMap
+  /** How quickly the rim fades inward from the silhouette; lower is a broader rim. */
+  rimPower?: number
 }
 
 /** Shared uniforms of the lung edge map: the texture, the drawing buffer size and the rim width, both in device pixels. */
@@ -82,7 +84,7 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
         float d = abs(fract(v) - 0.5);
         float w = fwidth(v) * 0.9;
         float line = smoothstep(0.5 - uWidth - w, 0.5 - uWidth + w, d);
-        float fr = pow(1.0 - abs(dot(normalize(vN), normalize(vView))), 2.0);
+        float fr = pow(1.0 - abs(dot(normalize(vN), normalize(vView))), ${(o.rimPower ?? 2).toFixed(2)});
         ${o.edges ? 'fr = max(fr, edgeRim(vView.z));' : ''}
         float focus = 1.0;
         ${o.focusTrunk ? 'focus = (1.0 - smoothstep(0.13, 0.2, abs(vRest.x))) * smoothstep(0.98, 1.12, vRest.y); line *= mix(0.3, 1.0, smoothstep(0.05, 0.5, fr));' : ''}
@@ -166,7 +168,7 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     // then their near wall. Both write depth, so the other lung and the airways behind or inside
     // a lung no longer show through it; only the lung's own back rings do.
     lungBack: stripeMaterial({ pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: dark ? 0.42 : 0.36, dimAlpha: dark ? 0.1 : 0.08, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.0, level, side: 'back', occlude: true }),
-    lung: stripeMaterial({ pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: 1.0, dimAlpha: dark ? 0.22 : 0.18, fillAlpha: dark ? 0.05 : 0.035, rim: p.lungRim, rimAlpha: 0.85, level, occlude: true, edges }),
+    lung: stripeMaterial({ pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: 1.0, dimAlpha: dark ? 0.22 : 0.18, fillAlpha: dark ? 0.05 : 0.035, rim: p.lungRim, rimAlpha: 0.85, level, occlude: true, edges, rimPower: 1.5 }),
     lungEdgeLeft: edgeDepthMaterial(1),
     lungEdgeRight: edgeDepthMaterial(2),
     diaphragm: stripeMaterial({ pattern: 'level', density: 85, width: 0.06, line: p.lung, fill: p.lung, lineAlpha: 0.3, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.3 }),
