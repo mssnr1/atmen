@@ -36,6 +36,8 @@ export type StripeOptions = {
   edges?: EdgeMap
   /** How quickly the rim fades inward from the silhouette; lower is a broader rim. */
   rimPower?: number
+  /** Shared multiplier of the final opacity, e.g. to fade the lungs out after the exercise. */
+  show?: { value: number }
 }
 
 /** Shared uniforms of the lung edge map: the texture, the drawing buffer size and the rim width, both in device pixels. */
@@ -59,6 +61,7 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
       uRimA: { value: o.rimAlpha },
       uLevel: o.level ?? { value: 99 },
       uDim: { value: o.dimAlpha ?? o.lineAlpha },
+      uShow: o.show ?? { value: 1 },
       ...(o.edges ? { uEdgeMap: o.edges.map, uEdgeSize: o.edges.size, uEdgeR: o.edges.radius } : {}),
     })
     shader.vertexShader = shader.vertexShader
@@ -76,7 +79,7 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
         `#include <common>
         varying vec3 vRest; varying vec3 vN; varying vec3 vView;
         uniform vec3 uLine; uniform vec3 uFill; uniform vec3 uRim;
-        uniform float uDensity; uniform float uWidth; uniform float uLineA; uniform float uFillA; uniform float uRimA; uniform float uLevel; uniform float uDim;
+        uniform float uDensity; uniform float uWidth; uniform float uLineA; uniform float uFillA; uniform float uRimA; uniform float uLevel; uniform float uDim; uniform float uShow;
         ${o.edges ? EDGE_GLSL : ''}`,
       )
       .replace(
@@ -99,10 +102,10 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
         col = mix(mix(uFill, uLine, line * 0.55), col, lit);
         float a = mix(uFillA, mix(uDim, uLineA, lit), line);
         a = max(a, fr * uRimA * mix(0.5, 1.0, lit));
-        gl_FragColor = vec4(col, a * focus);`,
+        gl_FragColor = vec4(col, min(a * focus * uShow, 1.0));`,
       )
   }
-  m.customProgramCacheKey = () => `stripes-${JSON.stringify(o)}`
+  m.customProgramCacheKey = () => `stripes-${JSON.stringify({ ...o, show: !!o.show })}`
   return m
 }
 
@@ -174,8 +177,15 @@ export const STRIPE_PALETTES: Record<'light' | 'dark', StripePalette> = {
 const neckGlsl = (radius: number) =>
   `(1.0 - smoothstep(${radius.toFixed(3)}, ${(radius + 0.015).toFixed(3)}, length(vec2(vRest.x, vRest.z + 0.01)))) * smoothstep(1.45, 1.49, vRest.y)`
 
-export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { value: number }, edges?: EdgeMap) {
-  const skinLines: StripeOptions = { pattern: 'around', density: 120, width: 0.06, line: p.body, fill: p.body, lineAlpha: dark ? 0.6 : 0.55, fillAlpha: 0.0, rim: p.body, rimAlpha: dark ? 0.3 : 0.26, focusTrunk: true }
+/**
+ * `fade.inner` scales the lungs, airways and diaphragm (1 = shown, 0 = gone), `fade.skin` the skin
+ * (1 = as usual): after the exercise the inside fades out and the skin glows a little more.
+ */
+export type Fade = { inner: { value: number }; skin: { value: number } }
+
+export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { value: number }, edges?: EdgeMap, fade?: Fade) {
+  const inner = fade?.inner
+  const skinLines: StripeOptions = { show: fade?.skin, pattern: 'around', density: 120, width: 0.06, line: p.body, fill: p.body, lineAlpha: dark ? 0.6 : 0.55, fillAlpha: 0.0, rim: p.body, rimAlpha: dark ? 0.3 : 0.26, focusTrunk: true }
   return {
     // Up to the neck the trunk's skin shows its far wall (the lungs, writing depth, hide it where they lie in front).
     skin: stripeMaterial({ ...skinLines, neck: 'without' }),
@@ -193,13 +203,13 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     // The lungs are drawn as a solid volume: first their far wall (the rings at the back, dimmed),
     // then their near wall. Both write depth, so the other lung and the airways behind or inside
     // a lung no longer show through it; only the lung's own back rings do.
-    lungBack: stripeMaterial({ pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: dark ? 0.42 : 0.36, dimAlpha: dark ? 0.1 : 0.08, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.0, level, side: 'back', occlude: true }),
-    lung: stripeMaterial({ pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: 1.0, dimAlpha: dark ? 0.22 : 0.18, fillAlpha: dark ? 0.05 : 0.035, rim: p.lungRim, rimAlpha: 0.85, level, occlude: true, edges, rimPower: 1.5 }),
+    lungBack: stripeMaterial({ show: inner, pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: dark ? 0.42 : 0.36, dimAlpha: dark ? 0.1 : 0.08, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.0, level, side: 'back', occlude: true }),
+    lung: stripeMaterial({ show: inner, pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: 1.0, dimAlpha: dark ? 0.22 : 0.18, fillAlpha: dark ? 0.05 : 0.035, rim: p.lungRim, rimAlpha: 0.85, level, occlude: true, edges, rimPower: 1.5 }),
     lungEdgeLeft: edgeDepthMaterial(1),
     lungEdgeRight: edgeDepthMaterial(2),
-    diaphragm: stripeMaterial({ pattern: 'level', density: 85, width: 0.06, line: p.lung, fill: p.lung, lineAlpha: 0.3, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.3 }),
+    diaphragm: stripeMaterial({ show: inner, pattern: 'level', density: 85, width: 0.06, line: p.lung, fill: p.lung, lineAlpha: 0.3, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.3 }),
     // Both walls: the throat is open toward the mouth, and through that opening the eye sees the inside
     // of its back wall, which one-sided drawing would leave blank.
-    airway: stripeMaterial({ pattern: 'level', density: 160, width: 0.1, line: p.lung, fill: p.lung, lineAlpha: 0.45, fillAlpha: 0.04, rim: p.lungRim, rimAlpha: 0.45, side: 'both' }),
+    airway: stripeMaterial({ show: inner, pattern: 'level', density: 160, width: 0.1, line: p.lung, fill: p.lung, lineAlpha: 0.45, fillAlpha: 0.04, rim: p.lungRim, rimAlpha: 0.45, side: 'both' }),
   }
 }
