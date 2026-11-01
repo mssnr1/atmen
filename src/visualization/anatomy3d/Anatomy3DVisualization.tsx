@@ -4,7 +4,7 @@ import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNo
 import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { ExpandIcon } from '../../components/icons'
-import type { BreathingEngine } from '../../engine'
+import type { BreathSource } from '../breathState'
 import { useI18n } from '../../i18n'
 import { AbstractVisualization } from '../abstract/AbstractVisualization'
 import { AnatomyModel } from './AnatomyModel'
@@ -12,8 +12,7 @@ import { Aura } from './Aura'
 
 /** What the camera looks at by default: the middle of the chest. Its height is set per viewport by `fitView`. */
 const TARGET = new THREE.Vector3(0, 1.37, 0.0)
-/** Default view: slightly from the model's left and from above, a 3/4 perspective. */
-const AZIMUTH = THREE.MathUtils.degToRad(28)
+/** Default view: straight from the front, slightly from above. A start only zooms in, it never turns. */
 const ELEVATION = THREE.MathUtils.degToRad(6)
 const FOV = 28
 /** Half the width that must be visible, shoulder to shoulder. */
@@ -44,18 +43,12 @@ export function fitView(aspect: number, clear = 1, started = false, top = 0): { 
 const RUN_ZOOM = 0.76
 const LUNG_Y = 1.33
 
-function defaultPosition(aspect: number, clear: number, azimuth = AZIMUTH, started = false, top = 0): THREE.Vector3 {
+function defaultPosition(aspect: number, clear: number, started = false, top = 0): THREE.Vector3 {
   const { distance: d, target } = fitView(aspect, clear, started, top)
-  return new THREE.Vector3(
-    target.x + d * Math.cos(ELEVATION) * Math.sin(azimuth),
-    target.y + d * Math.sin(ELEVATION),
-    target.z + d * Math.cos(ELEVATION) * Math.cos(azimuth),
-  )
+  return new THREE.Vector3(target.x, target.y + d * Math.sin(ELEVATION), target.z + d * Math.cos(ELEVATION))
 }
 
-/** Before the exercise starts the figure faces the user; once it starts it turns to the 3/4 view. */
-const facingFor = (started: boolean) => (started ? AZIMUTH : 0)
-/** A slow turn (and zoom) that eases in and out with no jolt at either end (smootherstep). */
+/** A slow zoom (and the way back from wherever the user turned the figure) that eases in and out with no jolt at either end (smootherstep). */
 const TURN_S = 3.4
 const easeInOut = (t: number) => t * t * t * (t * (6 * t - 15) + 10)
 
@@ -97,16 +90,17 @@ function Rig({
   const H = Math.max(1, size.height)
   const top = Math.min(Math.max(topInset / H, 0), 0.3)
   const clear = Math.min(Math.max(1 - bottomInset / H - top, 0.4), 1)
-  // Read through a ref so a start turns the camera smoothly instead of resetting it.
+  // Read through a ref so a start zooms the camera smoothly instead of resetting it.
   const startedRef = useRef(started)
   useEffect(() => {
     startedRef.current = started
   }, [started])
-  const facing = useRef(facingFor(started))
+  /** Whether the camera is at (or heading for) the started framing. */
+  const framed = useRef(started)
   // The latest default framing, read by the frame loop so a turn can head for it.
   const layout = useRef({ aspect, clear, top })
   layout.current = { aspect, clear, top }
-  /** A tween of the whole camera pose: from where it was to the default view for the current facing and layout. */
+  /** A tween of the whole camera pose: from where it was to the default view for the current framing and layout. */
   const turn = useRef<{ from: THREE.Spherical; fromTarget: THREE.Vector3; t: number } | null>(null)
   // Default view on mount and on Reset view. A layout change once started (the
   // controls panel shrinks as the exercise starts) eases there, as part of
@@ -116,29 +110,28 @@ function Rig({
     const c = controls.current
     // Before the exercise starts (first load, the panel being measured) it just snaps.
     if (lastSignal.current !== null && lastSignal.current === resetSignal && c && startedRef.current) {
-      if (turn.current || facing.current !== facingFor(startedRef.current)) return
+      if (turn.current || framed.current !== startedRef.current) return
       turn.current = { from: new THREE.Spherical().setFromVector3(new THREE.Vector3().subVectors(camera.position, c.target)), fromTarget: c.target.clone(), t: 0 }
       return
     }
     lastSignal.current = resetSignal
     turn.current = null
-    facing.current = facingFor(startedRef.current)
+    framed.current = startedRef.current
     const { target } = fitView(aspect, clear, startedRef.current, top)
-    camera.position.copy(defaultPosition(aspect, clear, facing.current, startedRef.current, top))
+    camera.position.copy(defaultPosition(aspect, clear, startedRef.current, top))
     controls.current?.target.copy(target)
     camera.lookAt(target)
     controls.current?.update()
   }, [camera, aspect, clear, top, controls, resetSignal])
 
-  // Turn around the model when the exercise starts (or goes back to the start).
+  // Zoom in when the exercise starts, and back out when it ends or goes back to the start.
   const spherical = useMemo(() => new THREE.Spherical(), [])
   const offset = useMemo(() => new THREE.Vector3(), [])
   useFrame((_, dt) => {
     const c = controls.current
     if (!c) return
-    const want = facingFor(startedRef.current)
-    if (want !== facing.current) {
-      facing.current = want
+    if (framed.current !== startedRef.current) {
+      framed.current = startedRef.current
       turn.current = { from: new THREE.Spherical().setFromVector3(offset.copy(camera.position).sub(c.target)), fromTarget: c.target.clone(), t: 0 }
     }
     const tw = turn.current
@@ -150,8 +143,8 @@ function Rig({
     const mix = (x: number, y: number) => x + (y - x) * k
     // From wherever the user left the camera (turned, zoomed, panned) the shortest way round to the default view.
     c.target.lerpVectors(tw.fromTarget, target, k)
-    const theta = facing.current + THREE.MathUtils.euclideanModulo(tw.from.theta - facing.current + Math.PI, 2 * Math.PI) - Math.PI
-    spherical.set(mix(tw.from.radius, distance), mix(tw.from.phi, Math.PI / 2 - ELEVATION), mix(theta, facing.current))
+    const theta = THREE.MathUtils.euclideanModulo(tw.from.theta + Math.PI, 2 * Math.PI) - Math.PI
+    spherical.set(mix(tw.from.radius, distance), mix(tw.from.phi, Math.PI / 2 - ELEVATION), mix(theta, 0))
     camera.position.copy(c.target).add(offset.setFromSpherical(spherical))
     camera.lookAt(c.target)
     c.update()
@@ -167,7 +160,7 @@ export function Anatomy3DVisualization({
   topInset = 0,
   started = false,
 }: {
-  engine: BreathingEngine
+  engine: BreathSource
   showProgress: boolean
   bottomInset?: number
   topInset?: number
@@ -200,7 +193,7 @@ export function Anatomy3DVisualization({
         >
           <Canvas
             dpr={[1, 1.75]}
-            camera={{ fov: FOV, near: 0.05, far: 10, position: defaultPosition(1, 1, 0) }}
+            camera={{ fov: FOV, near: 0.05, far: 10, position: defaultPosition(1, 1) }}
             gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
             data-testid="anatomy-canvas"
           >

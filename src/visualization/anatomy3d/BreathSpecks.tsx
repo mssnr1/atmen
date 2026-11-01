@@ -1,9 +1,8 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
-import type { BreathingEngine } from '../../engine'
 import { useTheme } from '../../lib/theme'
-import { breathState, type BreathState } from '../breathState'
+import { breathState, type BreathSource, type BreathState } from '../breathState'
 import { lungs, pointOn, routes, type V3 } from './airflow3d'
 
 const COUNT = 160
@@ -151,7 +150,7 @@ const fragment = /* glsl */ `
  * exhale take the same way back out of the nose. Their place
  * is a pure function of the breath state, so they follow the engine exactly.
  */
-export function BreathSpecks({ engine }: { engine: BreathingEngine }) {
+export function BreathSpecks({ engine }: { engine: BreathSource }) {
   const theme = useTheme()
   const specks = useMemo(makeSpecks, [])
   const { geometry, material } = useMemo(() => {

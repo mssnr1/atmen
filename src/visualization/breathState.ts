@@ -52,3 +52,8 @@ export function breathState(s: EngineSnapshot): BreathState {
       return { volume: 0, direction: 0, flow: 0, phaseProgress: p, phase: 'holdOut', elapsedS }
   }
 }
+
+/** Anything the visualizations can read the breath from: the session engine, or the calm breathing that carries on after it. */
+export interface BreathSource {
+  sample(): EngineSnapshot
+}

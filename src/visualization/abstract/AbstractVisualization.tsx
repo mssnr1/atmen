@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { BreathingEngine } from '../../engine'
-import { breathState, type BreathState } from '../breathState'
+import { breathState, type BreathSource, type BreathState } from '../breathState'
 
 const MIN_SCALE = 0.42
 const MAX_SCALE = 1
@@ -11,7 +10,7 @@ const RING_LENGTH = 2 * Math.PI * RING_RADIUS
 export const scaleFor = (b: BreathState) => MIN_SCALE + (MAX_SCALE - MIN_SCALE) * b.volume
 
 interface Props {
-  engine: BreathingEngine
+  engine: BreathSource
   /** Draw the session ring; off when session progress is hidden. */
   showProgress: boolean
 }
