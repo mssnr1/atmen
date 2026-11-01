@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useTheme } from '../../lib/theme'
 import { breathState, type BreathSource } from '../breathState'
+import { intoFrame, simplifiedDiaphragm } from './diaphragmShape'
 import { airwayTree, type Branch } from './airwayTree'
 import { BreathSpecks } from './BreathSpecks'
 import { addCalmMorph } from './face'
@@ -131,6 +132,8 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     model.traverse((o) => o.userData.lungBack && stale.push(o))
     stale.forEach((o) => o.removeFromParent())
     const backs: [THREE.Mesh, THREE.Mesh][] = []
+    let diaphragm: THREE.Mesh | null = null
+    const lungMeshes: THREE.Mesh[] = []
     model.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
@@ -167,6 +170,13 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         }
       }
       mesh.material = mesh.name === 'Head' ? materials.head : materials[part.kind]
+      // The anatomical diaphragm folds over itself in the front view; a simplified sheet under the
+      // lungs takes its place once the lungs are known (see below).
+      if (part.kind === 'diaphragm') {
+        mesh.visible = false
+        diaphragm = mesh
+        return
+      }
       // Trachea and bronchi give way to one smooth airway with a clean fork (see `airwayTree`).
       if (mesh.name === 'Bronchi') {
         mesh.visible = false
@@ -214,6 +224,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
       if (dict?.Calm !== undefined) found.push({ mesh, index: dict.Calm, kind: 'calm', gain: 1 })
       // A second copy of each lung draws its far wall: the rings at the back, dimmed.
       if (part.kind === 'lung') {
+        lungMeshes.push(mesh)
         const back = mesh.clone(false)
         back.material = materials.lungBack
         back.renderOrder = part.order - 1
@@ -228,6 +239,26 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
       }
     })
     for (const [src, back] of backs) src.parent?.add(back)
+    // Narrowing is lost across the traverse callback, hence the explicit type.
+    const sheetOwner = diaphragm as THREE.Mesh | null
+    if (sheetOwner?.parent && lungMeshes.length) {
+      const diaphragmMesh = sheetOwner
+      const owner = sheetOwner.parent
+      let sheet = diaphragmMesh.geometry.userData.sheet as THREE.BufferGeometry | undefined
+      if (!sheet) {
+        model.updateMatrixWorld(true)
+        const built = simplifiedDiaphragm(lungMeshes.map((l) => ({ geometry: l.geometry, matrixWorld: l.matrixWorld, gain: BREATH_GAIN[l.name] ?? 1 })))
+        if (built) sheet = diaphragmMesh.geometry.userData.sheet = intoFrame(built, owner)
+      }
+      if (sheet) {
+        const mesh = new THREE.Mesh(sheet, materials.diaphragm)
+        mesh.renderOrder = PARTS.Diaphragm.order
+        mesh.userData.lungBack = true
+        owner.add(mesh)
+        // The lungs' own breath, already at its full strength, is baked into the sheet.
+        found.push({ mesh, index: 0, kind: 'breath', gain: 1 })
+      }
+    }
     morphs.current = found
     const lungs = new THREE.Box3()
     model.updateMatrixWorld(true)
