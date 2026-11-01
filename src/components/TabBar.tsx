@@ -1,8 +1,31 @@
 import { useI18n } from '../i18n'
-import { navigate } from '../lib/route'
+import { navigate, showStart } from '../lib/route'
 import { GearIcon, HomeIcon, LearnIcon } from './icons'
 
 type Tab = 'home' | 'learn' | 'settings'
+
+/** Two taps on Home within this time go back to the start screen. */
+const DOUBLE_TAP_MS = 350
+// Kept outside the component: the first tap can switch screens and remount the bar.
+let lastHomeTap = 0
+let pendingWelcome: ReturnType<typeof setTimeout> | undefined
+
+function tapHome(active: boolean) {
+  const now = performance.now()
+  const double = now - lastHomeTap < DOUBLE_TAP_MS
+  lastHomeTap = double ? 0 : now
+  clearTimeout(pendingWelcome)
+  if (double) {
+    showStart()
+    return
+  }
+  if (!active) {
+    navigate({ name: 'home' })
+    return
+  }
+  // Tapping Home again while on it shows the welcome cards once more, unless a second tap follows.
+  pendingWelcome = setTimeout(() => navigate({ name: 'welcome' }), DOUBLE_TAP_MS)
+}
 
 /** The navigation of the main screens: a bar at the bottom on phones, a floating pill at the top on iPad and desktop. */
 export function TabBar({ current }: { current: Tab }) {
@@ -25,8 +48,8 @@ export function TabBar({ current }: { current: Tab }) {
               <button
                 type="button"
                 aria-current={active ? 'page' : undefined}
-                // Tapping Home again while on it shows the welcome cards once more.
-                onClick={() => navigate(active && id === 'home' ? { name: 'welcome' } : { name: id })}
+                // Home: a double tap goes back to the start screen, see tapHome.
+                onClick={() => (id === 'home' ? tapHome(active) : navigate({ name: id }))}
                 className={`flex w-full flex-col items-center gap-1 pt-2.5 pb-1 text-[0.6875rem] md:flex-row md:gap-2 md:rounded-full md:px-5 md:py-2 md:text-[0.9375rem] md:transition-colors ${
                   active ? 'text-accent md:bg-thumb md:shadow-[0_1px_3px_rgb(0_0_0/0.08)]' : 'text-muted md:hover:text-ink'
                 }`}
