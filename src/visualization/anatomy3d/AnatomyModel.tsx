@@ -6,6 +6,7 @@ import type { BreathingEngine } from '../../engine'
 import { useTheme } from '../../lib/theme'
 import { breathState } from '../breathState'
 import { BreathSpecks } from './BreathSpecks'
+import { withHolesFilled } from './holes'
 import { simplifiedLung } from './lungShape'
 import { makeMaterials, type MaterialKind } from './materials'
 import { makeStripeMaterials, STRIPE_PALETTES, type EdgeMap } from './stripes'
@@ -18,19 +19,25 @@ const EDGE_RIM_PX = 18
 export const MODEL_URL = `${import.meta.env.BASE_URL}models/atmen-anatomy.glb`
 
 /** Which look and draw order each object of the model gets. */
-const PARTS: Record<string, { kind: MaterialKind; order: number }> = {
-  Heart: { kind: 'heart', order: 0 },
+const PARTS: Record<string, { kind: MaterialKind; order: number; hidden?: boolean }> = {
+  // The heart stays out of the picture so the lungs and diaphragm read clearly.
+  Heart: { kind: 'heart', order: 0, hidden: true },
   // The lungs go first and write depth (back wall at order 1, see below), so the
   // airways and diaphragm drawn after them are hidden where a lung covers them.
   Lung_Left: { kind: 'lung', order: 2 },
   Lung_Right: { kind: 'lung', order: 2 },
-  Trachea: { kind: 'airway', order: 3 },
-  Bronchi: { kind: 'airway', order: 3 },
-  Nasal_Cavity: { kind: 'airway', order: 3 },
+  // The airways come before the neck and the head, whose skin writes depth and would hide the trachea.
+  Trachea: { kind: 'airway', order: 2.2 },
+  Bronchi: { kind: 'airway', order: 2.2 },
+  // The nose and throat cavities lie inside the head, which hides them anyway; only through the
+  // gaps around the neck would they peek out as stray blue patches. The specks still show the way in.
+  Nasal_Cavity: { kind: 'airway', order: 2.2, hidden: true },
   Diaphragm: { kind: 'diaphragm', order: 4 },
   Abdomen: { kind: 'skin', order: 6 },
-  Body_Shell: { kind: 'skin', order: 6 },
-  Head: { kind: 'skin', order: 6 },
+  // Its far wall goes before the neck and the head (which write depth), so they hide none of it.
+  Body_Shell: { kind: 'skin', order: 2.3 },
+  // Right after the neck (2.4, see below); it writes depth and hides what lies inside or behind it (see `head` in stripes.ts).
+  Head: { kind: 'skin', order: 2.5 },
 }
 
 /**
@@ -87,8 +94,7 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
       if (!mesh.isMesh) return
       const part = PARTS[mesh.name] ?? PARTS[mesh.parent?.name ?? '']
       if (!part) return
-      // The heart stays out of the picture so the lungs and diaphragm read clearly.
-      if (part.kind === 'heart') {
+      if (part.hidden) {
         mesh.visible = false
         return
       }
@@ -108,7 +114,27 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
           mesh.updateMorphTargets()
         }
       }
-      mesh.material = mesh.name === 'Head' || mesh.parent?.name === 'Head' ? materials.head : materials[part.kind]
+      // The head is closed over its eyes, brows and lips, so the lines run on across them.
+      if (mesh.name === 'Head' && !mesh.geometry.userData.holesFilled) {
+        const filled = withHolesFilled(mesh.geometry, mesh.getWorldScale(new THREE.Vector3()).x)
+        if (filled) {
+          filled.userData.holesFilled = true
+          mesh.geometry = filled
+        }
+      }
+      mesh.material = mesh.name === 'Head' ? materials.head : materials[part.kind]
+      // Second copies: the inner wall of the head (filling the gaps under the jaw) and the near wall of the neck.
+      if (mesh.name === 'Head' || mesh.name === 'Body_Shell') {
+        const copy = mesh.clone(false)
+        copy.material = mesh.name === 'Head' ? materials.headInner : materials.skinNeck
+        // The neck just before the head, so each hides what of the other lies behind it; the head's inner
+        // wall after everything else, so it shows only where neither covers it.
+        copy.renderOrder = mesh.name === 'Head' ? 6.2 : 2.4
+        copy.userData.lungBack = true
+        backs.push([mesh, copy])
+        const inhale = mesh.morphTargetDictionary?.Inhale
+        if (inhale !== undefined) found.push({ mesh: copy, index: inhale, kind: 'breath', gain: BREATH_GAIN[mesh.name] ?? 1 })
+      }
       mesh.renderOrder = part.order
       const dict = mesh.morphTargetDictionary
       const gain = BREATH_GAIN[mesh.name] ?? BREATH_GAIN[mesh.parent?.name ?? ''] ?? 1
