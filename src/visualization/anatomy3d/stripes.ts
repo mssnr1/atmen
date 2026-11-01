@@ -27,9 +27,11 @@ export type StripeOptions = {
   level?: { value: number }
   dimAlpha?: number
   /** Draw the inside (back faces) instead of the outside, e.g. the far wall of a lung seen through its near wall. */
-  side?: 'front' | 'back'
+  side?: 'front' | 'back' | 'both'
   /** Write depth so whatever lies behind this surface is hidden instead of showing through. */
   occlude?: boolean
+  /** Draw only the neck (`'only'`) or everything but the neck (`'without'`), with a soft border between them. */
+  neck?: 'only' | 'without'
   /** Screen-space map of how far away the nearest lung surface is, to draw the rim where this surface lies in front of another (see `edgeDepthMaterial`). */
   edges?: EdgeMap
   /** How quickly the rim fades inward from the silhouette; lower is a broader rim. */
@@ -43,7 +45,7 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
   const m = new THREE.MeshBasicMaterial({
     transparent: true,
     depthWrite: o.occlude ?? false,
-    side: o.side === 'back' ? THREE.BackSide : THREE.FrontSide,
+    side: o.side === 'back' ? THREE.BackSide : o.side === 'both' ? THREE.DoubleSide : THREE.FrontSide,
   })
   m.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, {
@@ -87,7 +89,10 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
         float fr = pow(1.0 - abs(dot(normalize(vN), normalize(vView))), ${(o.rimPower ?? 2).toFixed(2)});
         ${o.edges ? 'fr = max(fr, edgeRim(vView.z));' : ''}
         float focus = 1.0;
-        ${o.focusTrunk ? 'focus = (1.0 - smoothstep(0.13, 0.2, abs(vRest.x))) * smoothstep(0.98, 1.12, vRest.y); line *= mix(0.3, 1.0, smoothstep(0.05, 0.5, fr));' : ''}
+        ${o.neck ? `float neck = ${neckGlsl(o.neck === 'only' ? 0.07 : 0.1)};` : ''}
+        // Both walls stay above half strength across the border, so it reads as one surface, not a pale band.
+        ${o.neck === 'only' ? 'focus = 1.0 - (1.0 - neck) * (1.0 - neck); if (neck < 0.1) discard;' : o.neck === 'without' ? 'focus = 1.0 - neck * neck;' : ''}
+        ${o.focusTrunk ? 'focus *= (1.0 - smoothstep(0.13, 0.2, abs(vRest.x))) * smoothstep(0.98, 1.12, vRest.y); line *= mix(0.3, 1.0, smoothstep(0.05, 0.5, fr));' : ''}
         vec3 col = mix(uFill, uLine, line);
         col = mix(col, uRim, fr * 0.8);
         float lit = 1.0 - smoothstep(uLevel - 0.012, uLevel + 0.012, vRest.y);
@@ -160,10 +165,31 @@ export const STRIPE_PALETTES: Record<'light' | 'dark', StripePalette> = {
   dark: { body: '#8f877f', line: '#b89aff', lung: '#b89aff', lungRim: '#dccbff' },
 }
 
+/**
+ * The neck: a column round the spine's axis above the shoulders (world metres; the neck is about 6 cm in
+ * radius), with a soft border 1.5 cm wide starting at `radius`. The skin switches from its far wall (trunk)
+ * to its near wall (neck) across it. The far wall gives way over a wider column, so its jagged top edge
+ * under the jaw never shows.
+ */
+const neckGlsl = (radius: number) =>
+  `(1.0 - smoothstep(${radius.toFixed(3)}, ${(radius + 0.015).toFixed(3)}, length(vec2(vRest.x, vRest.z + 0.01)))) * smoothstep(1.45, 1.49, vRest.y)`
+
 export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { value: number }, edges?: EdgeMap) {
+  const skinLines: StripeOptions = { pattern: 'around', density: 120, width: 0.06, line: p.body, fill: p.body, lineAlpha: dark ? 0.6 : 0.55, fillAlpha: 0.0, rim: p.body, rimAlpha: dark ? 0.3 : 0.26, focusTrunk: true }
   return {
-    skin: stripeMaterial({ pattern: 'around', density: 120, width: 0.06, line: p.body, fill: p.body, lineAlpha: dark ? 0.6 : 0.55, fillAlpha: 0.0, rim: p.body, rimAlpha: dark ? 0.3 : 0.26, focusTrunk: true }),
-    head: stripeMaterial({ pattern: 'around', density: 120, width: 0.0, line: p.body, fill: p.body, lineAlpha: 0.0, fillAlpha: 0.0, rim: p.body, rimAlpha: dark ? 0.32 : 0.28 }),
+    // Up to the neck the trunk's skin shows its far wall (the lungs, writing depth, hide it where they lie in front).
+    skin: stripeMaterial({ ...skinLines, neck: 'without' }),
+    // The neck shows its near wall instead, like the head above it, so the lines run on from the neck over the
+    // skull without a step, also round the back where the trunk's far wall would show the throat from inside.
+    // (The trunk's skin is wound inside out, so its near wall is the back side.)
+    // It writes depth, so where it covers the gap under the head, the head's inner wall (drawn last) stays hidden.
+    skinNeck: stripeMaterial({ ...skinLines, side: 'back', occlude: true, neck: 'only' }),
+    // The head carries the same lines over the skull, face and (closed) eye sockets. It writes depth, so
+    // what lies inside or behind it (the top of the neck's skin under the chin) doesn't show through the face.
+    head: stripeMaterial({ ...skinLines, occlude: true }),
+    // Where the head's skin and the neck's don't quite meet (under the jaw), the eye would look into the
+    // empty inside of the head; its inner wall, drawn after the head and the neck, fills only those gaps.
+    headInner: stripeMaterial({ ...skinLines, rimAlpha: 0.0, side: 'back' }),
     // The lungs are drawn as a solid volume: first their far wall (the rings at the back, dimmed),
     // then their near wall. Both write depth, so the other lung and the airways behind or inside
     // a lung no longer show through it; only the lung's own back rings do.
@@ -172,6 +198,8 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     lungEdgeLeft: edgeDepthMaterial(1),
     lungEdgeRight: edgeDepthMaterial(2),
     diaphragm: stripeMaterial({ pattern: 'level', density: 85, width: 0.06, line: p.lung, fill: p.lung, lineAlpha: 0.3, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.3 }),
-    airway: stripeMaterial({ pattern: 'level', density: 160, width: 0.1, line: p.lung, fill: p.lung, lineAlpha: 0.45, fillAlpha: 0.04, rim: p.lungRim, rimAlpha: 0.45 }),
+    // Both walls: the throat is open toward the mouth, and through that opening the eye sees the inside
+    // of its back wall, which one-sided drawing would leave blank.
+    airway: stripeMaterial({ pattern: 'level', density: 160, width: 0.1, line: p.lung, fill: p.lung, lineAlpha: 0.45, fillAlpha: 0.04, rim: p.lungRim, rimAlpha: 0.45, side: 'both' }),
   }
 }
