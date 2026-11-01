@@ -43,6 +43,12 @@ export interface Messages {
   settings: string
   openSettings: string
   aboutExercise: string
+  /** Label for the heads-up cards on what happens in the body. */
+  bodyInsights: string
+  /** Small label before the positive result on a body insight card. */
+  insightImpact: string
+  /** Small label before where in the body it happens. */
+  insightPlace: string
   breathingPace: string
   breathingPaceHint: string
   slowDown: string
@@ -155,6 +161,9 @@ const de: Messages = {
   settings: 'Einstellungen',
   openSettings: 'Einstellungen öffnen',
   aboutExercise: 'Über die Übung',
+  bodyInsights: 'Was gerade in deinem Körper passiert',
+  insightImpact: 'Wirkung',
+  insightPlace: 'Ort',
   breathingPace: 'Atemtempo',
   breathingPaceHint: 'Sekunden ein / aus',
   slowDown: 'Mit der Zeit langsamer',
@@ -285,6 +294,9 @@ const en: Messages = {
   settings: 'Settings',
   openSettings: 'Open settings',
   aboutExercise: 'About this exercise',
+  bodyInsights: 'What is happening in your body',
+  insightImpact: 'Impact',
+  insightPlace: 'Location',
   breathingPace: 'Breathing pace',
   breathingPaceHint: 'Seconds in / out',
   slowDown: 'Slow down over time',

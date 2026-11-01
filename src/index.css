@@ -27,6 +27,8 @@
   --color-accent: #2f6bf5;
   /* The translucent practice panel. */
   --color-panel: rgb(255 255 255 / 0.18);
+  /* The heads-up insight cards: more opaque than the panel so their text stands off the figure. */
+  --color-insight: rgb(255 255 255 / 0.52);
   /* Drawings, page dots and arrow button on the welcome screens (the logo stays white). */
   --color-page-mark: #ffffff;
   --color-page-dot: #ffffff;
@@ -74,6 +76,7 @@
   --color-breath: #c3a6ff;
   --color-accent: #b89aff;
   --color-panel: rgb(30 28 26 / 0.42);
+  --color-insight: rgb(38 35 32 / 0.58);
   /* The deeper violet of the Learn cards, which Jan prefers for drawings. */
   --color-page-mark: #6d3fd6;
   --color-page-dot: #6d3fd6;
@@ -301,5 +304,75 @@ body.blue-page {
   }
   .start-choices {
     animation-duration: 1ms;
+  }
+}
+
+/* Body insight cards drift in like the breath: fade, rise a little, come into focus. */
+.insight-in {
+  animation: insight-in 1400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes insight-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .insight-in {
+    animation: fade-in 600ms ease-out both;
+  }
+}
+
+/* Heads-up look on the insight cards: a soft glow on the accent text and a pulsing status dot. */
+.hud-glow {
+  text-shadow: 0 0 6px color-mix(in srgb, var(--color-accent) 55%, transparent), 0 0 14px color-mix(in srgb, var(--color-accent) 25%, transparent);
+}
+.hud-dot {
+  position: relative;
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  box-shadow: 0 0 6px var(--color-accent);
+  animation: hud-dot 2.4s ease-in-out infinite;
+}
+.hud-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid var(--color-accent);
+  animation: hud-ring 2.4s ease-out infinite;
+}
+@keyframes hud-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes hud-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-dot,
+  .hud-dot::after {
+    animation: none;
   }
 }
