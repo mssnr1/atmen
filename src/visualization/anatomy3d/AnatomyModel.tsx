@@ -2,9 +2,8 @@ import { useGLTF } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import type { BreathingEngine } from '../../engine'
 import { useTheme } from '../../lib/theme'
-import { breathState } from '../breathState'
+import { breathState, type BreathSource } from '../breathState'
 import { BreathSpecks } from './BreathSpecks'
 import { withHolesFilled } from './holes'
 import { simplifiedLung } from './lungShape'
@@ -62,7 +61,7 @@ const BEAT_S = 60 / 62
  * nothing runs on a timer of its own. Only the heartbeat runs on its own clock,
  * on purpose.
  */
-export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
+export function AnatomyModel({ engine }: { engine: BreathSource }) {
   const { scene } = useGLTF(MODEL_URL, false, true)
   const theme = useTheme()
   const level = useMemo(() => ({ value: 99 }), [])

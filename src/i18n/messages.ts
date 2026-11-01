@@ -74,6 +74,8 @@ export interface Messages {
   progress: string
   // Completion flow
   wellDone: string
+  /** Under "well done" over the still breathing figure, by exercise id (falls back to `default`). */
+  afterglow: Record<string, string> & { default: string }
   completed: (duration: string, exercise: string) => string
   /** A short reflection under "well done": a question, a line on it, then short labelled thoughts. */
   reflection: { question: string; lead: string; parts: { title: string; text: string }[] }
@@ -197,6 +199,12 @@ const de: Messages = {
   guide: 'Atemführung',
   progress: 'Fortschritt',
   wellDone: 'Gut gemacht.',
+  afterglow: {
+    default: 'Du fühlst dich jetzt besser und entspannter.',
+    resonance: 'Du fühlst dich jetzt ruhiger und ausgeglichener.',
+    energy: 'Du fühlst dich jetzt wacher und klarer.',
+    relax: 'Du fühlst dich jetzt besser und entspannter.',
+  },
   completed: (d, e) => `Du hast ${d} ${e} abgeschlossen.`,
   reflection: {
     question: 'Hast du gesehen, wie groß deine Lunge und dein Zwerchfell sind?',
@@ -332,6 +340,12 @@ const en: Messages = {
   guide: 'Breathing guide',
   progress: 'Progress',
   wellDone: 'Well done.',
+  afterglow: {
+    default: 'You feel better and more relaxed now.',
+    resonance: 'You feel calmer and more balanced now.',
+    energy: 'You feel more awake and clear now.',
+    relax: 'You feel better and more relaxed now.',
+  },
   completed: (d, e) => `You completed ${d} of ${e}.`,
   reflection: {
     question: 'Did you see how large your lungs and your diaphragm are?',

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import type { BreathingEngine } from '../engine'
+import type { BreathSource } from './breathState'
 import { AbstractVisualization } from './abstract/AbstractVisualization'
 import type { VisualizationMode } from './modes'
 
@@ -8,7 +8,7 @@ const Anatomy3DVisualization = lazy(() => import('./anatomy3d/Anatomy3DVisualiza
 
 interface Props {
   mode: VisualizationMode
-  engine: BreathingEngine
+  engine: BreathSource
   showProgress: boolean
   /** Height in px of controls that float over the bottom of the area. */
   bottomInset?: number

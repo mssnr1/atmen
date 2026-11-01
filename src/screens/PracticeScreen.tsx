@@ -4,11 +4,11 @@ import { BodyInsights } from '../guide/BodyInsights'
 import { ParticleWord } from '../components/ParticleWord'
 import { FullscreenButton } from '../components/FullscreenButton'
 import { IconButton } from '../components/Button'
-import { CircleIcon, CloseIcon, InfoIcon, LungsIcon, MoonIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon, SunIcon } from '../components/icons'
+import { ArrowRightIcon, CircleIcon, CloseIcon, InfoIcon, LungsIcon, MoonIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon, SunIcon } from '../components/icons'
 import { Segmented } from '../components/Segmented'
 import { Squircle } from '../components/Squircle'
 import { Switch } from '../components/Switch'
-import type { BreathPhase, EngineSnapshot } from '../engine'
+import { BreathingEngine, type BreathPhase, type EngineSnapshot } from '../engine'
 import type { Exercise } from '../exercises'
 import { audioCues, audioSupported } from '../feedback/audio'
 import { vibrationSupported } from '../feedback/haptics'
@@ -19,6 +19,7 @@ import { formatClock } from '../lib/format'
 import { navigate } from '../lib/route'
 import { useTheme } from '../lib/theme'
 import { store, useStore } from '../storage/store'
+import type { BreathSource } from '../visualization/breathState'
 import { visualizationModes } from '../visualization/modes'
 import { Visualization } from '../visualization/Visualization'
 import { CompletionFlow } from './CompletionFlow'
@@ -30,10 +31,10 @@ function shownPhase(s: EngineSnapshot): BreathPhase {
   return before?.phase ?? s.phase
 }
 
-/** The camera turn (see Anatomy3DVisualization) plus a moment of stillness before the first breath. */
+/** The camera zoom (see Anatomy3DVisualization) plus a moment of stillness before the first breath. */
 const LEAD_IN_MS = 4200
-/** When the exercise ends the figure turns back to face the user before the completion screen. */
-const OUTRO_MS = 3800
+/** Breaths the figure keeps taking, quietly, while "well done" shows. */
+const AFTERGLOW_CYCLES = 600
 
 function phaseLabel(s: EngineSnapshot, t: Messages): string {
   if (s.status === 'idle') return t.ready
@@ -75,7 +76,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
     return () => ro.disconnect()
   }, [])
 
-  // In the anatomical view the figure first turns to its 3/4 view, then breathing begins.
+  // In the anatomical view the camera first zooms in, then breathing begins.
   const [leadIn, setLeadIn] = useState(false)
   const leadInTimer = useRef<number | undefined>(undefined)
   useEffect(() => () => window.clearTimeout(leadInTimer.current), [])
@@ -90,13 +91,31 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
     }, LEAD_IN_MS)
   }
 
-  const [outroDone, setOutroDone] = useState(false)
+  // When the exercise ends the figure stays: it keeps breathing calmly in the same rhythm,
+  // without sound, the air keeps flowing and the aura stays full, with "well done" in the panel.
   const completed = s.status === 'completed'
+  const scaleRef = useRef(scale)
+  scaleRef.current = scale
+  const afterglow = useMemo(
+    () =>
+      completed
+        ? new BreathingEngine({ pattern: exercise.pattern, length: { kind: 'cycles', count: AFTERGLOW_CYCLES }, pace: { scale: scaleRef.current, slowDown: false } })
+        : null,
+    [completed, exercise],
+  )
   useEffect(() => {
-    setOutroDone(false)
-    if (!completed) return
-    const id = window.setTimeout(() => setOutroDone(true), OUTRO_MS)
-    return () => window.clearTimeout(id)
+    if (!afterglow) return
+    afterglow.start()
+    return () => afterglow.dispose()
+  }, [afterglow])
+  const breath = useMemo<BreathSource>(
+    () => (afterglow ? { sample: () => ({ ...afterglow.sample(), status: 'completed', progress: 1 }) } : session.engine),
+    [afterglow, session.engine],
+  )
+  // "Next" leads on to the rest of the completion flow.
+  const [showFlow, setShowFlow] = useState(false)
+  useEffect(() => {
+    if (!completed) setShowFlow(false)
   }, [completed])
 
   const goHome = () => {
@@ -105,8 +124,8 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
     navigate({ name: 'home' })
   }
 
-  if (s.status === 'completed' && summary && (outroDone || prefs.visualizationMode !== 'anatomical')) {
-    return <CompletionFlow exercise={exercise} summary={summary} sessionId={session.sessionId} scale={scale} />
+  if (completed && summary && showFlow) {
+    return <CompletionFlow exercise={exercise} summary={summary} sessionId={session.sessionId} scale={scale} initialStep="feel" />
   }
 
   const active = s.status === 'running' || s.status === 'paused'
@@ -145,7 +164,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       <section className="absolute inset-0" aria-label={t.guide}>
         <Visualization
           mode={prefs.visualizationMode}
-          engine={session.engine}
+          engine={breath}
           showProgress={prefs.showProgress}
           bottomInset={panelHeight}
           topInset={headerHeight}
@@ -172,6 +191,26 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
 
       <section ref={panel} className="safe-bottom safe-x pointer-events-none absolute inset-x-0 bottom-0 z-10 md:pb-6">
         <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-panel px-5 pt-[1.125rem] pb-4 backdrop-blur-[6px] md:px-8">
+        {completed ? (
+          <div className="flex flex-col items-center text-center" data-testid="completion">
+            <p className="w-full text-breath" aria-live="polite">
+              <ParticleWord text={t.wellDone.replace(/\.$/, '').toLowerCase()} className="h-[5.5rem]" fontSize={72} />
+            </p>
+            <p className="text-[1.0625rem] leading-snug text-ink-2 md:text-[1.25rem]" data-testid="completion-text">
+              {t.afterglow[exercise.id] ?? t.afterglow.default}
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowFlow(true)}
+              disabled={!summary}
+              className="mt-7 flex h-14 items-center gap-2 rounded-full border border-line bg-surface px-10 text-[1.0625rem] text-ink transition hover:bg-surface-2 active:scale-95 disabled:opacity-50"
+              data-testid="completion-next"
+            >
+              {t.next}
+              <ArrowRightIcon className="size-5" />
+            </button>
+          </div>
+        ) : (
         <div>
         <div className="flex flex-col items-center gap-1 text-center" aria-live="polite">
           <p className="w-full text-breath" data-testid="phase-label">
@@ -230,6 +269,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           </IconButton>
         </div>
         </div>
+        )}
         </Squircle>
       </section>
 

@@ -19,6 +19,8 @@ interface Props {
   sessionId: string | null
   /** Pace scale the session was breathed at. */
   scale: number
+  /** Where to begin: the practice screen can show its own "well done" over the figure first. */
+  initialStep?: Step
 }
 
 type Step = 'done' | 'feel' | 'summary' | 'next'
@@ -28,8 +30,8 @@ type Step = 'done' | 'feel' | 'summary' | 'next'
  * summary of what actually happened, and a suggestion for what to do next.
  * Everything shown is either from the session itself or what the user said.
  */
-export function CompletionFlow({ exercise, summary, sessionId, scale }: Props) {
-  const [step, setStep] = useState<Step>('done')
+export function CompletionFlow({ exercise, summary, sessionId, scale, initialStep = 'done' }: Props) {
+  const [step, setStep] = useState<Step>(initialStep)
   const feedback = useStore((d) => d.sessions.find((s) => s.id === sessionId)?.feedback)
   const save = (patch: Parameters<typeof store.setFeedback>[1]) => sessionId && store.setFeedback(sessionId, patch)
 

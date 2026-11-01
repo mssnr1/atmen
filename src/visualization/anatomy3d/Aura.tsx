@@ -2,8 +2,8 @@ import { useGLTF } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
-import type { BreathingEngine, EngineSnapshot } from '../../engine'
-import { breathState } from '../breathState'
+import type { EngineSnapshot } from '../../engine'
+import { breathState, type BreathSource } from '../breathState'
 import { MODEL_URL } from './AnatomyModel'
 
 /** Middle of the glow, between head and belly. The billboard turns around it to face the camera. */
@@ -212,7 +212,7 @@ function sampleShell(scene: THREE.Object3D, count: number) {
  * more and more of them, reaches its full glow near the end, swells gently
  * with each inhale, and stays through the outro.
  */
-export function Aura({ engine }: { engine: BreathingEngine }) {
+export function Aura({ engine }: { engine: BreathSource }) {
   const dark = useDarkPage()
   const { scene } = useGLTF(MODEL_URL, false, true)
   const plane = useRef<THREE.Mesh>(null)
