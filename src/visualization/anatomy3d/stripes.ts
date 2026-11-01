@@ -27,7 +27,7 @@ export type StripeOptions = {
   level?: { value: number }
   dimAlpha?: number
   /** Draw the inside (back faces) instead of the outside, e.g. the far wall of a lung seen through its near wall. */
-  side?: 'front' | 'back'
+  side?: 'front' | 'back' | 'both'
   /** Write depth so whatever lies behind this surface is hidden instead of showing through. */
   occlude?: boolean
   /** Draw only the neck (`'only'`) or everything but the neck (`'without'`), with a soft border between them. */
@@ -45,7 +45,7 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
   const m = new THREE.MeshBasicMaterial({
     transparent: true,
     depthWrite: o.occlude ?? false,
-    side: o.side === 'back' ? THREE.BackSide : THREE.FrontSide,
+    side: o.side === 'back' ? THREE.BackSide : o.side === 'both' ? THREE.DoubleSide : THREE.FrontSide,
   })
   m.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, {
@@ -198,6 +198,8 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     lungEdgeLeft: edgeDepthMaterial(1),
     lungEdgeRight: edgeDepthMaterial(2),
     diaphragm: stripeMaterial({ pattern: 'level', density: 85, width: 0.06, line: p.lung, fill: p.lung, lineAlpha: 0.3, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.3 }),
-    airway: stripeMaterial({ pattern: 'level', density: 160, width: 0.1, line: p.lung, fill: p.lung, lineAlpha: 0.45, fillAlpha: 0.04, rim: p.lungRim, rimAlpha: 0.45 }),
+    // Both walls: the throat is open toward the mouth, and through that opening the eye sees the inside
+    // of its back wall, which one-sided drawing would leave blank.
+    airway: stripeMaterial({ pattern: 'level', density: 160, width: 0.1, line: p.lung, fill: p.lung, lineAlpha: 0.45, fillAlpha: 0.04, rim: p.lungRim, rimAlpha: 0.45, side: 'both' }),
   }
 }

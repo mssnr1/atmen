@@ -31,7 +31,7 @@ const PARTS: Record<string, { kind: MaterialKind; order: number; hidden?: boolea
   Bronchi: { kind: 'airway', order: 2.2 },
   // The nose and throat cavities lie inside the head, which hides them anyway; only through the
   // gaps around the neck would they peek out as stray blue patches. The specks still show the way in.
-  Nasal_Cavity: { kind: 'airway', order: 2.2, hidden: true },
+  Nasal_Cavity: { kind: 'airway', order: 2.2 },
   Diaphragm: { kind: 'diaphragm', order: 4 },
   Abdomen: { kind: 'skin', order: 6 },
   // Its far wall goes before the neck and the head (which write depth), so they hide none of it.
