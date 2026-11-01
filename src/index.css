@@ -27,6 +27,8 @@
   --color-accent: #2f6bf5;
   /* The translucent practice panel. */
   --color-panel: rgb(255 255 255 / 0.18);
+  /* The heads-up insight cards: more opaque than the panel so their text stands off the figure. */
+  --color-insight: rgb(255 255 255 / 0.74);
   /* Drawings, page dots and arrow button on the welcome screens (the logo stays white). */
   --color-page-mark: #ffffff;
   --color-page-dot: #ffffff;
@@ -58,6 +60,7 @@
   --color-breath: #c3a6ff;
   --color-accent: #b89aff;
   --color-panel: rgb(30 28 26 / 0.42);
+  --color-insight: rgb(38 35 32 / 0.8);
   /* The deeper violet of the Learn cards, which Jan prefers for drawings. */
   --color-page-mark: #6d3fd6;
   --color-page-dot: #6d3fd6;

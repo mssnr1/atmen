@@ -37,7 +37,7 @@ function Column({ items, impactLabel, className }: { items: BodyInsight[]; impac
           radius={14}
           smoothing={0.6}
           role="listitem"
-          className="insight-in bg-panel px-2.5 py-2 shadow-[0_1px_8px_rgb(0_0_0/0.05)] ring-1 ring-line/60 backdrop-blur-[6px] md:px-4 md:py-3"
+          className="insight-in bg-insight px-2.5 py-2 shadow-[0_2px_12px_rgb(0_0_0/0.08)] ring-1 ring-line/60 backdrop-blur-[14px] backdrop-saturate-150 md:px-4 md:py-3"
           data-testid={`insight-${it.id}`}
         >
           <p className="hud-glow flex items-start gap-1.5 text-[0.5625rem] leading-tight tracking-[0.06em] text-accent uppercase [hyphens:auto] md:text-[0.6875rem]">
