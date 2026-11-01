@@ -1,26 +1,33 @@
 import { useGLTF } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import type { BreathingEngine } from '../../engine'
 import { useTheme } from '../../lib/theme'
 import { breathState } from '../breathState'
 import { BreathSpecks } from './BreathSpecks'
-import { withoutFissures } from './fissures'
+import { simplifiedLung } from './lungShape'
 import { makeMaterials, type MaterialKind } from './materials'
-import { makeStripeMaterials, STRIPE_PALETTES } from './stripes'
+import { makeStripeMaterials, STRIPE_PALETTES, type EdgeMap } from './stripes'
+
+/** Layer of the lung copies that only draw the edge map. */
+const EDGE_LAYER = 5
+/** Width of the rim along the edge between the lungs, in CSS pixels (like the outer rim). */
+const EDGE_RIM_PX = 18
 
 export const MODEL_URL = `${import.meta.env.BASE_URL}models/atmen-anatomy.glb`
 
 /** Which look and draw order each object of the model gets. */
 const PARTS: Record<string, { kind: MaterialKind; order: number }> = {
   Heart: { kind: 'heart', order: 0 },
-  Trachea: { kind: 'airway', order: 1 },
-  Bronchi: { kind: 'airway', order: 1 },
-  Nasal_Cavity: { kind: 'airway', order: 1 },
-  Diaphragm: { kind: 'diaphragm', order: 2 },
-  Lung_Left: { kind: 'lung', order: 4 },
-  Lung_Right: { kind: 'lung', order: 4 },
+  // The lungs go first and write depth (back wall at order 1, see below), so the
+  // airways and diaphragm drawn after them are hidden where a lung covers them.
+  Lung_Left: { kind: 'lung', order: 2 },
+  Lung_Right: { kind: 'lung', order: 2 },
+  Trachea: { kind: 'airway', order: 3 },
+  Bronchi: { kind: 'airway', order: 3 },
+  Nasal_Cavity: { kind: 'airway', order: 3 },
+  Diaphragm: { kind: 'diaphragm', order: 4 },
   Abdomen: { kind: 'skin', order: 6 },
   Body_Shell: { kind: 'skin', order: 6 },
   Head: { kind: 'skin', order: 6 },
@@ -52,11 +59,16 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   const { scene } = useGLTF(MODEL_URL, false, true)
   const theme = useTheme()
   const level = useMemo(() => ({ value: 99 }), [])
+  const { gl } = useThree()
+  // Map of how far away the nearest lung surface is, drawn each frame before the scene.
+  const edgeTarget = useMemo(() => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: true }), [])
+  const edges = useMemo<EdgeMap>(() => ({ map: { value: edgeTarget.texture }, size: { value: new THREE.Vector2(1, 1) }, radius: { value: EDGE_RIM_PX } }), [edgeTarget])
+  useEffect(() => () => edgeTarget.dispose(), [edgeTarget])
   const lungRange = useRef<[number, number] | null>(null)
   const materials = useMemo(() => {
     // Contour-stripe look: the lungs show the breath by lighting up from the bottom as they fill.
-    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level) }
-  }, [theme, level])
+    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges) }
+  }, [theme, level, edges])
   const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat'; gain: number }[]>([])
   const beat = useRef(0)
 
@@ -65,6 +77,11 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
   useEffect(() => {
     model.updateMatrixWorld(true)
     const found: typeof morphs.current = []
+    // Remove the back-wall and edge-map copies of a previous theme before adding fresh ones.
+    const stale: THREE.Object3D[] = []
+    model.traverse((o) => o.userData.lungBack && stale.push(o))
+    stale.forEach((o) => o.removeFromParent())
+    const backs: [THREE.Mesh, THREE.Mesh][] = []
     model.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
@@ -75,18 +92,44 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
         mesh.visible = false
         return
       }
-      // Only the outer shape of each lung is drawn, not the faces between its lobes.
-      if (part.kind === 'lung' && !mesh.geometry.userData.noFissures) {
-        mesh.geometry.userData.noFissures = true
-        const index = withoutFissures(mesh.geometry, mesh.getWorldScale(new THREE.Vector3()).x)
-        if (index) mesh.geometry.setIndex(index)
+      // Each lung is drawn as a simplified smooth body, not with its lobes, borders and notches,
+      // so its contour lines run calm and even.
+      if (part.kind === 'lung' && !mesh.geometry.userData.simplified) {
+        const at = mesh.getWorldPosition(new THREE.Vector3())
+        const scale = mesh.getWorldScale(new THREE.Vector3()).x
+        const side = Math.sign(at.x) || 1
+        const smooth = simplifiedLung(mesh.geometry, {
+          // Body midline at world x = 0; keep 3 mm off it, flattening over about 3 cm.
+          midline: { x: -at.x / scale, side, gap: 0.003 / scale, soft: 0.03 / scale, gain: BREATH_GAIN[mesh.name] ?? 1 },
+        })
+        if (smooth) {
+          smooth.userData.simplified = true
+          mesh.geometry = smooth
+          mesh.updateMorphTargets()
+        }
       }
       mesh.material = mesh.name === 'Head' || mesh.parent?.name === 'Head' ? materials.head : materials[part.kind]
       mesh.renderOrder = part.order
       const dict = mesh.morphTargetDictionary
-      if (dict?.Inhale !== undefined) found.push({ mesh, index: dict.Inhale, kind: 'breath', gain: BREATH_GAIN[mesh.name] ?? BREATH_GAIN[mesh.parent?.name ?? ''] ?? 1 })
+      const gain = BREATH_GAIN[mesh.name] ?? BREATH_GAIN[mesh.parent?.name ?? ''] ?? 1
+      if (dict?.Inhale !== undefined) found.push({ mesh, index: dict.Inhale, kind: 'breath', gain })
       if (dict?.Beat !== undefined) found.push({ mesh, index: dict.Beat, kind: 'beat', gain: 1 })
+      // A second copy of each lung draws its far wall: the rings at the back, dimmed.
+      if (part.kind === 'lung') {
+        const back = mesh.clone(false)
+        back.material = materials.lungBack
+        back.renderOrder = part.order - 1
+        back.userData.lungBack = true
+        // And one, seen only by the edge map, marks where this lung lies in front of the other.
+        const depth = mesh.clone(false)
+        depth.material = /Left/.test(mesh.name + (mesh.parent?.name ?? '')) ? materials.lungEdgeLeft : materials.lungEdgeRight
+        depth.layers.set(EDGE_LAYER)
+        depth.userData.lungBack = true
+        backs.push([mesh, back], [mesh, depth])
+        for (const copy of [back, depth]) if (dict?.Inhale !== undefined) found.push({ mesh: copy, index: dict.Inhale, kind: 'breath', gain })
+      }
     })
+    for (const [src, back] of backs) src.parent?.add(back)
     morphs.current = found
     const lungs = new THREE.Box3()
     model.updateMatrixWorld(true)
@@ -97,7 +140,7 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
     return () => Object.values(materials).forEach((m) => m.dispose())
   }, [model, materials])
 
-  useFrame((_, delta) => {
+  useFrame(({ scene, camera }, delta) => {
     const snapshot = engine.sample()
     const b = breathState(snapshot)
     const dt = Math.min(delta, 0.1)
@@ -111,6 +154,27 @@ export function AnatomyModel({ engine }: { engine: BreathingEngine }) {
       const influences = m.mesh.morphTargetInfluences
       if (influences) influences[m.index] = m.kind === 'beat' ? h : b.volume * m.gain
     }
+    // Edge map for the rim between the lungs, from the same camera as the frame about to be drawn.
+    const buffer = gl.getDrawingBufferSize(new THREE.Vector2())
+    const w = Math.max(1, buffer.x)
+    const hgt = Math.max(1, buffer.y)
+    if (edgeTarget.width !== w || edgeTarget.height !== hgt) edgeTarget.setSize(w, hgt)
+    edges.size.value.copy(buffer)
+    edges.radius.value = EDGE_RIM_PX * gl.getPixelRatio()
+    const layers = camera.layers.mask
+    const background = scene.background
+    const clear = gl.getClearColor(new THREE.Color())
+    const clearAlpha = gl.getClearAlpha()
+    camera.layers.set(EDGE_LAYER)
+    scene.background = null
+    gl.setRenderTarget(edgeTarget)
+    gl.setClearColor(0x000000, 0)
+    gl.clear()
+    gl.render(scene, camera)
+    gl.setRenderTarget(null)
+    gl.setClearColor(clear, clearAlpha)
+    scene.background = background
+    camera.layers.mask = layers
   })
 
   return (
