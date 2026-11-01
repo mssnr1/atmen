@@ -12,6 +12,8 @@ interface Props {
   showProgress: boolean
   /** Height in px of controls that float over the bottom of the area. */
   bottomInset?: number
+  /** Height of the bar floating over the top edge; the figure runs on behind it. */
+  topInset?: number
   /** The exercise has been started (it may still be in its lead-in). */
   started?: boolean
 }
@@ -22,16 +24,16 @@ interface Props {
  * mid-session picks up at exactly the current point of the breath without
  * touching the session.
  */
-export function Visualization({ mode, engine, showProgress, bottomInset = 0, started = false }: Props) {
+export function Visualization({ mode, engine, showProgress, bottomInset = 0, topInset = 0, started = false }: Props) {
   // The body runs on behind the floating controls; the abstract view stays clear of them.
   return mode === 'abstract' ? (
-    <div className="absolute inset-0 flex items-center justify-center pt-2" style={{ paddingBottom: bottomInset + 8 }}>
+    <div className="absolute inset-0 flex items-center justify-center" style={{ paddingTop: topInset + 8, paddingBottom: bottomInset + 8 }}>
       <AbstractVisualization engine={engine} showProgress={showProgress} />
     </div>
   ) : (
     <div className="absolute inset-0">
       <Suspense fallback={null}>
-        <Anatomy3DVisualization engine={engine} showProgress={showProgress} bottomInset={bottomInset} started={started} />
+        <Anatomy3DVisualization engine={engine} showProgress={showProgress} bottomInset={bottomInset} topInset={topInset} started={started} />
       </Suspense>
     </div>
   )
