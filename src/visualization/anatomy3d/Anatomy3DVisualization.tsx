@@ -28,23 +28,35 @@ const PAN_LIMIT = new THREE.Box3(new THREE.Vector3(-0.2, 1.05, -0.15), new THREE
  * `clear` fraction is not covered by the controls: head to diaphragm fill that
  * part, and the body continues down behind the controls.
  */
-export function fitView(aspect: number, clear = 1, started = false, top = 0): { distance: number; target: THREE.Vector3 } {
+export function fitView(aspect: number, clear = 1, framing: Framing = 'idle', top = 0): { distance: number; target: THREE.Vector3 } {
   const t = Math.tan(THREE.MathUtils.degToRad(FOV) / 2)
+  if (framing === 'done') {
+    // After the exercise: close on the head and neck, the shoulders just above the controls.
+    const halfH = Math.max((DONE_TOP - DONE_BOTTOM) / (2 * clear), DONE_HALF_W / aspect)
+    return { distance: halfH / t, target: new THREE.Vector3(TARGET.x, DONE_TOP - halfH + 2 * halfH * top, TARGET.z) }
+  }
   const halfH = Math.max((TOP - BOTTOM) / (2 * clear), HALF_W / aspect)
   // `top` is the share of the view hidden behind the top bar: the figure's head sits just below it.
   const target = new THREE.Vector3(TARGET.x, TOP - halfH + 2 * halfH * top, TARGET.z)
-  if (!started) return { distance: halfH / t, target }
+  if (framing === 'idle') return { distance: halfH / t, target }
   // Once the exercise runs, the camera also moves in closer, toward the lungs.
   target.y += (LUNG_Y - target.y) * 0.35
   return { distance: (halfH * RUN_ZOOM) / t, target }
 }
 
+/** The view before the start, while breathing, and on the "well done" screen after it. */
+export type Framing = 'idle' | 'run' | 'done'
+/** Framing after the exercise: from a little above the head down to the shoulders, and the width that must fit. */
+const DONE_TOP = 1.8
+const DONE_BOTTOM = 1.36
+const DONE_HALF_W = 0.11
+
 /** How much closer the camera is once the exercise runs, and the height of the middle of the lungs it moves toward. */
 const RUN_ZOOM = 0.76
 const LUNG_Y = 1.33
 
-function defaultPosition(aspect: number, clear: number, started = false, top = 0): THREE.Vector3 {
-  const { distance: d, target } = fitView(aspect, clear, started, top)
+function defaultPosition(aspect: number, clear: number, framing: Framing = 'idle', top = 0): THREE.Vector3 {
+  const { distance: d, target } = fitView(aspect, clear, framing, top)
   return new THREE.Vector3(target.x, target.y + d * Math.sin(ELEVATION), target.z + d * Math.cos(ELEVATION))
 }
 
@@ -73,13 +85,13 @@ class ModelBoundary extends Component<{ fallback: ReactNode; children: ReactNode
 }
 
 function Rig({
-  started,
+  framing,
   controls,
   resetSignal,
   bottomInset,
   topInset,
 }: {
-  started: boolean
+  framing: Framing
   controls: React.RefObject<OrbitControlsImpl | null>
   resetSignal: number
   bottomInset: number
@@ -91,12 +103,12 @@ function Rig({
   const top = Math.min(Math.max(topInset / H, 0), 0.3)
   const clear = Math.min(Math.max(1 - bottomInset / H - top, 0.4), 1)
   // Read through a ref so a start zooms the camera smoothly instead of resetting it.
-  const startedRef = useRef(started)
+  const framingRef = useRef(framing)
   useEffect(() => {
-    startedRef.current = started
-  }, [started])
-  /** Whether the camera is at (or heading for) the started framing. */
-  const framed = useRef(started)
+    framingRef.current = framing
+  }, [framing])
+  /** The framing the camera is at (or heading for). */
+  const framed = useRef(framing)
   // The latest default framing, read by the frame loop so a turn can head for it.
   const layout = useRef({ aspect, clear, top })
   layout.current = { aspect, clear, top }
@@ -109,16 +121,16 @@ function Rig({
   useEffect(() => {
     const c = controls.current
     // Before the exercise starts (first load, the panel being measured) it just snaps.
-    if (lastSignal.current !== null && lastSignal.current === resetSignal && c && startedRef.current) {
-      if (turn.current || framed.current !== startedRef.current) return
+    if (lastSignal.current !== null && lastSignal.current === resetSignal && c && framingRef.current !== 'idle') {
+      if (turn.current || framed.current !== framingRef.current) return
       turn.current = { from: new THREE.Spherical().setFromVector3(new THREE.Vector3().subVectors(camera.position, c.target)), fromTarget: c.target.clone(), t: 0 }
       return
     }
     lastSignal.current = resetSignal
     turn.current = null
-    framed.current = startedRef.current
-    const { target } = fitView(aspect, clear, startedRef.current, top)
-    camera.position.copy(defaultPosition(aspect, clear, startedRef.current, top))
+    framed.current = framingRef.current
+    const { target } = fitView(aspect, clear, framingRef.current, top)
+    camera.position.copy(defaultPosition(aspect, clear, framingRef.current, top))
     controls.current?.target.copy(target)
     camera.lookAt(target)
     controls.current?.update()
@@ -130,8 +142,8 @@ function Rig({
   useFrame((_, dt) => {
     const c = controls.current
     if (!c) return
-    if (framed.current !== startedRef.current) {
-      framed.current = startedRef.current
+    if (framed.current !== framingRef.current) {
+      framed.current = framingRef.current
       turn.current = { from: new THREE.Spherical().setFromVector3(offset.copy(camera.position).sub(c.target)), fromTarget: c.target.clone(), t: 0 }
     }
     const tw = turn.current
@@ -139,7 +151,7 @@ function Rig({
     tw.t = Math.min(tw.t + dt / TURN_S, 1)
     const k = easeInOut(tw.t)
     const { aspect: a, clear: cl, top: tp } = layout.current
-    const { distance, target } = fitView(a, cl, startedRef.current, tp)
+    const { distance, target } = fitView(a, cl, framingRef.current, tp)
     const mix = (x: number, y: number) => x + (y - x) * k
     // From wherever the user left the camera (turned, zoomed, panned) the shortest way round to the default view.
     c.target.lerpVectors(tw.fromTarget, target, k)
@@ -158,13 +170,13 @@ export function Anatomy3DVisualization({
   showProgress,
   bottomInset = 0,
   topInset = 0,
-  started = false,
+  framing = 'idle',
 }: {
   engine: BreathSource
   showProgress: boolean
   bottomInset?: number
   topInset?: number
-  started?: boolean
+  framing?: Framing
 }) {
   const { t } = useI18n()
   const controls = useRef<OrbitControlsImpl | null>(null)
@@ -227,7 +239,7 @@ export function Anatomy3DVisualization({
                 }
               }}
             />
-            <Rig started={started} controls={controls} resetSignal={resetSignal} bottomInset={bottomInset} topInset={topInset} />
+            <Rig framing={framing} controls={controls} resetSignal={resetSignal} bottomInset={bottomInset} topInset={topInset} />
           </Canvas>
         </Suspense>
       </ModelBoundary>
