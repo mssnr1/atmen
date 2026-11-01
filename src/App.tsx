@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getExercise } from './exercises'
-import { useRoute } from './lib/route'
+import { onShowStart, useRoute } from './lib/route'
 import { useApplyTheme } from './lib/theme'
 import { EmergencyScreen } from './screens/EmergencyScreen'
 import { HomeScreen } from './screens/HomeScreen'
@@ -16,6 +16,8 @@ export default function App() {
   // The start screen (logo and three ways in) shows each time the app opens, over the first screen.
   const [splash, setSplash] = useState(true)
   const hideSplash = useCallback(() => setSplash(false), [])
+  // A double tap on Home brings it back.
+  useEffect(() => onShowStart(() => setSplash(true)), [])
   return (
     <>
       <Screen />

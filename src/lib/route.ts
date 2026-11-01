@@ -33,3 +33,13 @@ export function startPractice(exerciseId: string): void {
   void audioCues.unlock()
   navigate({ name: 'practice', exerciseId })
 }
+
+/** Back to the very front: the start screen with the logo and the three ways in. */
+const START_EVENT = 'atmen:start'
+export function showStart(): void {
+  window.dispatchEvent(new Event(START_EVENT))
+}
+export function onShowStart(cb: () => void): () => void {
+  window.addEventListener(START_EVENT, cb)
+  return () => window.removeEventListener(START_EVENT, cb)
+}
