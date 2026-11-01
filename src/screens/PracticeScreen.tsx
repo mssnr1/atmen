@@ -92,7 +92,8 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   }
 
   // When the exercise ends the figure stays: it keeps breathing calmly in the same rhythm,
-  // without sound, the air keeps flowing and the aura stays full, with "well done" in the panel.
+  // without sound, and the aura stays full, with "well done" in the panel. The lungs and the specks
+  // of air fade out, so only the figure and its aura remain.
   const completed = s.status === 'completed'
   const scaleRef = useRef(scale)
   scaleRef.current = scale

@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
 import { useTheme } from '../../lib/theme'
 import { breathState, type BreathSource, type BreathState } from '../breathState'
@@ -149,8 +149,10 @@ const fragment = /* glsl */ `
  * through the nose on each inhale and travel down into the lungs, and on the
  * exhale take the same way back out of the nose. Their place
  * is a pure function of the breath state, so they follow the engine exactly.
+ * Once the exercise is done (`done` eases to 1, see AnatomyModel) they fade out
+ * with the lungs: the "well done" view shows only the figure and its aura.
  */
-export function BreathSpecks({ engine }: { engine: BreathSource }) {
+export function BreathSpecks({ engine, done }: { engine: BreathSource; done?: RefObject<number> }) {
   const theme = useTheme()
   const specks = useMemo(makeSpecks, [])
   const { geometry, material } = useMemo(() => {
@@ -184,19 +186,23 @@ export function BreathSpecks({ engine }: { engine: BreathSource }) {
   )
 
   const scratch = useMemo(() => ({ p: [0, 0, 0] as V3, a: 0 }), [])
+  const points = useRef<THREE.Points>(null)
   useFrame(({ clock, gl }) => {
+    const shown = 1 - Math.min(Math.max(done?.current ?? 0, 0), 1)
+    if (points.current) points.current.visible = shown > 0.001
+    if (shown <= 0.001) return
     const b = breathState(engine.sample())
     const pos = geometry.attributes.position.array as Float32Array
     const alpha = geometry.attributes.aAlpha.array as Float32Array
     for (let i = 0; i < COUNT; i++) {
       speckState(specks[i], b, clock.elapsedTime, scratch)
       pos.set(scratch.p, i * 3)
-      alpha[i] = scratch.a
+      alpha[i] = scratch.a * shown
     }
     geometry.attributes.position.needsUpdate = true
     geometry.attributes.aAlpha.needsUpdate = true
     material.uniforms.uSize.value = 2.6 * gl.getPixelRatio()
   })
 
-  return <points geometry={geometry} material={material} renderOrder={8} frustumCulled={false} />
+  return <points ref={points} geometry={geometry} material={material} renderOrder={8} frustumCulled={false} />
 }

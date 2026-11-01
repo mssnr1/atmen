@@ -110,7 +110,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
   const edges = useMemo<EdgeMap>(() => ({ map: { value: edgeTarget.texture }, size: { value: new THREE.Vector2(1, 1) }, radius: { value: EDGE_RIM_PX } }), [edgeTarget])
   useEffect(() => () => edgeTarget.dispose(), [edgeTarget])
   const lungRange = useRef<[number, number] | null>(null)
-  // 0 while breathing; eases to 1 once the exercise is done: the lungs fade out, the skin glows a little more.
+  // 0 while breathing; eases to 1 once the exercise is done: the lungs, airways and specks of air fade out, the skin glows a little more.
   const done = useRef(0)
   const fade = useMemo<Fade>(() => ({ inner: { value: 1 }, skin: { value: 1 } }), [])
   const materials = useMemo(() => {
@@ -291,7 +291,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
   return (
     <group>
       <primitive object={model} />
-      <BreathSpecks engine={engine} />
+      <BreathSpecks engine={engine} done={done} />
     </group>
   )
 }
