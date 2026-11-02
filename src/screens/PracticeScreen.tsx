@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BottomSheet } from '../components/BottomSheet'
 import { BodyInsights } from '../guide/BodyInsights'
+import { InsightStack } from '../guide/InsightStack'
+import { bodyInsights, insightsShown } from '../guide/insights'
+import { useIsPhone } from '../hooks/useMediaQuery'
 import { ParticleWord } from '../components/ParticleWord'
 import { FullscreenButton } from '../components/FullscreenButton'
 import { IconButton } from '../components/Button'
-import { ArrowRightIcon, CircleIcon, CloseIcon, InfoIcon, LungsIcon, MoonIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon, SunIcon } from '../components/icons'
+import { ArrowRightIcon, CircleIcon, CloseIcon, InfoIcon, LungsIcon, MaximizeIcon, MinimizeIcon, MoonIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon, SunIcon } from '../components/icons'
 import { Segmented } from '../components/Segmented'
 import { Squircle } from '../components/Squircle'
 import { Switch } from '../components/Switch'
@@ -97,6 +100,18 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
     if (!completed) setShowFlow(false)
   }, [completed])
 
+  const isPhone = useIsPhone()
+  const [panelBig, setPanelBig] = useState(false)
+  const [stackOpen, setStackOpen] = useState(false)
+  const [stackHeight, setStackHeight] = useState(0)
+  const sessionActive = s.status === 'running' || s.status === 'paused'
+  useEffect(() => {
+    if (!sessionActive) {
+      setStackOpen(false)
+      setPanelBig(false)
+    }
+  }, [sessionActive])
+
   const goHome = () => {
     window.clearTimeout(leadInTimer.current)
     session.reset()
@@ -108,6 +123,12 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   }
 
   const active = s.status === 'running' || s.status === 'paused'
+  // On the phone the insight cards lie in a stack above the panel, and the panel
+  // shrinks to make room (the breath is clear from the lungs by then). It can be
+  // grown back, which turns the cards into slim lines.
+  const hasCards = isPhone && active && insightsShown(s.cycleIndex, bodyInsights[lang].length) > 0
+  const compact = hasCards && !panelBig
+  const figureInset = panelHeight + (hasCards ? stackHeight : 0)
   const totalCycles = Math.ceil(s.plan.totalCycles)
   const setPace = (patch: { preset?: number; slowDown?: boolean }) => store.setPace(exercise.id, { preset, slowDown, ...patch })
 
@@ -145,12 +166,12 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           mode={prefs.visualizationMode}
           engine={session.engine}
           showProgress={prefs.showProgress}
-          bottomInset={panelHeight}
+          bottomInset={figureInset}
           topInset={headerHeight}
           framing={completed ? 'done' : leadIn || s.status !== 'idle' ? 'run' : 'idle'}
         />
         <div className="pointer-events-none absolute inset-x-0 bottom-0" style={{ top: headerHeight }}>
-          <BodyInsights cycleIndex={s.cycleIndex} visible={active} />
+          {!isPhone && <BodyInsights cycleIndex={s.cycleIndex} visible={active} />}
         </div>
         <div className="absolute right-4 md:right-6" style={{ top: headerHeight + 8 }}>
           <Segmented
@@ -168,8 +189,31 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         </div>
       </section>
 
+      {isPhone && (
+        <InsightStack
+          cycleIndex={s.cycleIndex}
+          visible={active}
+          small={!compact}
+          expanded={stackOpen}
+          onExpandedChange={setStackOpen}
+          top={headerHeight}
+          bottom={panelHeight}
+          onHeight={setStackHeight}
+        />
+      )}
+
       <section ref={panel} className="safe-bottom safe-x pointer-events-none absolute inset-x-0 bottom-0 z-10 md:pb-6">
-        <Squircle radius={16} smoothing={0.6} className="pointer-events-auto bg-panel px-5 pt-[1.125rem] pb-4 backdrop-blur-[6px] md:px-8">
+        <Squircle radius={16} smoothing={0.6} className={`pointer-events-auto relative bg-panel px-5 backdrop-blur-[6px] md:px-8 ${compact ? 'pt-2 pb-3' : 'pt-[1.125rem] pb-4'}`}>
+        {hasCards && !completed && (
+          <IconButton
+            label={compact ? t.panelMaximize : t.panelMinimize}
+            onClick={() => setPanelBig(compact)}
+            className="!absolute top-1.5 right-1.5 z-10 !size-9 text-muted"
+            data-testid="panel-size"
+          >
+            {compact ? <MaximizeIcon className="size-4" strokeWidth={1.6} /> : <MinimizeIcon className="size-4" strokeWidth={1.6} />}
+          </IconButton>
+        )}
         {completed ? (
           <div className="flex flex-col items-center text-center" data-testid="completion">
             <p className="w-full text-breath" aria-live="polite">
@@ -193,7 +237,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         <div>
         <div className="flex flex-col items-center gap-1 text-center" aria-live="polite">
           <p className="w-full text-breath" data-testid="phase-label">
-            <ParticleWord text={phaseLabel(s, t).toLowerCase()} className="h-[5.5rem]" fontSize={72} />
+            <ParticleWord text={phaseLabel(s, t).toLowerCase()} className={compact ? 'h-[2.75rem]' : 'h-[5.5rem]'} fontSize={compact ? 38 : 72} />
           </p>
           {s.status !== 'running' && (
             <p className="text-[1rem] text-muted tabular-nums" data-testid="phase-time">
@@ -203,7 +247,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         </div>
 
         {prefs.showProgress && (
-          <div className="mt-4" data-testid="session-progress">
+          <div className={compact ? 'mt-1.5' : 'mt-4'} data-testid="session-progress">
             <div className="h-1.5 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-label={t.progress} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(s.progress * 100)}>
               <div className="h-full rounded-full bg-blue transition-[width] duration-300" style={{ width: `${s.progress * 100}%` }} />
             </div>
@@ -214,22 +258,22 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-9">
+        <div className={`flex items-center justify-between ${compact ? 'pt-3' : 'pt-9'}`}>
           <IconButton
             label={t.restart}
             disabled={!active}
             onClick={session.restart}
-            className="size-12 border border-line"
+            className={`${compact ? '!size-10' : 'size-12'} border border-line`}
             data-testid="restart"
           >
             <RestartIcon className="size-5" strokeWidth={1.5} />
           </IconButton>
           {s.status === 'running' ? (
-            <IconButton label={t.pause} onClick={session.pause} className="size-16 bg-surface hover:bg-surface-2" data-testid="pause">
+            <IconButton label={t.pause} onClick={session.pause} className={`${compact ? '!size-12' : 'size-16'} bg-surface hover:bg-surface-2`} data-testid="pause">
               <PauseIcon className="size-6" />
             </IconButton>
           ) : s.status === 'paused' ? (
-            <IconButton label={t.resume} onClick={session.resume} className="size-16 border border-line bg-surface hover:bg-surface-2" data-testid="resume">
+            <IconButton label={t.resume} onClick={session.resume} className={`${compact ? '!size-12' : 'size-16'} border border-line bg-surface hover:bg-surface-2`} data-testid="resume">
               <PlayIcon className="ml-1 size-6" />
             </IconButton>
           ) : (
@@ -243,7 +287,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
               {t.start}
             </button>
           )}
-          <IconButton label={t.openSettings} onClick={() => setSheetOpen(true)} className="size-12 border border-line" data-testid="open-settings">
+          <IconButton label={t.openSettings} onClick={() => setSheetOpen(true)} className={`${compact ? '!size-10' : 'size-12'} border border-line`} data-testid="open-settings">
             <SlidersIcon className="size-5" strokeWidth={1.5} />
           </IconButton>
         </div>

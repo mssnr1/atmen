@@ -30,7 +30,7 @@ export function BodyInsights({ cycleIndex, visible }: { cycleIndex: number; visi
   )
 }
 
-function TargetIcon() {
+export function TargetIcon() {
   return (
     <svg viewBox="0 0 12 12" className="size-[0.7rem] flex-none" fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" aria-hidden>
       <circle cx="6" cy="6" r="3.9" />
@@ -40,7 +40,7 @@ function TargetIcon() {
   )
 }
 
-function OutcomeIcon() {
+export function OutcomeIcon() {
   return (
     <svg viewBox="0 0 12 12" className="size-[0.7rem] flex-none" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M3 9 9 3M4.2 3H9v4.8" />
@@ -49,7 +49,7 @@ function OutcomeIcon() {
 }
 
 /** A small HUD label: icon plus uppercase word. */
-function Label({ icon, children }: { icon: React.ReactNode; children: string }) {
+export function Label({ icon, children }: { icon: React.ReactNode; children: string }) {
   return (
     <span className="hud-glow flex items-center gap-1 text-[0.5625rem] leading-none tracking-[0.1em] text-accent uppercase md:text-[0.625rem]">
       {icon}

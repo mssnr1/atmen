@@ -49,6 +49,12 @@ export interface Messages {
   insightImpact: string
   /** Small label before where in the body it happens. */
   insightPlace: string
+  /** Fanning out the stacked insight cards on the phone, and folding them back. */
+  insightsExpand: string
+  insightsCollapse: string
+  /** Growing the shrunk practice panel back to full size, and shrinking it. */
+  panelMaximize: string
+  panelMinimize: string
   breathingPace: string
   breathingPaceHint: string
   slowDown: string
@@ -168,6 +174,10 @@ const de: Messages = {
   bodyInsights: 'Was gerade in deinem Körper passiert',
   insightImpact: 'Wirkung',
   insightPlace: 'Ort',
+  insightsExpand: 'Alle Hinweise zeigen',
+  insightsCollapse: 'Einklappen',
+  panelMaximize: 'Bedienfeld vergrößern',
+  panelMinimize: 'Bedienfeld verkleinern',
   breathingPace: 'Atemtempo',
   breathingPaceHint: 'Sekunden ein / aus',
   slowDown: 'Mit der Zeit langsamer',
@@ -309,6 +319,10 @@ const en: Messages = {
   bodyInsights: 'What is happening in your body',
   insightImpact: 'Impact',
   insightPlace: 'Location',
+  insightsExpand: 'Show all notes',
+  insightsCollapse: 'Fold away',
+  panelMaximize: 'Enlarge controls',
+  panelMinimize: 'Shrink controls',
   breathingPace: 'Breathing pace',
   breathingPaceHint: 'Seconds in / out',
   slowDown: 'Slow down over time',

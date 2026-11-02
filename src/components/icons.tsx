@@ -187,3 +187,20 @@ export const LifebuoyIcon = (p: P) => (
     <path d="M6 6l3.5 3.5M18 6l-3.5 3.5M6 18l3.5-3.5M18 18l-3.5-3.5" />
   </svg>
 )
+export const ChevronDownIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M6 9.5l6 6 6-6" />
+  </svg>
+)
+/** Two arrows pointing apart: make bigger. */
+export const MaximizeIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5" />
+  </svg>
+)
+/** Two arrows pointing together: make smaller. */
+export const MinimizeIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M20 10h-6V4M4 14h6v6M14 10l6.5-6.5M10 14l-6.5 6.5" />
+  </svg>
+)
