@@ -47,10 +47,10 @@ metres (Blender Z up; the glTF is Y up).
 | --- | --- | --- |
 | `Lung_Left`, `Lung_Right` | `Inhale`: expand in 3D, mostly lower and lateral | lung volume 0–1 |
 | `Diaphragm` | `Inhale`: dome flattens and moves down | lung volume |
-| `Abdomen` | `Inhale`: belly wall moves out, edges fixed | lung volume |
-| `Body_Shell` | `Inhale`: chest fills out all round (most at the front), shoulders lift and spread | lung volume |
+| `Body_Shell` | `Inhale`: chest fills out all round (most at the front, lower ribs most to the sides), belly moves out with it, shoulders lift | lung volume |
+| `Arms` | `Inhale`: move out and up with the side of the chest and the shoulders | lung volume |
 | `Heart` | `Beat`: ventricles contract, atria fill | its own illustrative rhythm (not the user's pulse) |
-| `Head`, `Arms`, `Legs`, `Nasal_Cavity`, `Trachea`, `Bronchi` | – | – |
+| `Head`, `Legs`, `Nasal_Cavity`, `Trachea`, `Bronchi` | – | – |
 
 In three.js the keys are `mesh.morphTargetDictionary.Inhale` / `.Beat`; the app
 sets `morphTargetInfluences` every frame from the breathing engine.

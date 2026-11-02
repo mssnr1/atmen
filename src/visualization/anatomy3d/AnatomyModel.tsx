@@ -39,7 +39,6 @@ const PARTS: Record<string, { kind: MaterialKind; order: number; hidden?: boolea
   Bronchi: { kind: 'airway', order: 2.2 },
   Nasal_Cavity: { kind: 'airway', order: 2.2 },
   Diaphragm: { kind: 'diaphragm', order: 4 },
-  Abdomen: { kind: 'skin', order: 6 },
   // Its far wall goes before the neck and the head (which write depth), so they hide none of it.
   Body_Shell: { kind: 'skin', order: 2.3 },
   // Right after the neck (2.4, see below); it writes depth and hides what lies inside or behind it (see `head` in stripes.ts).
@@ -62,7 +61,7 @@ const LIMBS = new Set(['Arms', 'Legs'])
  */
 const SHOW_DIAPHRAGM = false
 
-const BREATH_GAIN: Record<string, number> = { Body_Shell: 2.6, Arms: 2.6, Lung_Left: 1.7, Lung_Right: 1.7, Diaphragm: 1.25, Abdomen: 1.7 }
+const BREATH_GAIN: Record<string, number> = { Body_Shell: 2.6, Arms: 2.6, Lung_Left: 1.7, Lung_Right: 1.7, Diaphragm: 1.25 }
 
 /**
  * Windpipe and main bronchi, drawn as one smooth piece instead of the model's

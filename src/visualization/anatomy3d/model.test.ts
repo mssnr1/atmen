@@ -18,14 +18,14 @@ describe('exported anatomy model', () => {
   )
 
   it('keeps every anatomical structure as its own object', () => {
-    for (const name of ['Body_Shell', 'Head', 'Arms', 'Legs', 'Nasal_Cavity', 'Trachea', 'Bronchi', 'Lung_Left', 'Lung_Right', 'Heart', 'Diaphragm', 'Abdomen']) {
+    for (const name of ['Body_Shell', 'Head', 'Arms', 'Legs', 'Nasal_Cavity', 'Trachea', 'Bronchi', 'Lung_Left', 'Lung_Right', 'Heart', 'Diaphragm']) {
       expect(meshByNode[name], name).toBeDefined()
     }
   })
 
   it('has the morph targets the app drives', () => {
     const targets = (name: string) => meshByNode[name].extras?.targetNames
-    for (const name of ['Lung_Left', 'Lung_Right', 'Diaphragm', 'Abdomen', 'Body_Shell']) expect(targets(name)).toContain('Inhale')
+    for (const name of ['Lung_Left', 'Lung_Right', 'Diaphragm', 'Body_Shell', 'Arms']) expect(targets(name)).toContain('Inhale')
     expect(targets('Heart')).toContain('Beat')
     expect(meshByNode.Lung_Left.primitives[0].targets.length).toBe(1)
   })

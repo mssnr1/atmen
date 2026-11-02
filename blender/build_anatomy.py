@@ -17,7 +17,7 @@ Output in <out_dir>:
     atmen-anatomy.glb     mesh hierarchy, materials and morph targets for three.js
 
 Objects (all children of the empty `Anatomy`):
-    Body_Shell, Head, Abdomen        skin, split so the belly can move on its own
+    Body_Shell, Head                 skin of trunk and head (the belly is part of the trunk, so its lines run on)
     Arms                             arms and hands, hanging relaxed beside the body
     Legs                             skin below the navel: hips, legs and feet
     Nasal_Cavity                     nasal mucosa and pharynx (upper airway)
@@ -29,8 +29,7 @@ Objects (all children of the empty `Anatomy`):
 Morph targets (shape keys), all 0 = resting/exhaled:
     Lung_*.Inhale        3D expansion, mostly lower and lateral
     Diaphragm.Inhale     dome flattens and descends
-    Abdomen.Inhale       belly wall moves out, edges stay put
-    Body_Shell.Inhale    whole upper body fills out, shoulders lift, seamless with the belly
+    Body_Shell.Inhale    chest and belly fill out together, shoulders lift
     Arms.Inhale          arms move out and up with the side of the chest and the shoulders
     Heart.Beat           ventricles contract, atria fill
 """
@@ -56,8 +55,6 @@ LUNG_LEFT = ["Superior lobe of left lung", "Inferior lobe of left lung"]
 LUNG_RIGHT = ["Superior lobe of right lung", "Middle lobe of right lung", "Inferior lobe of right lung"]
 HEART = ["Left ventricle", "Right ventricle", "Left atrium", "Right atrium"]
 NASAL = ["Mucosa of nasal cavity", "Nasopharynx", "Oropharynx", "Laryngopharynx"]
-# Skin regions of the front belly wall: they form the Abdomen object.
-ABDOMEN = ["Epigastric region", "Umbilical region", "Hypochondriac region", "Lateral region of abdomen", "Inframammary region"]
 # Skin regions never wanted: hair, lashes, and the genital and anal regions (the figure stays neutral;
 # the gap they leave between the legs is capped in `cap_crotch`).
 SKIP_SKIN = ["Hairs", "Eyelashes", "Eyebrow", "Urogenital region", "Anal region"]
@@ -73,7 +70,7 @@ def in_collection(o, name):
 
 
 def skin_regions():
-    picked = {"Head": [], "Abdomen": [], "Body_Shell": [], "Arms": [], "Legs": []}
+    picked = {"Head": [], "Body_Shell": [], "Arms": [], "Legs": []}
     for o in src:
         if o.type != "MESH" or len(o.data.vertices) <= 10 or not in_collection(o, "9: Regions of human body"):
             continue
@@ -92,10 +89,7 @@ def skin_regions():
             picked["Legs"].append(o)
         if max(zs) < LOW_CUT + 0.02:
             continue
-        if base in ABDOMEN:
-            picked["Abdomen"].append(o)
-        else:
-            picked["Body_Shell"].append(o)
+        picked["Body_Shell"].append(o)
     return picked
 
 
@@ -371,30 +365,6 @@ def boundary_falloff(obj, width):
     return out
 
 
-# The app exaggerates each part's breath by its own gain (BREATH_GAIN in AnatomyModel.tsx); parts that
-# share an edge must move the same there, so the belly takes the chest wall's motion scaled by this ratio.
-BODY_TO_ABDOMEN_GAIN = 2.6 / 1.7
-
-
-def abdomen_inhale(obj, body):
-    """The belly wall moves out in the middle (its edges stay), and the whole of it
-    rides along with the chest wall around it (see `body_grow`)."""
-    lo, hi = bounds(obj)
-    fall = boundary_falloff(obj, 0.04)
-    cx = (lo.x + hi.x) / 2
-    grow = body_grow(chest_centre(body))
-    m = obj.matrix_world
-    inv = m.to_3x3().inverted()
-
-    def d(co, i):
-        front = smoothstep(hi.y, lo.y, co.y)  # front of the belly moves most
-        mid = 1 - min(1, abs(co.x - cx) / ((hi.x - lo.x) / 2)) ** 2
-        belly = Vector((0, -0.012 * fall[i] * front * mid, 0))
-        return belly + inv @ (grow(m @ co) * BODY_TO_ABDOMEN_GAIN)
-
-    add_key(obj, "Inhale", d)
-
-
 def body_grow(yc):
     """Displacement of the chest wall at world point `w` for a full breath (see `body_inhale`)."""
 
@@ -410,7 +380,12 @@ def body_grow(yc):
         # The lower ribs swing out to the sides most (the lungs widen there), so the flanks keep ahead of them.
         lower = 1 - smoothstep(1.2, 1.38, w.z)
         grow += Vector((0.006 * lower * out.x, 0, 0))
-        return (grow + Vector((0, 0, 0.002 + 0.004 * shoulder))) * trunk
+        lift = Vector((0, 0, 0.002 + 0.004 * shoulder))
+        # Belly breathing: below the ribs the front of the belly moves out with the chest, most in the middle.
+        belly = smoothstep(0.98, 1.06, w.z) * (1 - smoothstep(1.16, 1.3, w.z))
+        front_only = smoothstep(yc - 0.02, yc - 0.08, w.y)
+        mid = 1 - min(1.0, abs(w.x) / 0.15) ** 2
+        return (grow + lift) * trunk + Vector((0, -0.0085 * belly * front_only * mid, 0))
 
     return d
 
@@ -427,8 +402,8 @@ ARMPIT_Z = 1.3  # below this the arms follow the side of the chest at this heigh
 def body_inhale(obj, joined, arms):
     """The whole upper body fills out: the rib cage widens all round, most at
     the front, and the shoulders lift and spread a little with it. Only the open
-    edges at the neck and below the navel stay put; where the arms and the belly
-    join, they move along (see `arms_inhale`, `abdomen_inhale`), so the outline
+    edges at the neck and below the navel stay put; where the arms
+    join, they move along (see `arms_inhale`), so the outline
     stays smooth there."""
     m = obj.matrix_world
     world = [m @ v.co for v in obj.data.vertices]
@@ -517,14 +492,14 @@ for name, objs in regions.items():
     print(name, len(objs), "skin regions")
     o = bake(objs, name)
     clean(o, merge=0.0012, subdivide=1)
-    if name in ("Body_Shell", "Abdomen"):
+    if name == "Body_Shell":
         cut_below(o, LOW_CUT)
     if name == "Legs":
         cut_above(o, LOW_CUT)
         cap_crotch(o)
     if name == "Arms":
         relax_arms(o)
-    clean(o, target_faces={"Body_Shell": 9000, "Head": 7000, "Abdomen": 2500, "Arms": 6000, "Legs": 7000}[name])
+    clean(o, target_faces={"Body_Shell": 11000, "Head": 7000, "Arms": 6000, "Legs": 7000}[name])
     for a in list(o.data.color_attributes):  # the limbs carry the template's vertex colours; not used
         o.data.color_attributes.remove(a)
     assign(o, "Skin")
@@ -724,8 +699,7 @@ with open(os.path.join(OUT, "airway-paths.json"), "w") as f:
 for n in ("Lung_Left", "Lung_Right"):
     lung_inhale(parts[n])
 diaphragm_inhale(parts["Diaphragm"])
-abdomen_inhale(parts["Abdomen"], parts["Body_Shell"])
-body_inhale(parts["Body_Shell"], [parts["Arms"], parts["Abdomen"]], parts["Arms"])
+body_inhale(parts["Body_Shell"], [parts["Arms"]], parts["Arms"])
 arms_inhale(parts["Arms"], parts["Body_Shell"])
 heart_beat(parts["Heart"])
 
