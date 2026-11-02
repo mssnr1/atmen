@@ -104,13 +104,14 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   const [panelBig, setPanelBig] = useState(false)
   const [stackOpen, setStackOpen] = useState(false)
   const [stackHeight, setStackHeight] = useState(0)
-  const sessionActive = s.status === 'running' || s.status === 'paused'
+  // Back at the start (close, restart) the cards fold away; after the exercise they stay to be read.
+  const idle = s.status === 'idle'
   useEffect(() => {
-    if (!sessionActive) {
+    if (idle) {
       setStackOpen(false)
       setPanelBig(false)
     }
-  }, [sessionActive])
+  }, [idle])
 
   const goHome = () => {
     window.clearTimeout(leadInTimer.current)
@@ -126,8 +127,10 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   // On the phone the insight cards lie in a stack above the panel, and the panel
   // shrinks to make room (the breath is clear from the lungs by then). It can be
   // grown back, which turns the cards into slim lines.
-  const hasCards = isPhone && active && insightsShown(s.cycleIndex, bodyInsights[lang].length) > 0
-  const compact = hasCards && !panelBig
+  // The cards stay once the exercise is over, so they can be read in peace.
+  const cardsShown = active || completed
+  const hasCards = isPhone && cardsShown && insightsShown(s.cycleIndex, bodyInsights[lang].length) > 0
+  const compact = hasCards && !panelBig && !completed
   const figureInset = panelHeight + (hasCards ? stackHeight : 0)
   const totalCycles = Math.ceil(s.plan.totalCycles)
   const setPace = (patch: { preset?: number; slowDown?: boolean }) => store.setPace(exercise.id, { preset, slowDown, ...patch })
@@ -173,7 +176,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           framing={completed ? 'done' : leadIn || s.status !== 'idle' ? 'run' : 'idle'}
         />
         <div className="pointer-events-none absolute inset-x-0 bottom-0" style={{ top: headerHeight }}>
-          {!isPhone && <BodyInsights cycleIndex={s.cycleIndex} visible={active} />}
+          {!isPhone && <BodyInsights cycleIndex={s.cycleIndex} visible={cardsShown} />}
         </div>
         <div className="absolute right-4 md:right-6" style={{ top: headerHeight + 8 }}>
           <Segmented
@@ -194,8 +197,8 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       {isPhone && (
         <InsightStack
           cycleIndex={s.cycleIndex}
-          visible={active}
-          small={!compact}
+          visible={cardsShown}
+          small={!compact && !completed}
           expanded={stackOpen}
           onExpandedChange={setStackOpen}
           top={headerHeight}
