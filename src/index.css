@@ -329,6 +329,42 @@ body.blue-page {
   }
 }
 
+/* Soft cloud edges for the practice top bar and controls panel: the veil fades out instead of ending in a hard line. */
+.cloud-top {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 2.75rem), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 2.75rem), transparent 100%);
+}
+.cloud-bottom {
+  -webkit-mask-image:
+    linear-gradient(to top, #000 0, #000 calc(100% - 3.25rem), transparent 100%),
+    linear-gradient(to right, transparent 0, #000 1.5rem, #000 calc(100% - 1.5rem), transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to top, #000 0, #000 calc(100% - 3.25rem), transparent 100%),
+    linear-gradient(to right, transparent 0, #000 1.5rem, #000 calc(100% - 1.5rem), transparent 100%);
+  mask-composite: intersect;
+}
+
+/* Phone: the stacked insight cards fan open upwards, one after the other. */
+.stack-fan {
+  animation: stack-fan 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes stack-fan {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stack-fan {
+    animation: fade-in 300ms ease-out both;
+  }
+}
+
 /* Heads-up look on the insight cards: a soft glow on the accent text and a pulsing status dot. */
 .hud-glow {
   text-shadow: 0 0 6px color-mix(in srgb, var(--color-accent) 55%, transparent), 0 0 14px color-mix(in srgb, var(--color-accent) 25%, transparent);
