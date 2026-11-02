@@ -65,6 +65,11 @@ export const HomeIcon = (p: P) => (
     <path d="M4 11l8-6.5 8 6.5M6.5 9.5V19h11V9.5" />
   </svg>
 )
+export const ArrowLeftIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M19.5 12h-15M10.5 6l-6 6 6 6" />
+  </svg>
+)
 export const ArrowRightIcon = (p: P) => (
   <svg {...base} {...p}>
     <path d="M4.5 12h15M13.5 6l6 6-6 6" />
