@@ -49,6 +49,12 @@ const PARTS: Record<string, { kind: MaterialKind; order: number; hidden?: boolea
  * How much more the breath moves each part than in life, so the motion reads
  * on a phone screen: the chest wall most, lungs, diaphragm and belly with it.
  */
+/**
+ * Whether the simplified diaphragm sheet under the lungs is drawn. Off for now: its motion did not
+ * show how it pulls the lungs down, so only the lungs breathe. Set to true to bring it back.
+ */
+const SHOW_DIAPHRAGM = false
+
 const BREATH_GAIN: Record<string, number> = { Body_Shell: 2.6, Lung_Left: 1.7, Lung_Right: 1.7, Diaphragm: 1.25, Abdomen: 1.7 }
 
 /**
@@ -241,7 +247,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     for (const [src, back] of backs) src.parent?.add(back)
     // Narrowing is lost across the traverse callback, hence the explicit type.
     const sheetOwner = diaphragm as THREE.Mesh | null
-    if (sheetOwner?.parent && lungMeshes.length) {
+    if (SHOW_DIAPHRAGM && sheetOwner?.parent && lungMeshes.length) {
       const diaphragmMesh = sheetOwner
       const owner = sheetOwner.parent
       let sheet = diaphragmMesh.geometry.userData.sheet as THREE.BufferGeometry | undefined
