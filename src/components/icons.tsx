@@ -142,9 +142,11 @@ export const FaceIcon = ({ mood, ...p }: P & { mood: 1 | 2 | 3 | 4 | 5 }) => {
     </svg>
   )
 }
-export const ExpandIcon = (p: P) => (
+/** A 3D box: resets the 3D view. */
+export const CubeIcon = (p: P) => (
   <svg {...base} {...p}>
-    <path d="M4 12a8 8 0 1 0 8-8M4 4v4h4" />
+    <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" />
+    <path d="M4 7.5l8 4.5 8-4.5M12 12v9" />
   </svg>
 )
 export const FullscreenIcon = (p: P) => (
