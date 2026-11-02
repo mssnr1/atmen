@@ -3,6 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
+import { CubeIcon } from '../../components/icons'
 import type { BreathSource } from '../breathState'
 import { useI18n } from '../../i18n'
 import { AbstractVisualization } from '../abstract/AbstractVisualization'
@@ -179,6 +180,7 @@ export function Anatomy3DVisualization({
 }) {
   const { t } = useI18n()
   const controls = useRef<OrbitControlsImpl | null>(null)
+  const [resetSignal, setResetSignal] = useState(0)
   const [supported] = useState(webglAvailable)
 
   const fallback = (
@@ -237,10 +239,21 @@ export function Anatomy3DVisualization({
                 }
               }}
             />
-            <Rig framing={framing} controls={controls} resetSignal={0} bottomInset={bottomInset} topInset={topInset} />
+            <Rig framing={framing} controls={controls} resetSignal={resetSignal} bottomInset={bottomInset} topInset={topInset} />
           </Canvas>
         </Suspense>
       </ModelBoundary>
+      <button
+        type="button"
+        onClick={() => setResetSignal((n) => n + 1)}
+        aria-label={t.resetView}
+        title={t.resetView}
+        data-testid="reset-view"
+        style={{ top: topInset + 8 }}
+        className="absolute left-4 flex size-12 items-center justify-center rounded-full bg-card/80 text-ink-2 shadow-[0_1px_6px_rgb(0_0_0/0.06)] backdrop-blur"
+      >
+        <CubeIcon className="size-5" strokeWidth={1.5} />
+      </button>
     </div>
   )
 }
