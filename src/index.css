@@ -392,3 +392,84 @@ body.blue-page {
     animation: none;
   }
 }
+
+/* Home Start pill: page-coloured with an accent outline; a brighter light circles the outline
+   and the glow breathes slowly (11 s, like the resonance rhythm). */
+@property --magic-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.magic-start {
+  isolation: isolate;
+  box-shadow:
+    0 4px 18px rgb(0 0 0 / 0.12),
+    0 0 18px color-mix(in srgb, var(--color-accent) 35%, transparent);
+  animation: magic-breathe 11s ease-in-out infinite;
+}
+.magic-start::before,
+.magic-start::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--magic-angle),
+    var(--color-accent) 0deg,
+    var(--color-accent) 50deg,
+    color-mix(in srgb, var(--color-accent) 45%, #fff) 110deg,
+    var(--color-accent) 170deg,
+    var(--color-accent) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: magic-spin 5.5s linear infinite;
+  pointer-events: none;
+}
+/* A blurred copy carrying only the travelling light, so it glows. */
+.magic-start::after {
+  inset: -4px;
+  padding: 4px;
+  background: conic-gradient(
+    from var(--magic-angle),
+    transparent 0deg,
+    color-mix(in srgb, var(--color-accent) 50%, transparent) 60deg,
+    var(--color-accent) 110deg,
+    transparent 180deg,
+    transparent 360deg
+  );
+  filter: blur(6px);
+  opacity: 0.9;
+}
+@keyframes magic-spin {
+  to {
+    --magic-angle: 360deg;
+  }
+}
+@keyframes magic-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 18px rgb(0 0 0 / 0.12),
+      0 0 10px color-mix(in srgb, var(--color-accent) 22%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 4px 18px rgb(0 0 0 / 0.12),
+      0 0 26px color-mix(in srgb, var(--color-accent) 50%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .magic-start,
+  .magic-start::before,
+  .magic-start::after {
+    animation: none;
+  }
+}
