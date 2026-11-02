@@ -1,15 +1,18 @@
 import { useState } from 'react'
+import { Segmented } from '../components/Segmented'
+import { Switch } from '../components/Switch'
 import { TabBar } from '../components/TabBar'
 import { Waveform } from '../components/Waveform'
-import { exercises } from '../exercises'
+import { exercises, type Exercise } from '../exercises'
 import { useI18n } from '../i18n'
 import { presetIndex, rhythmText } from '../lib/exerciseText'
 import { startPractice } from '../lib/route'
-import { useStore } from '../storage/store'
+import { store, useStore } from '../storage/store'
 
 /**
  * Exercise selection: one large card per exercise, driven by the exercise configs.
- * A tap only selects a card (the top one is selected at first); the floating Start button begins it.
+ * A tap only selects a card (the top one is selected at first); the selected card opens up
+ * with its settings, and the floating Start button begins it.
  */
 export function HomeScreen() {
   const { lang, t } = useI18n()
@@ -30,15 +33,19 @@ export function HomeScreen() {
             const scale = e.paces.options[presetIndex(e, paces[e.id]?.preset)].scale
             const on = e.id === selected
             return (
-              <li key={e.id}>
+              <li
+                key={e.id}
+                className={`flex h-full flex-col rounded-[22px] transition-colors md:rounded-[26px] ${
+                  on ? 'bg-blue-soft ring-1 ring-accent/45' : 'bg-card shadow-[0_1px_2px_rgb(0_0_0/0.04),0_6px_24px_rgb(0_0_0/0.05)] ring-1 ring-line/60'
+                }`}
+              >
                 <button
                   type="button"
                   data-testid={`exercise-${e.id}`}
                   aria-pressed={on}
+                  aria-expanded={on}
                   onClick={() => setSelected(e.id)}
-                  className={`group relative flex h-full w-full flex-col rounded-[22px] px-5 pt-5 pb-5 text-left transition active:scale-[0.99] md:rounded-[26px] md:px-7 md:pt-7 md:pb-7 ${
-                    on ? 'bg-blue-soft ring-1 ring-accent/45' : 'bg-card shadow-[0_1px_2px_rgb(0_0_0/0.04),0_6px_24px_rgb(0_0_0/0.05)] ring-1 ring-line/60'
-                  }`}
+                  className="group relative flex w-full flex-1 flex-col rounded-[22px] px-5 pt-5 pb-5 text-left transition active:scale-[0.99] md:rounded-[26px] md:px-7 md:pt-7 md:pb-7"
                 >
                   <span className="flex items-start justify-between gap-3 lg:flex-col-reverse lg:justify-end lg:gap-6">
                     <span>
@@ -55,6 +62,12 @@ export function HomeScreen() {
                   </span>
                   <span className="mt-5 block text-[0.8125rem] text-muted md:text-[0.9375rem] lg:mt-auto lg:pt-8">{rhythmText(e, scale, lang, t)}</span>
                 </button>
+                {/* The selected card opens up with its settings; the others fold theirs away. */}
+                <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${on ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`} inert={!on}>
+                  <div className="overflow-hidden">
+                    <CardSettings exercise={e} />
+                  </div>
+                </div>
               </li>
             )
           })}
@@ -73,6 +86,37 @@ export function HomeScreen() {
         </button>
       </div>
       <TabBar current="home" />
+    </div>
+  )
+}
+
+/** Duration, pace and slowing down for one exercise, saved as its preferences (the practice screen reads the same). */
+function CardSettings({ exercise: e }: { exercise: Exercise }) {
+  const { lang, t } = useI18n()
+  const durationMs = useStore((d) => d.preferences.durationByExercise[e.id]) ?? e.defaultDurationMs
+  const pacePref = useStore((d) => d.preferences.paceByExercise[e.id])
+  const preset = presetIndex(e, pacePref?.preset)
+  const slowDown = pacePref?.slowDown ?? false
+  const setPace = (patch: { preset?: number; slowDown?: boolean }) => store.setPace(e.id, { preset, slowDown, ...patch })
+  return (
+    <div className="mx-5 border-t border-line pt-3 pb-2 md:mx-7 md:pb-4" data-testid={`settings-${e.id}`}>
+      <h3 className="mb-1.5 text-[0.8125rem] text-muted">{t.duration}</h3>
+      <Segmented
+        label={t.duration}
+        options={e.durationOptionsMs.map((ms) => ({ value: ms, label: t.minutes(ms / 60_000) }))}
+        value={durationMs}
+        onChange={(ms) => store.setDuration(e.id, ms)}
+      />
+      <h3 className="mt-3.5 mb-1.5 text-[0.8125rem] text-muted">{t.breathingPace}</h3>
+      <Segmented
+        label={t.breathingPace}
+        options={e.paces.options.map((o, i) => ({ value: i, label: o.label[lang] }))}
+        value={preset}
+        onChange={(i) => setPace({ preset: i })}
+      />
+      <div className="mt-1">
+        <Switch label={t.slowDown} hint={t.slowDownHint} checked={slowDown} onChange={(v) => setPace({ slowDown: v })} testId={`slowdown-${e.id}`} />
+      </div>
     </div>
   )
 }
