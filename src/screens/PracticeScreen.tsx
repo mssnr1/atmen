@@ -134,7 +134,9 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-paper" data-testid="practice">
-      <header ref={header} className="safe-top absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-panel px-3 pb-1 backdrop-blur-[6px] md:px-5">
+      <header ref={header} className="safe-top absolute inset-x-0 top-0 z-20 flex items-center justify-between px-3 pb-1 md:px-5">
+        {/* The bar's veil runs on a little below it and fades out there like a cloud; the icons stay sharp. */}
+        <div className="cloud-top pointer-events-none absolute inset-x-0 top-0 -bottom-7 -z-10 bg-panel backdrop-blur-[6px]" aria-hidden />
         <IconButton label={t.close} onClick={goHome} data-testid="practice-close">
           <CloseIcon className="size-5" strokeWidth={1.5} />
         </IconButton>
@@ -203,7 +205,9 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       )}
 
       <section ref={panel} className="safe-bottom safe-x pointer-events-none absolute inset-x-0 bottom-0 z-10 md:pb-6">
-        <Squircle radius={16} smoothing={0.6} className={`pointer-events-auto relative bg-panel px-5 backdrop-blur-[6px] md:px-8 ${compact ? 'pt-2 pb-3' : 'pt-[1.125rem] pb-4'}`}>
+        {/* The panel's veil reaches a little above it and fades out at the top and sides like a cloud. */}
+        <div className="cloud-bottom pointer-events-none absolute inset-x-0 -top-8 bottom-0 bg-panel backdrop-blur-[6px]" aria-hidden />
+        <Squircle radius={16} smoothing={0.6} className={`pointer-events-auto relative px-5 md:px-8 ${compact ? 'pt-2 pb-3' : 'pt-[1.125rem] pb-4'}`}>
         {hasCards && !completed && (
           <IconButton
             label={compact ? t.panelMaximize : t.panelMinimize}
