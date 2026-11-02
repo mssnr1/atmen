@@ -214,10 +214,10 @@ def cap_crotch(obj):
     bm.free()
 
 
-# The arms hang relaxed: from the template's anatomical pose (arms a little away from the
-# body, palms forward) they swing in toward the thighs and the forearms turn the palms in.
+# The arms hang relaxed: from the template's anatomical pose (palms forward) the forearms turn
+# the palms in, and the arms swing a little further out, so there is air between arms and trunk.
 SHOULDER = Vector((0.185, 0.0, 1.375))  # pivot of the left shoulder joint (x mirrored for the right)
-ARM_SWING = math.radians(6.5)
+ARM_SWING = math.radians(-4)
 ELBOW_Z, WRIST_Z = 1.1, 0.85
 PALM_TURN = math.radians(70)
 
@@ -251,7 +251,7 @@ def relax_arms(obj):
             rel = Vector((p.x - c.x, p.y - c.y, 0))
             rel.rotate(Matrix.Rotation(t * PALM_TURN * -side, 3, "Z"))
             p.x, p.y = c.x + rel.x, c.y + rel.y
-        # Whole arm: swing in about the shoulder, fading out toward the shoulder cap so the seam stays put.
+        # Whole arm: swing out about the shoulder, fading out toward the shoulder cap so the seam stays put.
         w = smoothstep(1.31, 1.18, p.z)
         pivot = Vector((side * SHOULDER.x, SHOULDER.y, SHOULDER.z))
         p = pivot + Matrix.Rotation(side * ARM_SWING * w, 3, "Y") @ (p - pivot)

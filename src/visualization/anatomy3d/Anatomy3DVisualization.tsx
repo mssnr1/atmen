@@ -16,7 +16,7 @@ const TARGET = new THREE.Vector3(0, 1.37, 0.0)
 const ELEVATION = THREE.MathUtils.degToRad(6)
 const FOV = 28
 /** Half the width that must be visible: the whole figure, arms included. */
-const HALF_W = 0.29
+const HALF_W = 0.32
 /** Head to the middle of the lungs fill the part of the view above the controls; the lower lungs continue behind them. */
 const TOP = 1.74
 const BOTTOM = 1.2

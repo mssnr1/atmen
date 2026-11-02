@@ -172,11 +172,12 @@ export function edgeDepthMaterial(id: number): THREE.Material {
   return m
 }
 
-export type StripePalette = { line: string; lung: string; lungRim: string; body: string }
+/** `bodyRim`: the soft glow along the figure's outline (the skin's shading), lighter than its lines at night, darker by day. */
+export type StripePalette = { line: string; lung: string; lungRim: string; body: string; bodyRim: string }
 
 export const STRIPE_PALETTES: Record<'light' | 'dark', StripePalette> = {
-  light: { body: '#7d8798', line: '#2f6bf5', lung: '#2f6bf5', lungRim: '#6f9bff' },
-  dark: { body: '#8f877f', line: '#b89aff', lung: '#b89aff', lungRim: '#dccbff' },
+  light: { body: '#7d8798', bodyRim: '#5f6b80', line: '#2f6bf5', lung: '#2f6bf5', lungRim: '#6f9bff' },
+  dark: { body: '#8f877f', bodyRim: '#c8c0e6', line: '#b89aff', lung: '#b89aff', lungRim: '#dccbff' },
 }
 
 /**
@@ -196,7 +197,7 @@ export type Fade = { inner: { value: number }; skin: { value: number } }
 
 export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { value: number }, edges?: EdgeMap, fade?: Fade) {
   const inner = fade?.inner
-  const skinLines: StripeOptions = { show: fade?.skin, pattern: 'around', density: 120, width: 0.06, line: p.body, fill: p.body, lineAlpha: dark ? 0.6 : 0.55, fillAlpha: 0.0, rim: p.body, rimAlpha: dark ? 0.3 : 0.26, focusTrunk: true }
+  const skinLines: StripeOptions = { show: fade?.skin, pattern: 'around', density: 120, width: 0.06, line: p.body, fill: p.body, lineAlpha: dark ? 0.6 : 0.55, fillAlpha: 0.0, rim: p.bodyRim, rimAlpha: dark ? 0.62 : 0.5, rimPower: 1.7, focusTrunk: true }
   return {
     // Up to the neck the trunk's skin shows its far wall (the lungs, writing depth, hide it where they lie in front).
     skin: stripeMaterial({ ...skinLines, neck: 'without' }),
