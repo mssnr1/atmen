@@ -226,7 +226,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             <p className="w-full text-breath" aria-live="polite">
               <ParticleWord text={t.wellDone.replace(/\.$/, '').toLowerCase()} className="h-[5.5rem]" fontSize={72} />
             </p>
-            <p className="text-[1.0625rem] leading-snug text-ink-2 md:text-[1.25rem]" data-testid="completion-text">
+            <p className="text-[1.3125rem] leading-snug text-breath md:text-[1.5rem]" data-testid="completion-text">
               {t.afterglow[exercise.id] ?? t.afterglow.default}
             </p>
             <button
