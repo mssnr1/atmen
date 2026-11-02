@@ -72,17 +72,19 @@ const BREATH_GAIN: Record<string, number> = { Body_Shell: 2.6, Arms: 2.6, Lung_L
 const AIRWAY_TOP = 1.4606
 /** Below this height the model's throat (mouth and lower pharynx) is left out; the nose above stays. */
 const NOSE_FLOOR = 1.552
+/** Behind this depth (world z) the upper throat (nasopharynx, wider than the nose, with side flaps) is left out too. */
+const NOSE_BACK = 0.047
 const CARINA: [number, number, number] = [-0.0005, 1.362, -0.013]
 const AIRWAY_BRANCHES: Branch[] = [
   { points: [[0, AIRWAY_TOP + 0.004, 0.01], [-0.0004, 1.4257, 0.005], [-0.0004, 1.3904, -0.0033], CARINA], r0: 0.0105, r1: 0.0095 },
-  // Up the back of the throat into the back of the nose, so nose and windpipe join without the mouth.
-  { points: [[0, AIRWAY_TOP + 0.004, 0.01], [0, 1.483, 0.02], [0, 1.53, 0.028], [0, 1.568, 0.024]], r0: 0.0105, r1: 0.011 },
+  // Up the back of the throat into the back of the nose, so nose and windpipe join without mouth or throat.
+  { points: [[0, AIRWAY_TOP + 0.004, 0.01], [0, 1.483, 0.02], [0, 1.53, 0.03], [0, 1.56, 0.042], [0, 1.566, 0.056]], r0: 0.0105, r1: 0.008 },
   { points: [CARINA, [0.027, 1.335, -0.018], [0.044, 1.321, -0.021], [0.062, 1.306, -0.02]], r0: 0.0078, r1: 0.0058 },
   { points: [CARINA, [-0.014, 1.348, -0.017], [-0.031, 1.318, -0.021], [-0.044, 1.297, -0.026]], r0: 0.0078, r1: 0.0058 },
 ]
 
-/** The geometry with only the triangles whose centre lies above `floor` (world height). */
-function noseOnly(geometry: THREE.BufferGeometry, world: THREE.Matrix4, floor: number): THREE.BufferGeometry {
+/** The geometry with only the triangles whose centre lies above `floor` (world height) and in front of `back` (world z). */
+function noseOnly(geometry: THREE.BufferGeometry, world: THREE.Matrix4, floor: number, back: number): THREE.BufferGeometry {
   const out = geometry.clone()
   const index = geometry.index
   const pos = geometry.attributes.position
@@ -91,8 +93,13 @@ function noseOnly(geometry: THREE.BufferGeometry, world: THREE.Matrix4, floor: n
   const keep: number[] = []
   for (let i = 0; i < index.count; i += 3) {
     let y = 0
-    for (let k = 0; k < 3; k++) y += v.fromBufferAttribute(pos, index.getX(i + k)).applyMatrix4(world).y / 3
-    if (y > floor) keep.push(index.getX(i), index.getX(i + 1), index.getX(i + 2))
+    let z = 0
+    for (let k = 0; k < 3; k++) {
+      v.fromBufferAttribute(pos, index.getX(i + k)).applyMatrix4(world)
+      y += v.y / 3
+      z += v.z / 3
+    }
+    if (y > floor && z > back) keep.push(index.getX(i), index.getX(i + 1), index.getX(i + 2))
   }
   out.setIndex(keep)
   return out
@@ -210,10 +217,10 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         backs.push([mesh, airway])
         return
       }
-      // Of the nose and throat only the nose is drawn: the throat and mouth below its floor are left
-      // out, and the airway tube above runs up the back of the throat to meet it.
+      // Of the nose and throat only the nose is drawn: the mouth and throat below its floor and the
+      // upper throat behind it are left out, and the airway tube above runs up to meet its back.
       if (mesh.name === 'Nasal_Cavity' && !mesh.geometry.userData.noseOnly) {
-        mesh.geometry = noseOnly(mesh.geometry, mesh.matrixWorld, NOSE_FLOOR)
+        mesh.geometry = noseOnly(mesh.geometry, mesh.matrixWorld, NOSE_FLOOR, NOSE_BACK)
         mesh.geometry.userData.noseOnly = true
       }
       // Second copies: the inner wall of the head (filling the gaps under the jaw) and the near wall of the neck.
