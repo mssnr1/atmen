@@ -30,9 +30,9 @@ export function BodyInsights({ cycleIndex, visible }: { cycleIndex: number; visi
   )
 }
 
-export function TargetIcon() {
+export function TargetIcon({ className = 'size-[0.7rem]' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 12 12" className="size-[0.7rem] flex-none" fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" aria-hidden>
+    <svg viewBox="0 0 12 12" className={`${className} flex-none`} fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" aria-hidden>
       <circle cx="6" cy="6" r="3.9" />
       <path d="M6 0.6v2.6M6 8.8v2.6M0.6 6h2.6M8.8 6h2.6" />
       <circle cx="6" cy="6" r="0.6" fill="currentColor" stroke="none" />
@@ -40,18 +40,18 @@ export function TargetIcon() {
   )
 }
 
-export function OutcomeIcon() {
+export function OutcomeIcon({ className = 'size-[0.7rem]' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 12 12" className="size-[0.7rem] flex-none" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg viewBox="0 0 12 12" className={`${className} flex-none`} fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M3 9 9 3M4.2 3H9v4.8" />
     </svg>
   )
 }
 
 /** A small HUD label: icon plus uppercase word. */
-export function Label({ icon, children }: { icon: React.ReactNode; children: string }) {
+export function Label({ icon, children, className = 'text-[0.5625rem] md:text-[0.625rem]' }: { icon: React.ReactNode; children: string; className?: string }) {
   return (
-    <span className="hud-glow flex items-center gap-1 text-[0.5625rem] leading-none tracking-[0.1em] text-accent uppercase md:text-[0.625rem]">
+    <span className={`hud-glow flex items-center gap-1 leading-none tracking-[0.1em] text-accent uppercase ${className}`}>
       {icon}
       {children}
     </span>
