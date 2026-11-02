@@ -62,6 +62,8 @@ function defaultPosition(aspect: number, clear: number, framing: Framing = 'idle
 
 /** A slow zoom (and the way back from wherever the user turned the figure) that eases in and out with no jolt at either end (smootherstep). */
 const TURN_S = 3.4
+/** Reset view turns back the same way, a little quicker since it answers a tap. */
+const RESET_S = 2
 const easeInOut = (t: number) => t * t * t * (t * (6 * t - 15) + 10)
 
 function webglAvailable(): boolean {
@@ -113,17 +115,24 @@ function Rig({
   const layout = useRef({ aspect, clear, top })
   layout.current = { aspect, clear, top }
   /** A tween of the whole camera pose: from where it was to the default view for the current framing and layout. */
-  const turn = useRef<{ from: THREE.Spherical; fromTarget: THREE.Vector3; t: number } | null>(null)
+  const turn = useRef<{ from: THREE.Spherical; fromTarget: THREE.Vector3; t: number; seconds: number } | null>(null)
   // Default view on mount and on Reset view. A layout change once started (the
   // controls panel shrinks as the exercise starts) eases there, as part of
   // the turn if one is running, so the figure never jumps.
   const lastSignal = useRef<number | null>(null)
   useEffect(() => {
     const c = controls.current
+    // Reset view: turn back to the default view smoothly, like the zoom at the start.
+    if (lastSignal.current !== null && lastSignal.current !== resetSignal && c) {
+      lastSignal.current = resetSignal
+      framed.current = framingRef.current
+      turn.current = { from: new THREE.Spherical().setFromVector3(new THREE.Vector3().subVectors(camera.position, c.target)), fromTarget: c.target.clone(), t: 0, seconds: RESET_S }
+      return
+    }
     // Before the exercise starts (first load, the panel being measured) it just snaps.
     if (lastSignal.current !== null && lastSignal.current === resetSignal && c && framingRef.current !== 'idle') {
       if (turn.current || framed.current !== framingRef.current) return
-      turn.current = { from: new THREE.Spherical().setFromVector3(new THREE.Vector3().subVectors(camera.position, c.target)), fromTarget: c.target.clone(), t: 0 }
+      turn.current = { from: new THREE.Spherical().setFromVector3(new THREE.Vector3().subVectors(camera.position, c.target)), fromTarget: c.target.clone(), t: 0, seconds: TURN_S }
       return
     }
     lastSignal.current = resetSignal
@@ -144,11 +153,11 @@ function Rig({
     if (!c) return
     if (framed.current !== framingRef.current) {
       framed.current = framingRef.current
-      turn.current = { from: new THREE.Spherical().setFromVector3(offset.copy(camera.position).sub(c.target)), fromTarget: c.target.clone(), t: 0 }
+      turn.current = { from: new THREE.Spherical().setFromVector3(offset.copy(camera.position).sub(c.target)), fromTarget: c.target.clone(), t: 0, seconds: TURN_S }
     }
     const tw = turn.current
     if (!tw) return
-    tw.t = Math.min(tw.t + dt / TURN_S, 1)
+    tw.t = Math.min(tw.t + dt / tw.seconds, 1)
     const k = easeInOut(tw.t)
     const { aspect: a, clear: cl, top: tp } = layout.current
     const { distance, target } = fitView(a, cl, framingRef.current, tp)
