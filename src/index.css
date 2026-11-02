@@ -392,3 +392,77 @@ body.blue-page {
     animation: none;
   }
 }
+
+/* Home Start pill: a soft light circles its outline, with a glow that breathes slowly (11 s, like the resonance rhythm). */
+@property --magic-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.magic-start {
+  isolation: isolate;
+  box-shadow:
+    0 4px 18px rgb(0 0 0 / 0.18),
+    0 0 18px color-mix(in srgb, var(--color-breath) 45%, transparent);
+  animation: magic-breathe 11s ease-in-out infinite;
+}
+.magic-start::before,
+.magic-start::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--magic-angle),
+    transparent 0deg,
+    color-mix(in srgb, var(--color-breath) 40%, transparent) 50deg,
+    color-mix(in srgb, var(--color-breath) 55%, #fff) 100deg,
+    var(--color-breath) 140deg,
+    transparent 200deg,
+    color-mix(in srgb, var(--color-breath) 35%, transparent) 280deg,
+    transparent 340deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: magic-spin 5.5s linear infinite;
+  pointer-events: none;
+}
+/* A blurred copy of the ring so the travelling light glows. */
+.magic-start::after {
+  inset: -4px;
+  padding: 4px;
+  filter: blur(6px);
+  opacity: 0.8;
+}
+@keyframes magic-spin {
+  to {
+    --magic-angle: 360deg;
+  }
+}
+@keyframes magic-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 18px rgb(0 0 0 / 0.18),
+      0 0 12px color-mix(in srgb, var(--color-breath) 30%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 4px 18px rgb(0 0 0 / 0.18),
+      0 0 30px color-mix(in srgb, var(--color-breath) 60%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .magic-start,
+  .magic-start::before,
+  .magic-start::after {
+    animation: none;
+  }
+}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MagicStartButton } from '../components/MagicStartButton'
 import { Segmented } from '../components/Segmented'
 import { Switch } from '../components/Switch'
 import { TabBar } from '../components/TabBar'
@@ -77,14 +78,9 @@ export function HomeScreen() {
       </main>
       {/* Floats centred over the cards, just above the tab bar on phones. */}
       <div className="pointer-events-none fixed inset-x-0 bottom-[calc(max(env(safe-area-inset-bottom),0.5rem)+4.5rem)] z-20 flex justify-center md:bottom-[max(env(safe-area-inset-bottom),2rem)]">
-        <button
-          type="button"
-          onClick={() => startPractice(selected)}
-          className="pointer-events-auto h-14 rounded-full bg-blue px-12 text-[1.0625rem] text-white shadow-[0_4px_18px_rgb(0_0_0/0.18)] transition hover:bg-blue-deep active:scale-95"
-          data-testid="home-start"
-        >
+        <MagicStartButton onClick={() => startPractice(selected)} testId="home-start">
           {t.start}
-        </button>
+        </MagicStartButton>
       </div>
       <TabBar current="home" />
     </div>
