@@ -18,7 +18,7 @@ describe('exported anatomy model', () => {
   )
 
   it('keeps every anatomical structure as its own object', () => {
-    for (const name of ['Body_Shell', 'Head', 'Nasal_Cavity', 'Trachea', 'Bronchi', 'Lung_Left', 'Lung_Right', 'Heart', 'Diaphragm', 'Abdomen']) {
+    for (const name of ['Body_Shell', 'Head', 'Arms', 'Legs', 'Nasal_Cavity', 'Trachea', 'Bronchi', 'Lung_Left', 'Lung_Right', 'Heart', 'Diaphragm', 'Abdomen']) {
       expect(meshByNode[name], name).toBeDefined()
     }
   })

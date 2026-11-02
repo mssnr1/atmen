@@ -11,6 +11,7 @@ import { addCalmMorph } from './face'
 import { withHolesFilled } from './holes'
 import { simplifiedLung } from './lungShape'
 import { makeMaterials, type MaterialKind } from './materials'
+import { addLimbAxis } from './limbs'
 import { makeStripeMaterials, STRIPE_PALETTES, type EdgeMap, type Fade } from './stripes'
 
 /** Layer of the lung copies that only draw the edge map. */
@@ -43,7 +44,13 @@ const PARTS: Record<string, { kind: MaterialKind; order: number; hidden?: boolea
   Body_Shell: { kind: 'skin', order: 2.3 },
   // Right after the neck (2.4, see below); it writes depth and hides what lies inside or behind it (see `head` in stripes.ts).
   Head: { kind: 'skin', order: 2.5 },
+  // Arms and legs: drawn like the trunk's skin (far wall), lines running round each limb.
+  Arms: { kind: 'skin', order: 2.3 },
+  Legs: { kind: 'skin', order: 2.3 },
 }
+
+/** Objects whose skin lines run round their own long axis (see `addLimbAxis`). */
+const LIMBS = new Set(['Arms', 'Legs'])
 
 /**
  * How much more the breath moves each part than in life, so the motion reads
@@ -175,7 +182,8 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
           mesh.updateMorphTargets()
         }
       }
-      mesh.material = mesh.name === 'Head' ? materials.head : materials[part.kind]
+      if (LIMBS.has(mesh.name) && !mesh.geometry.getAttribute('axis')) addLimbAxis(mesh.geometry, 0.01 / mesh.getWorldScale(new THREE.Vector3()).x)
+      mesh.material = mesh.name === 'Head' ? materials.head : LIMBS.has(mesh.name) ? materials.limbs : materials[part.kind]
       // The anatomical diaphragm folds over itself in the front view; a simplified sheet under the
       // lungs takes its place once the lungs are known (see below).
       if (part.kind === 'diaphragm') {

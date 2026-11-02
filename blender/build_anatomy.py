@@ -18,6 +18,8 @@ Output in <out_dir>:
 
 Objects (all children of the empty `Anatomy`):
     Body_Shell, Head, Abdomen        skin, split so the belly can move on its own
+    Arms                             arms and hands, hanging relaxed beside the body
+    Legs                             skin below the navel: hips, legs and feet
     Nasal_Cavity                     nasal mucosa and pharynx (upper airway)
     Trachea, Bronchi                 trachea mesh and main/lobar bronchi
     Lung_Left, Lung_Right            lobes joined per side
@@ -55,10 +57,14 @@ HEART = ["Left ventricle", "Right ventricle", "Left atrium", "Right atrium"]
 NASAL = ["Mucosa of nasal cavity", "Nasopharynx", "Oropharynx", "Laryngopharynx"]
 # Skin regions of the front belly wall: they form the Abdomen object.
 ABDOMEN = ["Epigastric region", "Umbilical region", "Hypochondriac region", "Lateral region of abdomen", "Inframammary region"]
-# Skin regions never wanted: limbs below the shoulder, hair, lashes.
-SKIP_SKIN = ["arm", "elbow", "forearm", "Cubital", "bicipital", "Hairs", "Eyelashes", "Eyebrow", "wrist", "hand"]
+# Skin regions never wanted: hair, lashes, and the genital and anal regions (the figure stays neutral;
+# the gap they leave between the legs is capped in `cap_crotch`).
+SKIP_SKIN = ["Hairs", "Eyelashes", "Eyebrow", "Urogenital region", "Anal region"]
+# Shoulder caps and shoulder blades stay with the trunk; the rest of the upper limb forms the Arms object.
+ARM_COLLECTIONS = ("Left upper limb", "Right upper limb")
+TRUNK_OF_LIMB = ["Deltoid region", "Scapular region"]
 
-LOW_CUT = 0.975  # metres: the skin ends just below the navel
+LOW_CUT = 0.975  # metres: the trunk's skin ends just below the navel, the Legs object takes over there
 
 
 def in_collection(o, name):
@@ -66,20 +72,27 @@ def in_collection(o, name):
 
 
 def skin_regions():
-    picked = {"Head": [], "Abdomen": [], "Body_Shell": []}
+    picked = {"Head": [], "Abdomen": [], "Body_Shell": [], "Arms": [], "Legs": []}
     for o in src:
         if o.type != "MESH" or len(o.data.vertices) <= 10 or not in_collection(o, "9: Regions of human body"):
             continue
         if any(s.lower() in o.name.lower() for s in SKIP_SKIN):
             continue
+        base = o.name.rsplit(".", 1)[0]
+        if any(in_collection(o, c) for c in ARM_COLLECTIONS) and base not in TRUNK_OF_LIMB:
+            picked["Arms"].append(o)
+            continue
+        if in_collection(o, "Head"):
+            picked["Head"].append(o)
+            continue
         zs = [(o.matrix_world @ Vector(c)).z for c in o.bound_box]
+        # Regions across the cut go to both sides of it; each object keeps only its own half.
+        if min(zs) < LOW_CUT - 0.002:
+            picked["Legs"].append(o)
         if max(zs) < LOW_CUT + 0.02:
             continue
-        base = o.name.rsplit(".", 1)[0]
         if base in ABDOMEN:
             picked["Abdomen"].append(o)
-        elif in_collection(o, "Head"):
-            picked["Head"].append(o)
         else:
             picked["Body_Shell"].append(o)
     return picked
@@ -159,6 +172,91 @@ def cut_below(obj, z):
     bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, z), plane_no=(0, 0, 1), clear_inner=True)
     bm.to_mesh(obj.data)
     bm.free()
+
+
+def cut_above(obj, z):
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, z), plane_no=(0, 0, -1), clear_inner=True)
+    bm.to_mesh(obj.data)
+    bm.free()
+
+
+def boundary_loops(bm):
+    """Open edge loops of the mesh, as lists of edges."""
+    todo = {e for e in bm.edges if e.is_boundary}
+    loops = []
+    while todo:
+        e = todo.pop()
+        loop, stack = [e], [e]
+        while stack:
+            for v in stack.pop().verts:
+                for n in v.link_edges:
+                    if n in todo:
+                        todo.remove(n)
+                        loop.append(n)
+                        stack.append(n)
+        loops.append(loop)
+    return loops
+
+
+def cap_crotch(obj):
+    """Closes the gap left between the legs by the skipped genital and anal regions."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    for loop in boundary_loops(bm):
+        vs = {v for e in loop for v in e.verts}
+        c = sum((v.co for v in vs), Vector()) / len(vs)
+        if abs(c.x) < 0.04 and c.z < 0.9 and len(vs) > 6:
+            bmesh.ops.holes_fill(bm, edges=loop, sides=0)
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
+    bm.to_mesh(obj.data)
+    bm.free()
+
+
+# The arms hang relaxed: from the template's anatomical pose (arms a little away from the
+# body, palms forward) they swing in toward the thighs and the forearms turn the palms in.
+SHOULDER = Vector((0.185, 0.0, 1.375))  # pivot of the left shoulder joint (x mirrored for the right)
+ARM_SWING = math.radians(6.5)
+ELBOW_Z, WRIST_Z = 1.1, 0.85
+PALM_TURN = math.radians(70)
+
+
+def relax_arms(obj):
+    me = obj.data
+    # Centre of each arm per 1 cm slice: the forearm turns about its own long axis.
+    slices = {}
+    for v in me.vertices:
+        k = (v.co.x >= 0, round(v.co.z * 100))
+        acc = slices.setdefault(k, [Vector(), 0])
+        acc[0] += v.co
+        acc[1] += 1
+
+    def centre(side, z):
+        for dz in range(0, 6):
+            for k in ((side, round(z * 100) + dz), (side, round(z * 100) - dz)):
+                if k in slices:
+                    return slices[k][0] / slices[k][1]
+        return Vector()
+
+    wrist = {True: centre(True, WRIST_Z), False: centre(False, WRIST_Z)}
+    for v in me.vertices:
+        p = v.co.copy()
+        left = p.x >= 0
+        side = 1.0 if left else -1.0
+        # Forearm and hand: turn about the forearm's long axis, nothing at the elbow, fully from the wrist down.
+        t = smoothstep(ELBOW_Z, WRIST_Z, p.z)
+        if t > 0:
+            c = centre(left, p.z) if p.z > WRIST_Z else wrist[left]
+            rel = Vector((p.x - c.x, p.y - c.y, 0))
+            rel.rotate(Matrix.Rotation(t * PALM_TURN * -side, 3, "Z"))
+            p.x, p.y = c.x + rel.x, c.y + rel.y
+        # Whole arm: swing in about the shoulder, fading out toward the shoulder cap so the seam stays put.
+        w = smoothstep(1.31, 1.18, p.z)
+        pivot = Vector((side * SHOULDER.x, SHOULDER.y, SHOULDER.z))
+        p = pivot + Matrix.Rotation(side * ARM_SWING * w, 3, "Y") @ (p - pivot)
+        v.co = p
+    me.update()
 
 
 def set_origin_to_center(obj):
@@ -331,9 +429,16 @@ for name, objs in regions.items():
     print(name, len(objs), "skin regions")
     o = bake(objs, name)
     clean(o, merge=0.0012, subdivide=1)
-    if name != "Head":
+    if name in ("Body_Shell", "Abdomen"):
         cut_below(o, LOW_CUT)
-    clean(o, target_faces={"Body_Shell": 9000, "Head": 7000, "Abdomen": 2500}[name])
+    if name == "Legs":
+        cut_above(o, LOW_CUT)
+        cap_crotch(o)
+    if name == "Arms":
+        relax_arms(o)
+    clean(o, target_faces={"Body_Shell": 9000, "Head": 7000, "Abdomen": 2500, "Arms": 6000, "Legs": 7000}[name])
+    for a in list(o.data.color_attributes):  # the limbs carry the template's vertex colours; not used
+        o.data.color_attributes.remove(a)
     assign(o, "Skin")
     parts[name] = o
 
