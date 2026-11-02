@@ -135,13 +135,13 @@ export function MagicStartButton({ onClick, children, testId }: { onClick: () =>
       <canvas
         ref={canvas}
         aria-hidden
-        className="pointer-events-none absolute text-breath"
+        className="pointer-events-none absolute text-accent"
         style={{ left: -PAD_X, right: -PAD_X, top: -PAD_TOP, bottom: -PAD_BOTTOM, width: `calc(100% + ${2 * PAD_X}px)`, height: `calc(100% + ${PAD_TOP + PAD_BOTTOM}px)` }}
       />
       <button
         type="button"
         onClick={onClick}
-        className="magic-start pointer-events-auto relative h-14 rounded-full bg-blue px-12 text-[1.0625rem] text-white transition hover:bg-blue-deep active:scale-95"
+        className="magic-start pointer-events-auto relative h-14 rounded-full bg-paper px-12 text-[1.0625rem] font-medium text-accent transition hover:bg-surface active:scale-95"
         data-testid={testId}
       >
         {children}
