@@ -131,6 +131,14 @@ export class BreathingEngine {
     this.start()
   }
 
+  /** Development shortcut: jumps to the end of a running or paused session, which completes it. */
+  skipToEnd(): void {
+    if (this.status !== 'running' && this.status !== 'paused') return
+    this.clock.set(this.plan.totalDurationMs)
+    this.status = 'running'
+    this.update()
+  }
+
   reset(): void {
     this.stopTicking()
     this.clock.reset()

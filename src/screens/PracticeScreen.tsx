@@ -267,9 +267,11 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
 
         <div className={`flex items-center justify-between ${compact ? 'pt-3' : 'pt-9'}`}>
           <IconButton
+            // For now this button skips to the end of the exercise (a development shortcut, Jan's wish);
+            // it still looks like restart so the screen stays unchanged.
             label={t.restart}
             disabled={!active}
-            onClick={session.restart}
+            onClick={session.skipToEnd}
             className={`${compact ? '!size-10' : 'size-12'} border border-line`}
             data-testid="restart"
           >

@@ -33,6 +33,12 @@ export class PausableClock {
     this.startedAt = null
   }
 
+  /** Jumps to the given elapsed time, keeping the running state. */
+  set(elapsedMs: number): void {
+    this.accumulated = elapsedMs
+    if (this.startedAt !== null) this.startedAt = this.now()
+  }
+
   reset(): void {
     this.accumulated = 0
     this.startedAt = null

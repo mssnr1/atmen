@@ -167,6 +167,19 @@ describe('pace', () => {
 })
 
 describe('BreathingEngine', () => {
+  it('skips to the end and completes the session, also when paused', () => {
+    for (const pause of [false, true]) {
+      const h = harness(resonance, { kind: 'cycles', count: 4 })
+      h.engine.start()
+      h.advance(3000)
+      if (pause) h.engine.pause()
+      h.engine.skipToEnd()
+      expect(h.engine.getSnapshot()).toMatchObject({ status: 'completed', completedCycles: 4 })
+      expect(h.events.at(-1)?.type).toBe('complete')
+      expect(h.ticking).toBe(false)
+    }
+  })
+
   it('changes pace mid-session and re-plans on a fresh start', () => {
     const h = harness(resonance, { kind: 'cycles', count: 4 })
     h.engine.start()
