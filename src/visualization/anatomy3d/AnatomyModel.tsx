@@ -62,7 +62,7 @@ const LIMBS = new Set(['Arms', 'Legs'])
  */
 const SHOW_DIAPHRAGM = false
 
-const BREATH_GAIN: Record<string, number> = { Body_Shell: 2.6, Lung_Left: 1.7, Lung_Right: 1.7, Diaphragm: 1.25, Abdomen: 1.7 }
+const BREATH_GAIN: Record<string, number> = { Body_Shell: 2.6, Arms: 2.6, Lung_Left: 1.7, Lung_Right: 1.7, Diaphragm: 1.25, Abdomen: 1.7 }
 
 /**
  * Windpipe and main bronchi, drawn as one smooth piece instead of the model's

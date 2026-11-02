@@ -31,6 +31,7 @@ Morph targets (shape keys), all 0 = resting/exhaled:
     Diaphragm.Inhale     dome flattens and descends
     Abdomen.Inhale       belly wall moves out, edges stay put
     Body_Shell.Inhale    whole upper body fills out, shoulders lift, seamless with the belly
+    Arms.Inhale          arms move out and up with the side of the chest and the shoulders
     Heart.Beat           ventricles contract, atria fill
 """
 
@@ -370,42 +371,129 @@ def boundary_falloff(obj, width):
     return out
 
 
-def abdomen_inhale(obj):
+# The app exaggerates each part's breath by its own gain (BREATH_GAIN in AnatomyModel.tsx); parts that
+# share an edge must move the same there, so the belly takes the chest wall's motion scaled by this ratio.
+BODY_TO_ABDOMEN_GAIN = 2.6 / 1.7
+
+
+def abdomen_inhale(obj, body):
+    """The belly wall moves out in the middle (its edges stay), and the whole of it
+    rides along with the chest wall around it (see `body_grow`)."""
     lo, hi = bounds(obj)
     fall = boundary_falloff(obj, 0.04)
     cx = (lo.x + hi.x) / 2
+    grow = body_grow(chest_centre(body))
+    m = obj.matrix_world
+    inv = m.to_3x3().inverted()
 
     def d(co, i):
         front = smoothstep(hi.y, lo.y, co.y)  # front of the belly moves most
         mid = 1 - min(1, abs(co.x - cx) / ((hi.x - lo.x) / 2)) ** 2
-        return Vector((0, -0.012 * fall[i] * front * mid, 0))
+        belly = Vector((0, -0.012 * fall[i] * front * mid, 0))
+        return belly + inv @ (grow(m @ co) * BODY_TO_ABDOMEN_GAIN)
 
     add_key(obj, "Inhale", d)
 
 
-def body_inhale(obj):
-    """The whole upper body fills out: the rib cage widens all round, most at
-    the front, and the shoulders lift and spread a little with it."""
-    fall = boundary_falloff(obj, 0.04)
-    # Mesh coordinates are local to the object; heights below are world heights.
-    m = obj.matrix_world
-    world = [m @ v.co for v in obj.data.vertices]
-    band_ys = [w.y for w in world if 1.15 < w.z < 1.4]
-    yc = (min(band_ys) + max(band_ys)) / 2
+def body_grow(yc):
+    """Displacement of the chest wall at world point `w` for a full breath (see `body_inhale`)."""
 
-    def d(_, i):
-        w = world[i]
-        trunk = smoothstep(1.02, 1.16, w.z) * (1 - smoothstep(1.5, 1.58, w.z))
+    def d(w):
+        # The rib cage grows from the waist up, in one long soft ramp, and calms toward the neck.
+        trunk = smoothstep(0.98, 1.3, w.z) * (1 - smoothstep(1.48, 1.6, w.z))
         shoulder = smoothstep(1.36, 1.48, w.z)
         out = Vector((w.x, w.y - yc, 0))
         if out.length > 1e-6:
             out.normalize()
-        front = 0.6 + 0.6 * smoothstep(yc + 0.03, yc - 0.06, w.y)  # front of the chest is -Y
-        f = trunk * fall[i]
-        grow = out * (0.008 * front * (1 - 0.4 * shoulder))
-        return (grow + Vector((0, 0, 0.002 + 0.004 * shoulder))) * f
+        front = 0.7 + 0.5 * smoothstep(yc + 0.03, yc - 0.06, w.y)  # front of the chest is -Y
+        grow = out * (0.009 * front * (1 - 0.4 * shoulder))
+        # The lower ribs swing out to the sides most (the lungs widen there), so the flanks keep ahead of them.
+        lower = 1 - smoothstep(1.2, 1.38, w.z)
+        grow += Vector((0.006 * lower * out.x, 0, 0))
+        return (grow + Vector((0, 0, 0.002 + 0.004 * shoulder))) * trunk
+
+    return d
+
+
+def chest_centre(body):
+    m = body.matrix_world
+    band_ys = [(m @ v.co).y for v in body.data.vertices if 1.15 < (m @ v.co).z < 1.4]
+    return (min(band_ys) + max(band_ys)) / 2
+
+
+ARMPIT_Z = 1.3  # below this the arms follow the side of the chest at this height (see `arms_inhale`)
+
+
+def body_inhale(obj, joined, arms):
+    """The whole upper body fills out: the rib cage widens all round, most at
+    the front, and the shoulders lift and spread a little with it. Only the open
+    edges at the neck and below the navel stay put; where the arms and the belly
+    join, they move along (see `arms_inhale`, `abdomen_inhale`), so the outline
+    stays smooth there."""
+    m = obj.matrix_world
+    world = [m @ v.co for v in obj.data.vertices]
+    seam = {}
+    for o in joined:
+        for v in o.data.vertices:
+            p = o.matrix_world @ v.co
+            seam.setdefault((round(p.x * 50), round(p.y * 50), round(p.z * 50)), []).append(p)
+
+    def near_joined(w):
+        kx, ky, kz = round(w.x * 50), round(w.y * 50), round(w.z * 50)
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                for dz in (-1, 0, 1):
+                    for p in seam.get((kx + dx, ky + dy, kz + dz), ()):
+                        if (p - w).length < 0.012:
+                            return True
+        return False
+
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    edge = [world[v.index] for v in bm.verts if any(e.is_boundary for e in v.link_edges) and not near_joined(world[v.index])]
+    bm.free()
+    fall = [smoothstep(0, 0.04, min(((w - e).length for e in edge), default=0.04)) for w in world]
+    grow = body_grow(chest_centre(obj))
+    inv = m.to_3x3().inverted()
+    # Round the armpit the chest wall takes on the arms' motion, so the two meet without a step.
+    arm_cells = {}
+    for v in arms.data.vertices:
+        p = arms.matrix_world @ v.co
+        arm_cells.setdefault((round(p.x * 25), round(p.y * 25), round(p.z * 25)), []).append(p)
+
+    def arm_dist(w):
+        kx, ky, kz = round(w.x * 25), round(w.y * 25), round(w.z * 25)
+        best = 1.0
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                for dz in (-1, 0, 1):
+                    for p in arm_cells.get((kx + dx, ky + dy, kz + dz), ()):
+                        best = min(best, (p - w).length)
+        return best
+
+    def d(_, i):
+        w = world[i]
+        a = 1 - smoothstep(0.012, 0.04, arm_dist(w))
+        g = grow(w).lerp(grow(Vector((w.x, w.y, max(w.z, ARMPIT_Z)))), a)
+        return inv @ (g * fall[i])
 
     add_key(obj, "Inhale", d)
+
+
+def arms_inhale(arms, body):
+    """The arms ride along with the chest wall where they join it: each moves as one
+    piece, out and up as the side of the rib cage and the shoulder do, so there is no
+    kink at the armpit."""
+    grow = body_grow(chest_centre(body))
+    m = arms.matrix_world
+    inv = m.to_3x3().inverted()
+
+    def d(co, _):
+        w = m @ co
+        # Below the armpit the whole arm follows the side of the chest at armpit height.
+        return inv @ grow(Vector((w.x, w.y, max(w.z, ARMPIT_Z))))
+
+    add_key(arms, "Inhale", d)
 
 
 def heart_beat(obj):
@@ -636,8 +724,9 @@ with open(os.path.join(OUT, "airway-paths.json"), "w") as f:
 for n in ("Lung_Left", "Lung_Right"):
     lung_inhale(parts[n])
 diaphragm_inhale(parts["Diaphragm"])
-abdomen_inhale(parts["Abdomen"])
-body_inhale(parts["Body_Shell"])
+abdomen_inhale(parts["Abdomen"], parts["Body_Shell"])
+body_inhale(parts["Body_Shell"], [parts["Arms"], parts["Abdomen"]], parts["Arms"])
+arms_inhale(parts["Arms"], parts["Body_Shell"])
 heart_beat(parts["Heart"])
 
 # Drop all template data no longer used, so the saved .blend holds only our scene.
