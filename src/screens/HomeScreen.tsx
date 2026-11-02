@@ -72,7 +72,8 @@ export function HomeScreen() {
             )
           })}
         </ul>
-        <p className="mt-8 mb-6 text-center text-[0.8125rem] text-muted">{t.inspired}</p>
+        {/* Extra room on phones so the last line scrolls clear above the floating Start pill. */}
+        <p className="mt-8 mb-20 text-center text-[0.8125rem] text-muted md:mb-6">{t.inspired}</p>
       </main>
       {/* Floats centred over the cards, just above the tab bar on phones. */}
       <div className="pointer-events-none fixed inset-x-0 bottom-[calc(max(env(safe-area-inset-bottom),0.5rem)+4.5rem)] z-20 flex justify-center md:bottom-[max(env(safe-area-inset-bottom),2rem)]">
