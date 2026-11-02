@@ -117,6 +117,11 @@ export function usePracticeSession(exercise: Exercise, durationMs: number, pace:
     sessionId,
     start: useCallback(() => begin('start'), [begin]),
     restart: useCallback(() => begin('restart'), [begin]),
+    /** Development shortcut to the end of the exercise. */
+    skipToEnd: useCallback(() => {
+      audio.cancel()
+      engine.skipToEnd()
+    }, [engine]),
     pause: useCallback(() => {
       engine.pause()
       audio.cancel()
