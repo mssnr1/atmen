@@ -232,13 +232,13 @@ export function InsightStack({
 function Card({ it, labels, small }: { it: BodyInsight; labels: { place: string; impact: string }; small: boolean }) {
   if (small) {
     return (
-      <Squircle radius={12} smoothing={0.6} className={`${cardClass} flex h-full items-center gap-2 px-3 py-2`} data-testid={`insight-${it.id}`}>
+      <Squircle radius={12} smoothing={0.6} className={`${cardClass} flex h-full items-center gap-2 px-3 py-2.5`} data-testid={`insight-${it.id}`}>
         <span className="text-accent">
-          <TargetIcon />
+          <TargetIcon className="size-[0.8125rem]" />
         </span>
-        <span className="min-w-0 flex-1 truncate text-[0.8125rem] leading-tight text-ink">{it.place}</span>
-        <span className="hud-glow flex min-w-0 items-center gap-1 truncate text-[0.75rem] leading-tight text-accent">
-          <OutcomeIcon />
+        <span className="min-w-0 flex-1 truncate text-[0.9375rem] leading-tight text-ink">{it.place}</span>
+        <span className="hud-glow flex min-w-0 items-center gap-1 truncate text-[0.875rem] leading-tight text-accent">
+          <OutcomeIcon className="size-[0.8125rem]" />
           {it.impact}
         </span>
         <span className="hud-dot ml-1" aria-hidden />
@@ -248,18 +248,22 @@ function Card({ it, labels, small }: { it: BodyInsight; labels: { place: string;
   return (
     <Squircle radius={14} smoothing={0.6} className={`${cardClass} grid h-full grid-cols-2`} data-testid={`insight-${it.id}`}>
       <p className="sr-only">{it.title}</p>
-      <div className="px-3 pt-2.5 pb-2.5">
-        <Label icon={<TargetIcon />}>{labels.place}</Label>
-        <p className="mt-1 text-[0.9375rem] leading-tight break-words text-ink [hyphens:auto]">{it.place}</p>
-        <p className="mt-0.5 text-[0.6875rem] leading-tight text-muted [hyphens:auto]">{it.term}</p>
+      <div className="px-3.5 pt-3 pb-3">
+        <Label icon={<TargetIcon className="size-[0.8125rem]" />} className="text-[0.6875rem]">
+          {labels.place}
+        </Label>
+        <p className="mt-1.5 text-[1.125rem] leading-tight break-words text-ink [hyphens:auto]">{it.place}</p>
+        <p className="mt-1 text-[0.8125rem] leading-snug text-muted [hyphens:auto]">{it.term}</p>
       </div>
-      <div className="relative border-l border-accent/20 bg-accent/[0.07] px-3 pt-2.5 pb-2.5">
+      <div className="relative border-l border-accent/20 bg-accent/[0.07] px-3.5 pt-3 pb-3">
         <span className="absolute top-3 right-3 flex" aria-hidden>
           <span className="hud-dot" />
         </span>
-        <Label icon={<OutcomeIcon />}>{labels.impact}</Label>
-        <p className="hud-glow mt-1 text-[0.875rem] leading-snug text-accent">{it.impact}</p>
-        {it.value && <p className="mt-0.5 text-[0.6875rem] leading-tight text-muted tabular-nums">{it.value}</p>}
+        <Label icon={<OutcomeIcon className="size-[0.8125rem]" />} className="text-[0.6875rem]">
+          {labels.impact}
+        </Label>
+        <p className="hud-glow mt-1.5 text-[1.0625rem] leading-snug text-accent">{it.impact}</p>
+        {it.value && <p className="mt-1 text-[0.8125rem] leading-snug text-muted tabular-nums">{it.value}</p>}
       </div>
     </Squircle>
   )
