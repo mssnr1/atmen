@@ -21,7 +21,7 @@ function getAudioContextCtor(): AudioContextCtor | undefined {
 export const audioSupported = () => getAudioContextCtor() !== undefined
 
 /**
- * Plays soft ambient pads that swell with each breath in and out. Cues are
+ * Plays a dark, breath-like sound with each breath in and out. Cues are
  * scheduled ahead on the Web Audio clock (two minutes at a time, topped up
  * regularly), so they keep exact time even when the screen is off or the tab is
  * throttled.
@@ -85,13 +85,13 @@ export class AudioCues {
       const seg = segs[i]
       const start = zero + seg.startMs / 1000
       if (isHold(seg.phase.type)) {
-        // Announced holds keep the gentle bell; quiet ones are covered by the pad before.
+        // Announced holds keep the gentle bell; quiet ones stay silent like a held breath.
         const tone = HOLD_TONES[seg.phase.type]
         if (!seg.phase.quiet && tone) this.bell(start, tone, 1.6, 0.2)
         i++
         continue
       }
-      // A pad lingers through the pauses that follow it.
+      // Pauses that follow a breath are passed along (its tail rings into them).
       let hold = 0
       let j = i + 1
       while (j < segs.length && isHold(segs[j].phase.type)) hold += segs[j++].durationMs / 1000
