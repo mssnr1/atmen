@@ -87,8 +87,8 @@ export const ChevronLeftIcon = (p: P) => (
 )
 export const LearnIcon = (p: P) => (
   <svg {...base} {...p}>
-    <circle cx="12" cy="7.5" r="3.5" />
-    <path d="M5 20c.6-3.8 3.4-6 7-6s6.4 2.2 7 6" />
+    {/* A plain capital A, as in the style guide's tab bar. */}
+    <path d="M5 20.5L12 3.5l7 17M7.6 14.2h8.8" />
   </svg>
 )
 export const GearIcon = (p: P) => (

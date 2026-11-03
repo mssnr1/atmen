@@ -246,25 +246,25 @@ function Card({ it, labels, small }: { it: BodyInsight; labels: { place: string;
     )
   }
   return (
-    <Squircle radius={14} smoothing={0.6} className={`${cardClass} grid h-full grid-cols-2`} data-testid={`insight-${it.id}`}>
+    <div className="grid h-full grid-cols-2 gap-1.5" data-testid={`insight-${it.id}`}>
       <p className="sr-only">{it.title}</p>
-      <div className="px-3.5 pt-3 pb-3">
+      <div className={`${cardClass} rounded-[14px] px-3.5 pt-3 pb-3 ring-1 ring-line/70`}>
         <Label icon={<TargetIcon className="size-[0.8125rem]" />} className="text-[0.6875rem]">
           {labels.place}
         </Label>
-        <p className="mt-1.5 text-[1.125rem] leading-tight break-words text-ink [hyphens:auto]">{it.place}</p>
+        <p className="mt-1.5 text-[1.0625rem] leading-tight font-bold break-words text-ink [hyphens:auto]">{it.place}</p>
         <p className="mt-1 text-[0.8125rem] leading-snug text-muted [hyphens:auto]">{it.term}</p>
       </div>
-      <div className="relative border-l border-mint/25 bg-linear-to-br from-mint/[0.14] to-sky/[0.08] px-3.5 pt-3 pb-3">
+      <div className="fluo-impact relative rounded-[14px] px-3.5 pt-3 pb-3 backdrop-blur-[10px]">
         <span className="absolute top-3 right-3 flex" aria-hidden>
           <span className="hud-dot" />
         </span>
         <Label icon={<OutcomeIcon className="size-[0.8125rem]" />} className="text-[0.6875rem]">
           {labels.impact}
         </Label>
-        <p className="hud-glow mt-1.5 text-[1.0625rem] leading-snug text-accent">{it.impact}</p>
-        {it.value && <p className="mt-1 text-[0.8125rem] leading-snug text-muted tabular-nums">{it.value}</p>}
+        <p className="mt-1.5 text-[1.0625rem] leading-snug font-bold text-ink">{it.impact}</p>
+        {it.value && <p className="mt-1 text-[0.8125rem] leading-snug text-ink-2 tabular-nums">{it.value}</p>}
       </div>
-    </Squircle>
+    </div>
   )
 }

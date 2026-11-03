@@ -51,7 +51,7 @@ export function OutcomeIcon({ className = 'size-[0.7rem]' }: { className?: strin
 /** A small HUD label: icon plus uppercase word. */
 export function Label({ icon, children, className = 'text-[0.5625rem] md:text-[0.625rem]' }: { icon: React.ReactNode; children: string; className?: string }) {
   return (
-    <span className={`hud-glow flex items-center gap-1 leading-none tracking-[0.1em] text-accent uppercase ${className}`}>
+    <span className={`flex items-center gap-1 leading-none font-bold tracking-[0.08em] text-ink-2 uppercase ${className}`}>
       {icon}
       {children}
     </span>
@@ -77,13 +77,13 @@ function Column({ items, labels, className }: { items: BodyInsight[]; labels: { 
               <Label icon={<TargetIcon />}>{labels.place}</Label>
               <span className="hud-dot" aria-hidden />
             </div>
-            <p className="mt-1 text-[0.8125rem] leading-tight break-words text-ink [hyphens:auto] md:mt-1.5 md:text-[1rem]">{it.place}</p>
+            <p className="mt-1 text-[0.8125rem] leading-tight font-bold break-words text-ink [hyphens:auto] md:mt-1.5 md:text-[1rem]">{it.place}</p>
             <p className="mt-0.5 text-[0.625rem] leading-tight text-muted [hyphens:auto] md:text-[0.6875rem]">{it.term}</p>
           </div>
           {/* What it does. */}
-          <div className="border-t border-mint/25 bg-linear-to-br from-mint/[0.14] to-sky/[0.08] px-2.5 pt-1.5 pb-1.5 md:px-4 md:pt-2 md:pb-3">
+          <div className="fluo-impact px-2.5 pt-1.5 pb-1.5 md:px-4 md:pt-2 md:pb-3">
             <Label icon={<OutcomeIcon />}>{labels.impact}</Label>
-            <p className="hud-glow mt-1 text-[0.75rem] leading-snug text-accent md:text-[0.9375rem]">{it.impact}</p>
+            <p className="mt-1 text-[0.75rem] leading-snug font-bold text-ink md:text-[0.9375rem]">{it.impact}</p>
             {it.value && <p className="mt-0.5 hidden text-[0.6875rem] leading-tight text-muted tabular-nums md:block">{it.value}</p>}
           </div>
         </Squircle>

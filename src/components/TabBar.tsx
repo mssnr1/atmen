@@ -37,7 +37,7 @@ export function TabBar({ current }: { current: Tab }) {
   ]
   return (
     <nav
-      className="sticky bottom-0 z-10 border-t border-line/70 bg-paper/92 pb-[max(env(safe-area-inset-bottom),0.5rem)] backdrop-blur md:pointer-events-none md:top-0 md:bottom-auto md:order-first md:flex md:justify-center md:border-0 md:bg-transparent md:pt-[max(env(safe-area-inset-top),1rem)] md:pb-0 md:backdrop-blur-none"
+      className="sticky bottom-0 z-10 border-t border-line/70 bg-surface/92 pb-[max(env(safe-area-inset-bottom),0.5rem)] backdrop-blur md:pointer-events-none md:top-0 md:bottom-auto md:order-first md:flex md:justify-center md:border-0 md:bg-transparent md:pt-[max(env(safe-area-inset-top),1rem)] md:pb-0 md:backdrop-blur-none"
       aria-label="Navigation"
     >
       <ul className="mx-auto flex max-w-md md:pointer-events-auto md:mx-0 md:gap-1 md:rounded-full md:bg-surface/85 md:p-1 md:shadow-[0_1px_6px_rgb(0_0_0/0.06)] md:backdrop-blur">
