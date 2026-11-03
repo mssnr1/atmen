@@ -32,8 +32,6 @@ export type StripeOptions = {
   side?: 'front' | 'back' | 'both'
   /** Write depth so whatever lies behind this surface is hidden instead of showing through. */
   occlude?: boolean
-  /** Draw only the neck (`'only'`) or everything but the neck (`'without'`), with a soft border between them. */
-  neck?: 'only' | 'without'
   /** Screen-space map of how far away the nearest lung surface is, to draw the rim where this surface lies in front of another (see `edgeDepthMaterial`). */
   edges?: EdgeMap
   /** How quickly the rim fades inward from the silhouette; lower is a broader rim. */
@@ -114,9 +112,6 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
         float fr = pow(1.0 - abs(dot(normalize(vN), normalize(vView))), ${(o.rimPower ?? 2).toFixed(2)});
         ${o.edges ? 'fr = max(fr, edgeRim(vView.z));' : ''}
         float focus = 1.0;
-        ${o.neck ? `float neck = ${neckGlsl(o.neck === 'only' ? 0.07 : 0.1)};` : ''}
-        // Both walls stay above half strength across the border, so it reads as one surface, not a pale band.
-        ${o.neck === 'only' ? 'focus = 1.0 - (1.0 - neck) * (1.0 - neck); if (neck < 0.1) discard;' : o.neck === 'without' ? 'focus = 1.0 - neck * neck;' : ''}
         ${o.focusTrunk ? 'line *= mix(0.3, 1.0, smoothstep(0.05, 0.5, fr));' : ''}
         float low = 1.0 - smoothstep(uRange.x, uRange.y, vRest.y);
         vec3 cLine = mix(uLine, uLow, low);
@@ -172,6 +167,23 @@ float edgeRim(float depth) {
   return pow(min(e, 1.0), 2.0);
 }`
 
+/**
+ * The skin's depth, drawn before its colour (both sides, nothing visible): the colour pass after it then
+ * passes only where it is the nearest skin, so only the surface the eye looks at shows. Pushed back a
+ * hair, so that surface itself passes the depth test reliably.
+ */
+export function skinDepthMaterial(): THREE.Material {
+  return new THREE.MeshBasicMaterial({
+    transparent: true,
+    colorWrite: false,
+    depthWrite: true,
+    side: THREE.DoubleSide,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1,
+  })
+}
+
 /** Draws the distance from the eye to the nearest lung surface and which lung it is (1 or 2), for the edge map. */
 export function edgeDepthMaterial(id: number): THREE.Material {
   const m = new THREE.MeshBasicMaterial({ side: THREE.FrontSide })
@@ -189,24 +201,16 @@ export function edgeDepthMaterial(id: number): THREE.Material {
 
 /**
  * Colours of the figure (style guide): `body` the skin's lines, `bodyFill` the soft glow between them,
+ * `bodyBase` the skin's fill between its lines (close to the page, so the body reads as one calm surface),
  * `bodyRim` the glow along the outline, `bodyLow` the colour the skin turns toward the belly; the lungs
  * run from `lungLow` at their base to `lung` at their top, `lungRim` along their outline.
  */
-export type StripePalette = { line: string; lung: string; lungLow: string; lungRim: string; body: string; bodyFill: string; bodyRim: string; bodyLow: string }
+export type StripePalette = { line: string; lung: string; lungLow: string; lungRim: string; body: string; bodyFill: string; bodyBase: string; bodyRim: string; bodyLow: string }
 
 export const STRIPE_PALETTES: Record<'light' | 'dark', StripePalette> = {
-  light: { body: '#8c7bff', bodyFill: '#b9adff', bodyRim: '#6f5cf0', bodyLow: '#5ab8e8', line: '#8c7bff', lung: '#8c7bff', lungLow: '#38bdf8', lungRim: '#b3a6ff' },
-  dark: { body: '#8f86ff', bodyFill: '#3d3aa6', bodyRim: '#c7bbff', bodyLow: '#4aa6d6', line: '#b3a6ff', lung: '#b3a6ff', lungLow: '#7dd3fc', lungRim: '#e3dcff' },
+  light: { body: '#8c7bff', bodyFill: '#b9adff', bodyBase: '#f1effe', bodyRim: '#6f5cf0', bodyLow: '#5ab8e8', line: '#8c7bff', lung: '#8c7bff', lungLow: '#38bdf8', lungRim: '#b3a6ff' },
+  dark: { body: '#8f86ff', bodyFill: '#3d3aa6', bodyBase: '#11132a', bodyRim: '#c7bbff', bodyLow: '#4aa6d6', line: '#b3a6ff', lung: '#b3a6ff', lungLow: '#7dd3fc', lungRim: '#e3dcff' },
 }
-
-/**
- * The neck: a column round the spine's axis above the shoulders (world metres; the neck is about 6 cm in
- * radius), with a soft border 1.5 cm wide starting at `radius`. The skin switches from its far wall (trunk)
- * to its near wall (neck) across it. The far wall gives way over a wider column, so its jagged top edge
- * under the jaw never shows.
- */
-const neckGlsl = (radius: number) =>
-  `(1.0 - smoothstep(${radius.toFixed(3)}, ${(radius + 0.015).toFixed(3)}, length(vec2(vRest.x, vRest.z + 0.01)))) * smoothstep(1.45, 1.49, vRest.y)`
 
 /**
  * `fade.inner` scales the lungs, airways and diaphragm (1 = shown, 0 = gone), `fade.skin` the skin
@@ -219,40 +223,32 @@ const SKIN_GRADIENT = new THREE.Vector2(0.85, 1.45)
 
 export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { value: number }, edges?: EdgeMap, fade?: Fade, lungRange?: { value: THREE.Vector2 }) {
   const inner = fade?.inner
-  // A glowing, translucent body: faint lines, a soft fill and a bright rim; at night it adds light.
+  // The skin shows only the surface the eye looks at (see `skinDepth`): its lines and rim over a fill in
+  // nearly the page's colour, so no far wall, overlap or inner fold of the model shows through it.
   const skinLines: StripeOptions = {
     show: fade?.skin,
     pattern: 'around',
     density: 120,
     width: 0.06,
     line: p.body,
-    fill: p.bodyFill,
-    lineAlpha: dark ? 0.22 : 0.3,
-    fillAlpha: dark ? 0.16 : 0.05,
+    fill: p.bodyBase,
+    lineAlpha: dark ? 0.5 : 0.42,
+    fillAlpha: dark ? 0.9 : 0.88,
     rim: p.bodyRim,
-    rimAlpha: dark ? 0.8 : 0.55,
+    rimAlpha: 0.85,
     rimPower: 1.5,
     focusTrunk: true,
     gradient: { low: p.bodyLow, range: { value: SKIN_GRADIENT } },
-    glow: dark,
+    side: 'both',
   }
   const lungGradient = lungRange ? { low: p.lungLow, range: lungRange } : undefined
   return {
-    // Up to the neck the trunk's skin shows its far wall (the lungs, writing depth, hide it where they lie in front).
-    skin: stripeMaterial({ ...skinLines, neck: 'without' }),
+    // Trunk, neck and head: lines running down round the body's axis, so they go on from the trunk over the
+    // neck and jaw onto the head without a step.
+    skin: stripeMaterial(skinLines),
     // Arms and legs: the same lines, running round each limb (a limb is about a third of the trunk's girth).
-    limbs: stripeMaterial({ ...skinLines, limb: true, density: 44, side: 'back' }),
-    // The neck shows its near wall instead, like the head above it, so the lines run on from the neck over the
-    // skull without a step, also round the back where the trunk's far wall would show the throat from inside.
-    // (The trunk's skin is wound inside out, so its near wall is the back side.)
-    // It writes depth, so where it covers the gap under the head, the head's inner wall (drawn last) stays hidden.
-    skinNeck: stripeMaterial({ ...skinLines, side: 'back', occlude: true, neck: 'only' }),
-    // The head carries the same lines over the skull, face and (closed) eye sockets. It writes depth, so
-    // what lies inside or behind it (the top of the neck's skin under the chin) doesn't show through the face.
-    head: stripeMaterial({ ...skinLines, occlude: true }),
-    // Where the head's skin and the neck's don't quite meet (under the jaw), the eye would look into the
-    // empty inside of the head; its inner wall, drawn after the head and the neck, fills only those gaps.
-    headInner: stripeMaterial({ ...skinLines, rimAlpha: 0.0, side: 'back' }),
+    limbs: stripeMaterial({ ...skinLines, limb: true, density: 44 }),
+    skinDepth: skinDepthMaterial(),
     // The lungs are drawn as a solid volume: first their far wall (the rings at the back, dimmed),
     // then their near wall. Both write depth, so the other lung and the airways behind or inside
     // a lung no longer show through it; only the lung's own back rings do.

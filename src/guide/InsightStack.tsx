@@ -248,12 +248,12 @@ function Card({ it, labels, small }: { it: BodyInsight; labels: { place: string;
   return (
     <div className="grid h-full grid-cols-2 gap-1.5" data-testid={`insight-${it.id}`}>
       <p className="sr-only">{it.title}</p>
-      <div className={`${cardClass} rounded-[14px] px-3.5 pt-3 pb-3 ring-1 ring-line/70`}>
-        <Label icon={<TargetIcon className="size-[0.8125rem]" />} className="text-[0.6875rem]">
+      <div className="fluo-location rounded-[14px] px-3.5 pt-3 pb-3">
+        <Label icon={<TargetIcon className="size-[0.8125rem]" />} className="text-[0.6875rem]" onDark>
           {labels.place}
         </Label>
-        <p className="mt-1.5 text-[1.0625rem] leading-tight font-bold break-words text-ink [hyphens:auto]">{it.place}</p>
-        <p className="mt-1 text-[0.8125rem] leading-snug text-muted [hyphens:auto]">{it.term}</p>
+        <p className="mt-1.5 text-[1.0625rem] leading-tight font-bold break-words text-white [hyphens:auto]">{it.place}</p>
+        <p className="mt-1 text-[0.8125rem] leading-snug text-white/60 [hyphens:auto]">{it.term}</p>
       </div>
       <div className="fluo-impact relative rounded-[14px] px-3.5 pt-3 pb-3 backdrop-blur-[10px]">
         <span className="absolute top-3 right-3 flex" aria-hidden>
