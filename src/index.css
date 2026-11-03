@@ -122,8 +122,8 @@
 }
 :root.dark .logo-fluo,
 .bg-blue-page .logo-fluo {
-  --logo-top: #ebe8ff;
-  --logo-bottom: #cfc8ff;
+  --logo-top: #e6e3ff;
+  --logo-bottom: #d0cdfd;
 }
 :root:not(.dark) .logo-fluo {
   filter: drop-shadow(0 2px 10px rgb(111 92 240 / 0.35));
