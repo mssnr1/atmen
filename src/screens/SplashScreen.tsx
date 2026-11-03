@@ -11,7 +11,7 @@ const FADE_MS = 600
 const STRESS_EXERCISE = 'relax'
 
 /**
- * The start screen shown each time the app opens: the "atmen" logo breathing
+ * The start screen shown each time the app opens: the "FLUO" logo breathing
  * with a living background, and three ways in: normal training, a quick
  * wind-down when stressed, and acute help in a panic.
  */

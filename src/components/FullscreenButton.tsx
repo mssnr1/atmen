@@ -21,7 +21,7 @@ const isIos = () => /iPhone|iPod/.test(navigator.userAgent) || (navigator.platfo
 
 /**
  * Hides the browser's own bars. Where the browser can't do that (iPhone), it
- * explains how to open atmen from the Home Screen instead.
+ * explains how to open Fluo from the Home Screen instead.
  */
 export function FullscreenButton() {
   const { t } = useI18n()

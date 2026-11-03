@@ -69,7 +69,7 @@ const de: CalmText = {
     ],
     communityTitle: "Jemand atmet mit dir",
     communityText:
-      "Bald kannst du hier Menschen aus der atmen-Community erreichen, die gerade für andere da sind und dich durch den Moment begleiten.",
+      "Bald kannst du hier Menschen aus der Fluo-Community erreichen, die gerade für andere da sind und dich durch den Moment begleiten.",
     soon: "Kommt bald",
     helpTitle: "Brauchst du sofort ärztliche Hilfe?",
     helpText:
@@ -81,7 +81,7 @@ const de: CalmText = {
     talkCall: "0800 111 0 111",
     talkNumber: "08001110111",
     disclaimer:
-      "atmen kann dir helfen, ruhiger zu werden. Es ersetzt keine ärztliche oder psychotherapeutische Hilfe. Wenn Panikattacken öfter kommen, sprich mit deiner Ärztin oder deinem Arzt.",
+      "Fluo kann dir helfen, ruhiger zu werden. Es ersetzt keine ärztliche oder psychotherapeutische Hilfe. Wenn Panikattacken öfter kommen, sprich mit deiner Ärztin oder deinem Arzt.",
   },
 };
 
@@ -123,7 +123,7 @@ const en: CalmText = {
     ],
     communityTitle: "Someone breathes with you",
     communityText:
-      "Soon you’ll be able to reach people from the atmen community who are there for others right now and stay with you through the moment.",
+      "Soon you’ll be able to reach people from the Fluo community who are there for others right now and stay with you through the moment.",
     soon: "Coming soon",
     helpTitle: "Do you need medical help right now?",
     helpText:
@@ -135,7 +135,7 @@ const en: CalmText = {
     talkCall: "0800 111 0 111",
     talkNumber: "08001110111",
     disclaimer:
-      "atmen can help you calm down. It does not replace medical or psychological care. If panic attacks keep coming back, talk to your doctor.",
+      "Fluo can help you calm down. It does not replace medical or psychological care. If panic attacks keep coming back, talk to your doctor.",
   },
 };
 

@@ -121,7 +121,7 @@ export interface Messages {
 }
 
 const de: Messages = {
-  appName: 'atmen',
+  appName: 'Fluo',
   splashTagline: 'die vergessene Superpower',
   welcome: [
     {
@@ -196,8 +196,8 @@ const de: Messages = {
   exitFullscreen: 'Vollbild beenden',
   fullscreenIos: {
     title: 'Vollbild auf dem iPhone',
-    steps: ['Tippe in Safari unten auf das Teilen-Symbol.', 'Wähle „Zum Home-Bildschirm“.', 'Öffne atmen über das neue Symbol auf dem Home-Bildschirm.'],
-    note: 'Safari erlaubt auf dem iPhone kein Vollbild für Webseiten. Vom Home-Bildschirm aus startet atmen aber wie eine App, ganz ohne Adressleiste.',
+    steps: ['Tippe in Safari unten auf das Teilen-Symbol.', 'Wähle „Zum Home-Bildschirm“.', 'Öffne Fluo über das neue Symbol auf dem Home-Bildschirm.'],
+    note: 'Safari erlaubt auf dem iPhone kein Vollbild für Webseiten. Vom Home-Bildschirm aus startet Fluo aber wie eine App, ganz ohne Adressleiste.',
   },
   visualization: 'Darstellung',
   modes: {
@@ -260,14 +260,14 @@ const de: Messages = {
   themes: { light: 'Hell', dark: 'Dunkel', system: 'System' },
   defaultsHint: 'Tempo, Dauer und Fortschritt stellst du während der Übung ein.',
   sessionsCompleted: (n) => (n === 1 ? '1 Übung abgeschlossen' : `${n} Übungen abgeschlossen`),
-  about: 'Über atmen',
+  about: 'Über Fluo',
   credits: 'Quellen und Lizenzen',
   anatomyCredit:
     '3D-Anatomie abgeleitet von „Z-Anatomy – The libre 3D atlas of anatomy“ (CC BY-SA 4.0) und „BodyParts3D, The Database Center for Life Science“ (CC BY-SA 2.1 Japan). Das angepasste Modell steht unter CC BY-SA 4.0.',
 }
 
 const en: Messages = {
-  appName: 'atmen',
+  appName: 'Fluo',
   splashTagline: 'the forgotten superpower',
   welcome: [
     {
@@ -342,8 +342,8 @@ const en: Messages = {
   exitFullscreen: 'Exit full screen',
   fullscreenIos: {
     title: 'Full screen on iPhone',
-    steps: ['In Safari, tap the Share icon at the bottom.', 'Choose “Add to Home Screen”.', 'Open atmen from the new icon on your Home Screen.'],
-    note: 'Safari on iPhone does not allow web pages to go full screen. From the Home Screen, though, atmen opens like an app, without the address bar.',
+    steps: ['In Safari, tap the Share icon at the bottom.', 'Choose “Add to Home Screen”.', 'Open Fluo from the new icon on your Home Screen.'],
+    note: 'Safari on iPhone does not allow web pages to go full screen. From the Home Screen, though, Fluo opens like an app, without the address bar.',
   },
   visualization: 'View',
   modes: {
@@ -406,7 +406,7 @@ const en: Messages = {
   themes: { light: 'Light', dark: 'Dark', system: 'System' },
   defaultsHint: 'Pace, duration and progress are set during an exercise.',
   sessionsCompleted: (n) => (n === 1 ? '1 session completed' : `${n} sessions completed`),
-  about: 'About atmen',
+  about: 'About Fluo',
   credits: 'Sources and licences',
   anatomyCredit:
     '3D anatomy derived from “Z-Anatomy – The libre 3D atlas of anatomy” (CC BY-SA 4.0) and “BodyParts3D, The Database Center for Life Science” (CC BY-SA 2.1 Japan). The adapted model is licensed CC BY-SA 4.0.',
