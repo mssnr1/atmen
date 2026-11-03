@@ -369,8 +369,10 @@ def body_grow(yc):
     """Displacement of the chest wall at world point `w` for a full breath (see `body_inhale`)."""
 
     def d(w):
-        # The rib cage grows from the waist up, in one long soft ramp, and calms toward the neck.
-        trunk = smoothstep(0.98, 1.3, w.z) * (1 - smoothstep(1.48, 1.6, w.z))
+        # The rib cage grows from the waist up, in one long soft ramp, and calms toward the neck:
+        # the chest fills out, the neck only barely (it carries no lung).
+        rise = smoothstep(0.98, 1.3, w.z)
+        trunk = rise * (1 - smoothstep(1.38, 1.5, w.z))
         shoulder = smoothstep(1.36, 1.48, w.z)
         out = Vector((w.x, w.y - yc, 0))
         if out.length > 1e-6:
@@ -380,12 +382,13 @@ def body_grow(yc):
         # The lower ribs swing out to the sides most (the lungs widen there), so the flanks keep ahead of them.
         lower = 1 - smoothstep(1.2, 1.38, w.z)
         grow += Vector((0.006 * lower * out.x, 0, 0))
-        lift = Vector((0, 0, 0.002 + 0.004 * shoulder))
+        # The shoulders lift a little; the lift fades out up the neck, so the neck is hardly stretched.
+        lift = Vector((0, 0, 0.0015 + 0.003 * shoulder)) * rise * (1 - smoothstep(1.46, 1.56, w.z))
         # Belly breathing: below the ribs the front of the belly moves out with the chest, most in the middle.
         belly = smoothstep(0.98, 1.06, w.z) * (1 - smoothstep(1.16, 1.3, w.z))
         front_only = smoothstep(yc - 0.02, yc - 0.08, w.y)
         mid = 1 - min(1.0, abs(w.x) / 0.15) ** 2
-        return (grow + lift) * trunk + Vector((0, -0.0085 * belly * front_only * mid, 0))
+        return grow * trunk + lift + Vector((0, -0.0085 * belly * front_only * mid, 0))
 
     return d
 
