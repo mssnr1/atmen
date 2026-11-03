@@ -113,7 +113,7 @@ function WhitePage({ children, testId }: { children: React.ReactNode; testId: st
   return (
     <main className="safe-area mx-auto flex min-h-dvh max-w-md flex-col bg-paper px-6 md:max-w-3xl md:px-14 md:pb-10 lg:max-w-5xl" data-testid={testId}>
       <header className="pt-6">
-        <Wordmark size={13} className="text-muted" />
+        <Wordmark size={18} className="opacity-90" />
       </header>
       {children}
     </main>
@@ -135,7 +135,7 @@ function HowDoYouFeel({ value, onChange, onContinue, onBack }: { value?: Feeling
             <ArrowLeftIcon className="size-6" strokeWidth={1.7} />
           </IconButton>
         ) : (
-          <Wordmark size={13} className="text-muted" />
+          <Wordmark size={18} className="opacity-90" />
         )}
       </header>
       <h1 className="relative mt-[22vh] max-w-[11ch] text-[2.5rem] leading-[1.08] font-semibold tracking-[-0.02em] md:mt-[24vh] md:text-[3.75rem]">

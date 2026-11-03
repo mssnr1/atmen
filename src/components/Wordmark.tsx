@@ -1,13 +1,12 @@
-import { ParticleWord } from './ParticleWord'
-
 /**
- * The letter-spaced "a t m e n" logo: a clear core of specks with an airy halo
- * of looser specks drifting around it.
+ * The "atmen" logo in the style guide's look: a heavy, tightly set wordmark filled
+ * with the lavender to indigo gradient and a soft glow. `breathe` lets the letters
+ * open and close slowly with the resonance rhythm (start screen).
  */
-export function Wordmark({ size = 20, className = '' }: { size?: number; className?: string }) {
+export function Wordmark({ size = 26, className = '', breathe = false }: { size?: number; className?: string; breathe?: boolean }) {
   return (
-    <p className={`-mx-3 -my-3 ${className}`} data-testid="app-name" style={{ width: size * 9.2 + 24, height: size * 2.8 }}>
-      <ParticleWord text="atmen" fontSize={size * 1.5} spacing={0.5} align="left" halo={0.4} className="size-full" />
+    <p className={`logo-atmen ${breathe ? 'logo-breathe' : ''} ${className}`} data-testid="app-name" style={{ fontSize: size }} aria-label="atmen">
+      atmen
     </p>
   )
 }

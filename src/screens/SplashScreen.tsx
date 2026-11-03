@@ -1,17 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { BreathField, breathAt } from '../calm/BreathField'
+import { BreathField } from '../calm/BreathField'
 import { calmText } from '../calm/texts'
 import { LeafIcon, LifebuoyIcon, LungsIcon } from '../components/icons'
-import { ParticleWord } from '../components/ParticleWord'
+import { Wordmark } from '../components/Wordmark'
 import { useI18n } from '../i18n'
 import { navigate, startPractice } from '../lib/route'
 
 const FADE_MS = 600
-/** The breath of the start screen: 5.5 s in, 5.5 s out. */
-const BREATH_MS = 5500
-/** The logo's letter spacing (em) breathes with the background: close when out, wide when in. */
-const SPACING_OUT = 0.22
-const SPACING_IN = 0.55
 /** The exercise behind "I'm stressed": the long exhale. */
 const STRESS_EXERCISE = 'relax'
 
@@ -24,20 +19,6 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
   const { lang, t } = useI18n()
   const c = calmText[lang].start
   const [leaving, setLeaving] = useState(false)
-  const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const [spacing, setSpacing] = useState(reduced ? 0.4 : SPACING_OUT)
-
-  // The specks follow each new spacing smoothly, so a few updates a second are enough.
-  useEffect(() => {
-    if (reduced) return
-    const start = performance.now()
-    const id = setInterval(() => {
-      const b = breathAt(performance.now() - start, BREATH_MS, BREATH_MS)
-      setSpacing(Math.round((SPACING_OUT + (SPACING_IN - SPACING_OUT) * b) * 100) / 100)
-    }, 120)
-    return () => clearInterval(id)
-  }, [reduced])
-
   useEffect(() => {
     if (!leaving) return
     const done = setTimeout(onDone, FADE_MS)
@@ -59,8 +40,8 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
       <BreathField center={[0.5, 0.36]} />
       <div className="relative flex flex-1 items-center justify-center pb-[8vh]">
         <div className="flex flex-col items-center">
-          <ParticleWord text="atmen" spacing={spacing} fitSpacing={SPACING_IN} fontSize={56} className="h-20 w-[min(88vw,26rem)] text-breath md:h-24" />
-          <p className="splash-tagline -mt-1 text-[0.9375rem] font-medium tracking-[0.14em] text-breath/80 md:text-[1.0625rem]">{t.splashTagline}</p>
+          <Wordmark size={76} breathe className="md:text-[96px]" />
+          <p className="splash-tagline mt-3 text-[0.9375rem] font-medium tracking-[0.14em] text-breath/80 md:text-[1.0625rem]">{t.splashTagline}</p>
         </div>
       </div>
       <nav className="start-choices relative mx-auto mb-4 flex w-full max-w-sm flex-col gap-3 md:mb-10 md:max-w-md" data-testid="start-choices">
