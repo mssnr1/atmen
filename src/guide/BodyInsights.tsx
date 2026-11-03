@@ -1,5 +1,5 @@
 import type React from 'react'
-import { Squircle } from '../components/Squircle'
+import { useId } from 'react'
 import { useI18n } from '../i18n'
 import { bodyInsights, insightsShown, type BodyInsight } from './insights'
 
@@ -48,45 +48,109 @@ export function OutcomeIcon({ className = 'size-[0.7rem]' }: { className?: strin
   )
 }
 
-/** A small HUD label: icon plus uppercase word. */
-export function Label({ icon, children, className = 'text-[0.5625rem] md:text-[0.625rem] lg:text-[0.75rem]' }: { icon: React.ReactNode; children: string; className?: string }) {
+/** A small label: icon plus uppercase word. */
+export function Label({ icon, children, className = 'text-[0.6875rem]' }: { icon: React.ReactNode; children: string; className?: string }) {
   return (
-    <span className={`flex items-center gap-1 leading-none font-semibold tracking-[0.08em] text-ink-2 uppercase ${className}`}>
+    <span className={`flex items-center gap-1.5 leading-none font-semibold tracking-[0.06em] text-ink/80 uppercase ${className}`}>
       {icon}
       {children}
     </span>
   )
 }
 
-function Column({ items, labels, className }: { items: BodyInsight[]; labels: { place: string; impact: string }; className: string }) {
+type Size = 'phone' | 'tablet' | 'desktop'
+
+/** Type sizes and padding of the insight cards (style guide: semibold titles, a quieter line below). */
+const TEXT: Record<Size, { pad: string; label: string; icon: string; title: string; sub: string }> = {
+  phone: { pad: 'px-3.5 pt-3 pb-3.5', label: 'text-[0.6875rem]', icon: 'size-[0.75rem]', title: 'mt-2 text-[1.0625rem]', sub: 'mt-1 text-[0.8125rem]' },
+  tablet: { pad: 'px-3 pt-2.5 pb-3', label: 'text-[0.625rem]', icon: 'size-[0.6875rem]', title: 'mt-1.5 text-[0.9375rem]', sub: 'mt-0.5 text-[0.6875rem]' },
+  desktop: { pad: 'px-5 pt-4 pb-[1.125rem]', label: 'text-[0.75rem]', icon: 'size-[0.875rem]', title: 'mt-2.5 text-[1.25rem]', sub: 'mt-1 text-[0.875rem]' },
+}
+
+type Labels = { place: string; impact: string }
+
+function PlaceText({ it, labels, size }: { it: BodyInsight; labels: Labels; size: Size }) {
+  const t = TEXT[size]
   return (
-    <div className={`absolute flex w-[clamp(6.75rem,20%,15rem)] lg:w-[clamp(16rem,24%,24rem)] flex-col gap-2 ${className}`}>
+    <>
+      <Label icon={<TargetIcon className={t.icon} />} className={t.label}>
+        {labels.place}
+      </Label>
+      <p className={`${t.title} leading-tight font-semibold break-words text-ink [hyphens:auto]`}>{it.place}</p>
+      <p className={`${t.sub} leading-snug text-ink-2 [hyphens:auto]`}>{it.term}</p>
+    </>
+  )
+}
+
+function ImpactText({ it, labels, size }: { it: BodyInsight; labels: Labels; size: Size }) {
+  const t = TEXT[size]
+  return (
+    <>
+      <Label icon={<OutcomeIcon className={t.icon} />} className={t.label}>
+        {labels.impact}
+      </Label>
+      <p className={`${t.title} leading-tight font-semibold text-ink [hyphens:auto]`}>{it.impact}</p>
+      {it.value && <p className={`${t.sub} leading-snug text-ink-2 tabular-nums`}>{it.value}</p>}
+    </>
+  )
+}
+
+/** The guide's two tiles: location in violet glass, impact in glass from violet to mint; side by side or one above the other. */
+export function InsightTiles({ it, labels, size, dir = 'row', className = '' }: { it: BodyInsight; labels: Labels; size: Size; dir?: 'row' | 'col'; className?: string }) {
+  const t = TEXT[size]
+  return (
+    <div className={`grid gap-2 ${dir === 'row' ? 'grid-cols-2' : 'grid-cols-1'} ${className}`} data-testid={`insight-${it.id}`}>
+      <p className="sr-only">{it.title}</p>
+      <div className={`fluo-tile fluo-tile-place rounded-[16px] ${t.pad}`}>
+        <PlaceText it={it} labels={labels} size={size} />
+      </div>
+      <div className={`fluo-tile fluo-tile-impact rounded-[16px] ${t.pad}`}>
+        <ImpactText it={it} labels={labels} size={size} />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * The guide's joined card (the opened list): location on the left in violet glass, impact on the right in
+ * glass from violet to mint, the two meeting along a soft S-shaped edge.
+ */
+export function InsightJoined({ it, labels, size, className = '' }: { it: BodyInsight; labels: Labels; size: Size; className?: string }) {
+  const t = TEXT[size]
+  const id = useId()
+  return (
+    <div className={`fluo-insight grid grid-cols-2 overflow-hidden rounded-[16px] ${className}`} data-testid={`insight-${it.id}`}>
+      <p className="sr-only">{it.title}</p>
+      <div className={`relative z-[1] ${t.pad}`}>
+        <PlaceText it={it} labels={labels} size={size} />
+      </div>
+      <div className={`relative z-[1] ${t.pad}`}>
+        <svg className="pointer-events-none absolute inset-y-0 right-0 -left-5 -z-10 h-full w-[calc(100%+1.25rem)]" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+          <defs>
+            <linearGradient id={id} x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0" style={{ stopColor: 'var(--insight-impact-a)' }} />
+              <stop offset="0.45" style={{ stopColor: 'var(--insight-impact-b)' }} />
+              <stop offset="1" style={{ stopColor: 'var(--insight-impact-c)' }} />
+            </linearGradient>
+          </defs>
+          <path d="M18 0H100V100H0C5 100 9 95 9 85V18C9 7 12 0 18 0Z" fill={`url(#${id})`} />
+          <path d="M18 0C12 0 9 7 9 18V85C9 95 5 100 0 100" fill="none" stroke="var(--color-lavender)" strokeOpacity={0.55} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+        </svg>
+        <ImpactText it={it} labels={labels} size={size} />
+      </div>
+    </div>
+  )
+}
+
+function Column({ items, labels, className }: { items: BodyInsight[]; labels: Labels; className: string }) {
+  return (
+    <div className={`absolute flex w-[clamp(7.5rem,21%,15rem)] flex-col gap-2.5 lg:w-[clamp(21rem,28%,29rem)] lg:gap-3 ${className}`}>
       {items.map((it) => (
-        <Squircle
-          key={it.id}
-          radius={14}
-          smoothing={0.6}
-          role="listitem"
-          className="insight-in bg-insight shadow-[0_2px_12px_rgb(0_0_0/0.06)] ring-1 ring-line/50 backdrop-blur-[10px] backdrop-saturate-150"
-          data-testid={`insight-${it.id}`}
-        >
-          <p className="sr-only">{it.title}</p>
-          {/* Where it happens. */}
-          <div className="px-2.5 pt-2 pb-1.5 md:px-4 md:pt-3 md:pb-2.5 lg:px-5 lg:pt-4 lg:pb-3.5">
-            <div className="flex items-center justify-between gap-2">
-              <Label icon={<TargetIcon className="size-[0.7rem] lg:size-[0.85rem]" />}>{labels.place}</Label>
-              <span className="hud-dot" aria-hidden />
-            </div>
-            <p className="mt-1 text-[0.8125rem] leading-tight font-semibold break-words text-ink [hyphens:auto] md:mt-1.5 md:text-[1rem] lg:mt-2 lg:text-[1.375rem]">{it.place}</p>
-            <p className="mt-0.5 text-[0.625rem] leading-tight text-muted [hyphens:auto] md:text-[0.6875rem] lg:mt-1 lg:text-[0.875rem]">{it.term}</p>
-          </div>
-          {/* What it does. */}
-          <div className="fluo-impact px-2.5 pt-1.5 pb-1.5 md:px-4 md:pt-2 md:pb-3 lg:px-5 lg:pt-3 lg:pb-4">
-            <Label icon={<OutcomeIcon className="size-[0.7rem] lg:size-[0.85rem]" />}>{labels.impact}</Label>
-            <p className="mt-1 text-[0.75rem] leading-snug font-semibold text-ink md:text-[0.9375rem] lg:mt-1.5 lg:text-[1.1875rem]">{it.impact}</p>
-            {it.value && <p className="mt-0.5 hidden text-[0.6875rem] leading-tight text-ink-2 tabular-nums md:block lg:mt-1 lg:text-[0.875rem]">{it.value}</p>}
-          </div>
-        </Squircle>
+        <div key={it.id} role="listitem" className="insight-in">
+          {/* Wide screens: the guide's joined card; narrower ones: its two tiles, one above the other. */}
+          <InsightJoined it={it} labels={labels} size="desktop" className="hidden lg:grid" />
+          <InsightTiles it={it} labels={labels} size="tablet" dir="col" className="lg:hidden" />
+        </div>
       ))}
     </div>
   )

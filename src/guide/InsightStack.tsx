@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ChevronDownIcon } from '../components/icons'
-import { Squircle } from '../components/Squircle'
 import { useI18n } from '../i18n'
-import { Label, OutcomeIcon, TargetIcon } from './BodyInsights'
+import { InsightJoined, InsightTiles, OutcomeIcon, TargetIcon } from './BodyInsights'
 import { bodyInsights, insightsShown, type BodyInsight } from './insights'
 
 /** How many older cards peek out above the newest one. */
@@ -21,7 +20,6 @@ const ENTER_MS = 1400
 
 const reducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
-const cardClass = 'bg-insight shadow-[0_2px_14px_rgb(0_0_0/0.08)] backdrop-blur-[10px] backdrop-saturate-150'
 
 /**
  * The phone's alternative to the insight columns: the cards lie in a stack
@@ -168,7 +166,7 @@ export function InsightStack({
               className="relative origin-bottom will-change-transform"
               style={{ zIndex: newestFirst.length - i }}
             >
-              <Card it={it} labels={labels} small={false} />
+              <Card it={it} labels={labels} small={false} joined />
             </div>
           ))}
         </div>
@@ -213,13 +211,13 @@ export function InsightStack({
                 </div>
               ) : (
                 // The cards behind are bare shells: their text would show through the translucent front card.
-                <Squircle radius={small ? 12 : 14} smoothing={0.6} className={`${cardClass} h-full`} />
+                <div className={`fluo-insight h-full ${small ? 'rounded-[14px]' : 'rounded-[16px]'}`} />
               )}
             </div>
           )
         })}
         {shown.length > 1 && (
-          <span className="absolute -top-2.5 right-3 z-20 rounded-full bg-accent px-1.5 text-[0.625rem] leading-4 text-paper tabular-nums" aria-hidden>
+          <span className="bg-fluo absolute -top-3 right-2 z-20 flex size-6 items-center justify-center rounded-full text-[0.75rem] font-bold tabular-nums shadow-[0_0_12px_rgb(199_187_255/0.6)]" aria-hidden>
             {shown.length}
           </span>
         )}
@@ -228,43 +226,19 @@ export function InsightStack({
   )
 }
 
-/** A full-width card: where it happens on the left, what it does on the right; or one slim line. */
-function Card({ it, labels, small }: { it: BodyInsight; labels: { place: string; impact: string }; small: boolean }) {
+/** The guide's tiles side by side (closed stack), its joined card (opened list), or one slim line. */
+function Card({ it, labels, small, joined }: { it: BodyInsight; labels: { place: string; impact: string }; small: boolean; joined?: boolean }) {
   if (small) {
     return (
-      <Squircle radius={12} smoothing={0.6} className={`${cardClass} flex h-full items-center gap-2 px-3 py-2.5`} data-testid={`insight-${it.id}`}>
-        <span className="text-accent">
-          <TargetIcon className="size-[0.8125rem]" />
-        </span>
-        <span className="min-w-0 flex-1 truncate text-[0.9375rem] leading-tight text-ink">{it.place}</span>
-        <span className="hud-glow flex min-w-0 items-center gap-1 truncate text-[0.875rem] leading-tight text-accent">
+      <div className="fluo-insight flex h-full items-center gap-2 rounded-[14px] px-3 py-2.5" data-testid={`insight-${it.id}`}>
+        <TargetIcon className="size-[0.8125rem] text-ink/80" />
+        <span className="min-w-0 flex-1 truncate text-[0.9375rem] leading-tight font-semibold text-ink">{it.place}</span>
+        <span className="flex min-w-0 items-center gap-1 truncate text-[0.875rem] leading-tight font-semibold text-ink">
           <OutcomeIcon className="size-[0.8125rem]" />
           {it.impact}
         </span>
-        <span className="hud-dot ml-1" aria-hidden />
-      </Squircle>
+      </div>
     )
   }
-  return (
-    <div className="grid h-full grid-cols-2 gap-1.5" data-testid={`insight-${it.id}`}>
-      <p className="sr-only">{it.title}</p>
-      <div className={`${cardClass} rounded-[14px] px-3.5 pt-3 pb-3 ring-1 ring-line/70`}>
-        <Label icon={<TargetIcon className="size-[0.8125rem]" />} className="text-[0.6875rem]">
-          {labels.place}
-        </Label>
-        <p className="mt-1.5 text-[1.0625rem] leading-tight font-semibold break-words text-ink [hyphens:auto]">{it.place}</p>
-        <p className="mt-1 text-[0.8125rem] leading-snug text-muted [hyphens:auto]">{it.term}</p>
-      </div>
-      <div className="fluo-impact relative rounded-[14px] px-3.5 pt-3 pb-3 backdrop-blur-[10px]">
-        <span className="absolute top-3 right-3 flex" aria-hidden>
-          <span className="hud-dot" />
-        </span>
-        <Label icon={<OutcomeIcon className="size-[0.8125rem]" />} className="text-[0.6875rem]">
-          {labels.impact}
-        </Label>
-        <p className="mt-1.5 text-[1.0625rem] leading-snug font-semibold text-ink">{it.impact}</p>
-        {it.value && <p className="mt-1 text-[0.8125rem] leading-snug text-ink-2 tabular-nums">{it.value}</p>}
-      </div>
-    </div>
-  )
+  return joined ? <InsightJoined it={it} labels={labels} size="phone" /> : <InsightTiles it={it} labels={labels} size="phone" className="h-full" />
 }
