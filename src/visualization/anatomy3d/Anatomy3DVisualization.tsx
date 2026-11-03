@@ -15,13 +15,13 @@ const TARGET = new THREE.Vector3(0, 1.37, 0.0)
 /** Default view: straight from the front, slightly from above. A start only zooms in, it never turns. */
 const ELEVATION = THREE.MathUtils.degToRad(6)
 const FOV = 28
-/** Half the width that must be visible, shoulder to shoulder. */
-const HALF_W = 0.15
+/** Half the width that must be visible: the whole figure, arms included. */
+const HALF_W = 0.32
 /** Head to the middle of the lungs fill the part of the view above the controls; the lower lungs continue behind them. */
 const TOP = 1.74
 const BOTTOM = 1.2
 /** Panning keeps the target inside this box so the model cannot be lost. */
-const PAN_LIMIT = new THREE.Box3(new THREE.Vector3(-0.2, 1.05, -0.15), new THREE.Vector3(0.2, 1.7, 0.2))
+const PAN_LIMIT = new THREE.Box3(new THREE.Vector3(-0.2, 0.6, -0.15), new THREE.Vector3(0.2, 1.7, 0.2))
 
 /**
  * Default camera for a viewport of this aspect ratio, where only the top

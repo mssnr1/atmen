@@ -17,7 +17,9 @@ Output in <out_dir>:
     atmen-anatomy.glb     mesh hierarchy, materials and morph targets for three.js
 
 Objects (all children of the empty `Anatomy`):
-    Body_Shell, Head, Abdomen        skin, split so the belly can move on its own
+    Body_Shell, Head                 skin of trunk and head (the belly is part of the trunk, so its lines run on)
+    Arms                             arms and hands, hanging relaxed beside the body
+    Legs                             skin below the navel: hips, legs and feet
     Nasal_Cavity                     nasal mucosa and pharynx (upper airway)
     Trachea, Bronchi                 trachea mesh and main/lobar bronchi
     Lung_Left, Lung_Right            lobes joined per side
@@ -27,8 +29,8 @@ Objects (all children of the empty `Anatomy`):
 Morph targets (shape keys), all 0 = resting/exhaled:
     Lung_*.Inhale        3D expansion, mostly lower and lateral
     Diaphragm.Inhale     dome flattens and descends
-    Abdomen.Inhale       belly wall moves out, edges stay put
-    Body_Shell.Inhale    whole upper body fills out, shoulders lift, seamless with the belly
+    Body_Shell.Inhale    chest and belly fill out together, shoulders lift
+    Arms.Inhale          arms move out and up with the side of the chest and the shoulders
     Heart.Beat           ventricles contract, atria fill
 """
 
@@ -53,12 +55,14 @@ LUNG_LEFT = ["Superior lobe of left lung", "Inferior lobe of left lung"]
 LUNG_RIGHT = ["Superior lobe of right lung", "Middle lobe of right lung", "Inferior lobe of right lung"]
 HEART = ["Left ventricle", "Right ventricle", "Left atrium", "Right atrium"]
 NASAL = ["Mucosa of nasal cavity", "Nasopharynx", "Oropharynx", "Laryngopharynx"]
-# Skin regions of the front belly wall: they form the Abdomen object.
-ABDOMEN = ["Epigastric region", "Umbilical region", "Hypochondriac region", "Lateral region of abdomen", "Inframammary region"]
-# Skin regions never wanted: limbs below the shoulder, hair, lashes.
-SKIP_SKIN = ["arm", "elbow", "forearm", "Cubital", "bicipital", "Hairs", "Eyelashes", "Eyebrow", "wrist", "hand"]
+# Skin regions never wanted: hair, lashes, and the genital and anal regions (the figure stays neutral;
+# the gap they leave between the legs is capped in `cap_crotch`).
+SKIP_SKIN = ["Hairs", "Eyelashes", "Eyebrow", "Urogenital region", "Anal region"]
+# Shoulder caps and shoulder blades stay with the trunk; the rest of the upper limb forms the Arms object.
+ARM_COLLECTIONS = ("Left upper limb", "Right upper limb")
+TRUNK_OF_LIMB = ["Deltoid region", "Scapular region"]
 
-LOW_CUT = 0.975  # metres: the skin ends just below the navel
+LOW_CUT = 0.975  # metres: the trunk's skin ends just below the navel, the Legs object takes over there
 
 
 def in_collection(o, name):
@@ -66,22 +70,26 @@ def in_collection(o, name):
 
 
 def skin_regions():
-    picked = {"Head": [], "Abdomen": [], "Body_Shell": []}
+    picked = {"Head": [], "Body_Shell": [], "Arms": [], "Legs": []}
     for o in src:
         if o.type != "MESH" or len(o.data.vertices) <= 10 or not in_collection(o, "9: Regions of human body"):
             continue
         if any(s.lower() in o.name.lower() for s in SKIP_SKIN):
             continue
+        base = o.name.rsplit(".", 1)[0]
+        if any(in_collection(o, c) for c in ARM_COLLECTIONS) and base not in TRUNK_OF_LIMB:
+            picked["Arms"].append(o)
+            continue
+        if in_collection(o, "Head"):
+            picked["Head"].append(o)
+            continue
         zs = [(o.matrix_world @ Vector(c)).z for c in o.bound_box]
+        # Regions across the cut go to both sides of it; each object keeps only its own half.
+        if min(zs) < LOW_CUT - 0.002:
+            picked["Legs"].append(o)
         if max(zs) < LOW_CUT + 0.02:
             continue
-        base = o.name.rsplit(".", 1)[0]
-        if base in ABDOMEN:
-            picked["Abdomen"].append(o)
-        elif in_collection(o, "Head"):
-            picked["Head"].append(o)
-        else:
-            picked["Body_Shell"].append(o)
+        picked["Body_Shell"].append(o)
     return picked
 
 
@@ -159,6 +167,91 @@ def cut_below(obj, z):
     bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, z), plane_no=(0, 0, 1), clear_inner=True)
     bm.to_mesh(obj.data)
     bm.free()
+
+
+def cut_above(obj, z):
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, z), plane_no=(0, 0, -1), clear_inner=True)
+    bm.to_mesh(obj.data)
+    bm.free()
+
+
+def boundary_loops(bm):
+    """Open edge loops of the mesh, as lists of edges."""
+    todo = {e for e in bm.edges if e.is_boundary}
+    loops = []
+    while todo:
+        e = todo.pop()
+        loop, stack = [e], [e]
+        while stack:
+            for v in stack.pop().verts:
+                for n in v.link_edges:
+                    if n in todo:
+                        todo.remove(n)
+                        loop.append(n)
+                        stack.append(n)
+        loops.append(loop)
+    return loops
+
+
+def cap_crotch(obj):
+    """Closes the gap left between the legs by the skipped genital and anal regions."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    for loop in boundary_loops(bm):
+        vs = {v for e in loop for v in e.verts}
+        c = sum((v.co for v in vs), Vector()) / len(vs)
+        if abs(c.x) < 0.04 and c.z < 0.9 and len(vs) > 6:
+            bmesh.ops.holes_fill(bm, edges=loop, sides=0)
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
+    bm.to_mesh(obj.data)
+    bm.free()
+
+
+# The arms hang relaxed: from the template's anatomical pose (palms forward) the forearms turn
+# the palms in, and the arms swing a little further out, so there is air between arms and trunk.
+SHOULDER = Vector((0.185, 0.0, 1.375))  # pivot of the left shoulder joint (x mirrored for the right)
+ARM_SWING = math.radians(-4)
+ELBOW_Z, WRIST_Z = 1.1, 0.85
+PALM_TURN = math.radians(70)
+
+
+def relax_arms(obj):
+    me = obj.data
+    # Centre of each arm per 1 cm slice: the forearm turns about its own long axis.
+    slices = {}
+    for v in me.vertices:
+        k = (v.co.x >= 0, round(v.co.z * 100))
+        acc = slices.setdefault(k, [Vector(), 0])
+        acc[0] += v.co
+        acc[1] += 1
+
+    def centre(side, z):
+        for dz in range(0, 6):
+            for k in ((side, round(z * 100) + dz), (side, round(z * 100) - dz)):
+                if k in slices:
+                    return slices[k][0] / slices[k][1]
+        return Vector()
+
+    wrist = {True: centre(True, WRIST_Z), False: centre(False, WRIST_Z)}
+    for v in me.vertices:
+        p = v.co.copy()
+        left = p.x >= 0
+        side = 1.0 if left else -1.0
+        # Forearm and hand: turn about the forearm's long axis, nothing at the elbow, fully from the wrist down.
+        t = smoothstep(ELBOW_Z, WRIST_Z, p.z)
+        if t > 0:
+            c = centre(left, p.z) if p.z > WRIST_Z else wrist[left]
+            rel = Vector((p.x - c.x, p.y - c.y, 0))
+            rel.rotate(Matrix.Rotation(t * PALM_TURN * -side, 3, "Z"))
+            p.x, p.y = c.x + rel.x, c.y + rel.y
+        # Whole arm: swing out about the shoulder, fading out toward the shoulder cap so the seam stays put.
+        w = smoothstep(1.31, 1.18, p.z)
+        pivot = Vector((side * SHOULDER.x, SHOULDER.y, SHOULDER.z))
+        p = pivot + Matrix.Rotation(side * ARM_SWING * w, 3, "Y") @ (p - pivot)
+        v.co = p
+    me.update()
 
 
 def set_origin_to_center(obj):
@@ -272,42 +365,110 @@ def boundary_falloff(obj, width):
     return out
 
 
-def abdomen_inhale(obj):
-    lo, hi = bounds(obj)
-    fall = boundary_falloff(obj, 0.04)
-    cx = (lo.x + hi.x) / 2
+def body_grow(yc):
+    """Displacement of the chest wall at world point `w` for a full breath (see `body_inhale`)."""
 
-    def d(co, i):
-        front = smoothstep(hi.y, lo.y, co.y)  # front of the belly moves most
-        mid = 1 - min(1, abs(co.x - cx) / ((hi.x - lo.x) / 2)) ** 2
-        return Vector((0, -0.012 * fall[i] * front * mid, 0))
-
-    add_key(obj, "Inhale", d)
-
-
-def body_inhale(obj):
-    """The whole upper body fills out: the rib cage widens all round, most at
-    the front, and the shoulders lift and spread a little with it."""
-    fall = boundary_falloff(obj, 0.04)
-    # Mesh coordinates are local to the object; heights below are world heights.
-    m = obj.matrix_world
-    world = [m @ v.co for v in obj.data.vertices]
-    band_ys = [w.y for w in world if 1.15 < w.z < 1.4]
-    yc = (min(band_ys) + max(band_ys)) / 2
-
-    def d(_, i):
-        w = world[i]
-        trunk = smoothstep(1.02, 1.16, w.z) * (1 - smoothstep(1.5, 1.58, w.z))
+    def d(w):
+        # The rib cage grows from the waist up, in one long soft ramp, and calms toward the neck.
+        trunk = smoothstep(0.98, 1.3, w.z) * (1 - smoothstep(1.48, 1.6, w.z))
         shoulder = smoothstep(1.36, 1.48, w.z)
         out = Vector((w.x, w.y - yc, 0))
         if out.length > 1e-6:
             out.normalize()
-        front = 0.6 + 0.6 * smoothstep(yc + 0.03, yc - 0.06, w.y)  # front of the chest is -Y
-        f = trunk * fall[i]
-        grow = out * (0.008 * front * (1 - 0.4 * shoulder))
-        return (grow + Vector((0, 0, 0.002 + 0.004 * shoulder))) * f
+        front = 0.7 + 0.5 * smoothstep(yc + 0.03, yc - 0.06, w.y)  # front of the chest is -Y
+        grow = out * (0.009 * front * (1 - 0.4 * shoulder))
+        # The lower ribs swing out to the sides most (the lungs widen there), so the flanks keep ahead of them.
+        lower = 1 - smoothstep(1.2, 1.38, w.z)
+        grow += Vector((0.006 * lower * out.x, 0, 0))
+        lift = Vector((0, 0, 0.002 + 0.004 * shoulder))
+        # Belly breathing: below the ribs the front of the belly moves out with the chest, most in the middle.
+        belly = smoothstep(0.98, 1.06, w.z) * (1 - smoothstep(1.16, 1.3, w.z))
+        front_only = smoothstep(yc - 0.02, yc - 0.08, w.y)
+        mid = 1 - min(1.0, abs(w.x) / 0.15) ** 2
+        return (grow + lift) * trunk + Vector((0, -0.0085 * belly * front_only * mid, 0))
+
+    return d
+
+
+def chest_centre(body):
+    m = body.matrix_world
+    band_ys = [(m @ v.co).y for v in body.data.vertices if 1.15 < (m @ v.co).z < 1.4]
+    return (min(band_ys) + max(band_ys)) / 2
+
+
+ARMPIT_Z = 1.3  # below this the arms follow the side of the chest at this height (see `arms_inhale`)
+
+
+def body_inhale(obj, joined, arms):
+    """The whole upper body fills out: the rib cage widens all round, most at
+    the front, and the shoulders lift and spread a little with it. Only the open
+    edges at the neck and below the navel stay put; where the arms
+    join, they move along (see `arms_inhale`), so the outline
+    stays smooth there."""
+    m = obj.matrix_world
+    world = [m @ v.co for v in obj.data.vertices]
+    seam = {}
+    for o in joined:
+        for v in o.data.vertices:
+            p = o.matrix_world @ v.co
+            seam.setdefault((round(p.x * 50), round(p.y * 50), round(p.z * 50)), []).append(p)
+
+    def near_joined(w):
+        kx, ky, kz = round(w.x * 50), round(w.y * 50), round(w.z * 50)
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                for dz in (-1, 0, 1):
+                    for p in seam.get((kx + dx, ky + dy, kz + dz), ()):
+                        if (p - w).length < 0.012:
+                            return True
+        return False
+
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    edge = [world[v.index] for v in bm.verts if any(e.is_boundary for e in v.link_edges) and not near_joined(world[v.index])]
+    bm.free()
+    fall = [smoothstep(0, 0.04, min(((w - e).length for e in edge), default=0.04)) for w in world]
+    grow = body_grow(chest_centre(obj))
+    inv = m.to_3x3().inverted()
+    # Round the armpit the chest wall takes on the arms' motion, so the two meet without a step.
+    arm_cells = {}
+    for v in arms.data.vertices:
+        p = arms.matrix_world @ v.co
+        arm_cells.setdefault((round(p.x * 25), round(p.y * 25), round(p.z * 25)), []).append(p)
+
+    def arm_dist(w):
+        kx, ky, kz = round(w.x * 25), round(w.y * 25), round(w.z * 25)
+        best = 1.0
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                for dz in (-1, 0, 1):
+                    for p in arm_cells.get((kx + dx, ky + dy, kz + dz), ()):
+                        best = min(best, (p - w).length)
+        return best
+
+    def d(_, i):
+        w = world[i]
+        a = 1 - smoothstep(0.012, 0.04, arm_dist(w))
+        g = grow(w).lerp(grow(Vector((w.x, w.y, max(w.z, ARMPIT_Z)))), a)
+        return inv @ (g * fall[i])
 
     add_key(obj, "Inhale", d)
+
+
+def arms_inhale(arms, body):
+    """The arms ride along with the chest wall where they join it: each moves as one
+    piece, out and up as the side of the rib cage and the shoulder do, so there is no
+    kink at the armpit."""
+    grow = body_grow(chest_centre(body))
+    m = arms.matrix_world
+    inv = m.to_3x3().inverted()
+
+    def d(co, _):
+        w = m @ co
+        # Below the armpit the whole arm follows the side of the chest at armpit height.
+        return inv @ grow(Vector((w.x, w.y, max(w.z, ARMPIT_Z))))
+
+    add_key(arms, "Inhale", d)
 
 
 def heart_beat(obj):
@@ -331,9 +492,16 @@ for name, objs in regions.items():
     print(name, len(objs), "skin regions")
     o = bake(objs, name)
     clean(o, merge=0.0012, subdivide=1)
-    if name != "Head":
+    if name == "Body_Shell":
         cut_below(o, LOW_CUT)
-    clean(o, target_faces={"Body_Shell": 9000, "Head": 7000, "Abdomen": 2500}[name])
+    if name == "Legs":
+        cut_above(o, LOW_CUT)
+        cap_crotch(o)
+    if name == "Arms":
+        relax_arms(o)
+    clean(o, target_faces={"Body_Shell": 11000, "Head": 7000, "Arms": 6000, "Legs": 7000}[name])
+    for a in list(o.data.color_attributes):  # the limbs carry the template's vertex colours; not used
+        o.data.color_attributes.remove(a)
     assign(o, "Skin")
     parts[name] = o
 
@@ -531,8 +699,8 @@ with open(os.path.join(OUT, "airway-paths.json"), "w") as f:
 for n in ("Lung_Left", "Lung_Right"):
     lung_inhale(parts[n])
 diaphragm_inhale(parts["Diaphragm"])
-abdomen_inhale(parts["Abdomen"])
-body_inhale(parts["Body_Shell"])
+body_inhale(parts["Body_Shell"], [parts["Arms"]], parts["Arms"])
+arms_inhale(parts["Arms"], parts["Body_Shell"])
 heart_beat(parts["Heart"])
 
 # Drop all template data no longer used, so the saved .blend holds only our scene.

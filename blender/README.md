@@ -19,8 +19,8 @@ Blender, by script, so it can be rebuilt and changed.
 - Its models derive from **BodyParts3D, © The Database Center for Life Science**, CC BY-SA 2.1 Japan,
   <https://dbarchive.biosciencedbc.jp/en/bodyparts3d/>.
 
-Only BodyParts3D/Z-Anatomy geometry is used: skin regions of head, neck and
-trunk, nasal mucosa and pharynx, trachea, the five lung lobes, the four heart
+Only BodyParts3D/Z-Anatomy geometry is used: skin regions of the whole body
+(the genital and anal regions left out, the arms posed hanging relaxed), nasal mucosa and pharynx, trachea, the five lung lobes, the four heart
 chambers and the diaphragm. The bronchi are tubes along the template's
 bronchus centre lines. Parts of the template under other licences (the
 NC-licensed inner ear and kidney, the University of Washington brain models),
@@ -47,15 +47,15 @@ metres (Blender Z up; the glTF is Y up).
 | --- | --- | --- |
 | `Lung_Left`, `Lung_Right` | `Inhale`: expand in 3D, mostly lower and lateral | lung volume 0–1 |
 | `Diaphragm` | `Inhale`: dome flattens and moves down | lung volume |
-| `Abdomen` | `Inhale`: belly wall moves out, edges fixed | lung volume |
-| `Body_Shell` | `Inhale`: chest fills out all round (most at the front), shoulders lift and spread | lung volume |
+| `Body_Shell` | `Inhale`: chest fills out all round (most at the front, lower ribs most to the sides), belly moves out with it, shoulders lift | lung volume |
+| `Arms` | `Inhale`: move out and up with the side of the chest and the shoulders | lung volume |
 | `Heart` | `Beat`: ventricles contract, atria fill | its own illustrative rhythm (not the user's pulse) |
-| `Head`, `Nasal_Cavity`, `Trachea`, `Bronchi` | – | – |
+| `Head`, `Legs`, `Nasal_Cavity`, `Trachea`, `Bronchi` | – | – |
 
 In three.js the keys are `mesh.morphTargetDictionary.Inhale` / `.Beat`; the app
 sets `morphTargetInfluences` every frame from the breathing engine.
 
-Budget: about 80k triangles in total, 2 MB uncompressed, under 0.5 MB with meshopt.
+Budget: about 105k triangles in total, under 3 MB uncompressed, about 0.65 MB with meshopt.
 
 ## Rebuild
 

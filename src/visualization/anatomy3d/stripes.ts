@@ -21,8 +21,10 @@ export type StripeOptions = {
   /** Colour and strength of the silhouette glow. */
   rim: string
   rimAlpha: number
-  /** Fade the arms and the lower body out so the trunk carries the picture. */
+  /** Lines stronger toward the silhouette, quieter across the middle of the body, so the outline carries the picture. */
   focusTrunk?: boolean
+  /** 'around' lines run round each limb's own long axis (the geometry's `axis` attribute, see `addLimbAxis`) instead of the trunk's. */
+  limb?: boolean
   /** Shared world height up to which the lines are lit (the breath filling up); lines above stay at `dimAlpha`. */
   level?: { value: number }
   dimAlpha?: number
@@ -65,11 +67,12 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
       ...(o.edges ? { uEdgeMap: o.edges.map, uEdgeSize: o.edges.size, uEdgeR: o.edges.radius } : {}),
     })
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vRest;\nvarying vec3 vN;\nvarying vec3 vView;')
+      .replace('#include <common>', `#include <common>\nvarying vec3 vRest;\nvarying vec3 vN;\nvarying vec3 vView;${o.limb ? '\nattribute vec2 axis;\nvarying vec2 vAxis;' : ''}`)
       .replace(
         '#include <project_vertex>',
         `#include <project_vertex>
         vRest = (modelMatrix * vec4(position, 1.0)).xyz;
+        ${o.limb ? 'vAxis = (modelMatrix * vec4(axis.x, position.y, axis.y, 1.0)).xz;' : ''}
         // The normal follows the morph targets too (e.g. the calm face), so the rim and line strength follow the shape.
         vec3 shapedNormal = normal;
         #ifdef USE_MORPHNORMALS
@@ -85,7 +88,7 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
       .replace(
         '#include <common>',
         `#include <common>
-        varying vec3 vRest; varying vec3 vN; varying vec3 vView;
+        varying vec3 vRest; varying vec3 vN; varying vec3 vView;${o.limb ? ' varying vec2 vAxis;' : ''}
         uniform vec3 uLine; uniform vec3 uFill; uniform vec3 uRim;
         uniform float uDensity; uniform float uWidth; uniform float uLineA; uniform float uFillA; uniform float uRimA; uniform float uLevel; uniform float uDim; uniform float uShow;
         ${o.edges ? EDGE_GLSL : ''}`,
@@ -93,7 +96,7 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
       .replace(
         '#include <dithering_fragment>',
         `#include <dithering_fragment>
-        ${o.pattern === 'level' ? 'float v = vRest.y * uDensity;' : 'float v = atan(vRest.x, vRest.z + 0.03) / 6.2831853 * uDensity;'}
+        ${o.pattern === 'level' ? 'float v = vRest.y * uDensity;' : o.limb ? 'float v = atan(vRest.x - vAxis.x, vRest.z - vAxis.y) / 6.2831853 * uDensity;' : 'float v = atan(vRest.x, vRest.z + 0.03) / 6.2831853 * uDensity;'}
         float d = abs(fract(v) - 0.5);
         float w = fwidth(v) * 0.9;
         float line = smoothstep(0.5 - uWidth - w, 0.5 - uWidth + w, d);
@@ -103,7 +106,7 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
         ${o.neck ? `float neck = ${neckGlsl(o.neck === 'only' ? 0.07 : 0.1)};` : ''}
         // Both walls stay above half strength across the border, so it reads as one surface, not a pale band.
         ${o.neck === 'only' ? 'focus = 1.0 - (1.0 - neck) * (1.0 - neck); if (neck < 0.1) discard;' : o.neck === 'without' ? 'focus = 1.0 - neck * neck;' : ''}
-        ${o.focusTrunk ? 'focus *= (1.0 - smoothstep(0.13, 0.2, abs(vRest.x))) * smoothstep(0.98, 1.12, vRest.y); line *= mix(0.3, 1.0, smoothstep(0.05, 0.5, fr));' : ''}
+        ${o.focusTrunk ? 'line *= mix(0.3, 1.0, smoothstep(0.05, 0.5, fr));' : ''}
         vec3 col = mix(uFill, uLine, line);
         col = mix(col, uRim, fr * 0.8);
         float lit = 1.0 - smoothstep(uLevel - 0.012, uLevel + 0.012, vRest.y);
@@ -169,11 +172,12 @@ export function edgeDepthMaterial(id: number): THREE.Material {
   return m
 }
 
-export type StripePalette = { line: string; lung: string; lungRim: string; body: string }
+/** `bodyRim`: the soft glow along the figure's outline (the skin's shading), lighter than its lines at night, darker by day. */
+export type StripePalette = { line: string; lung: string; lungRim: string; body: string; bodyRim: string }
 
 export const STRIPE_PALETTES: Record<'light' | 'dark', StripePalette> = {
-  light: { body: '#7d8798', line: '#2f6bf5', lung: '#2f6bf5', lungRim: '#6f9bff' },
-  dark: { body: '#8f877f', line: '#b89aff', lung: '#b89aff', lungRim: '#dccbff' },
+  light: { body: '#7d8798', bodyRim: '#5f6b80', line: '#2f6bf5', lung: '#2f6bf5', lungRim: '#6f9bff' },
+  dark: { body: '#8f877f', bodyRim: '#c8c0e6', line: '#b89aff', lung: '#b89aff', lungRim: '#dccbff' },
 }
 
 /**
@@ -193,10 +197,12 @@ export type Fade = { inner: { value: number }; skin: { value: number } }
 
 export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { value: number }, edges?: EdgeMap, fade?: Fade) {
   const inner = fade?.inner
-  const skinLines: StripeOptions = { show: fade?.skin, pattern: 'around', density: 120, width: 0.06, line: p.body, fill: p.body, lineAlpha: dark ? 0.6 : 0.55, fillAlpha: 0.0, rim: p.body, rimAlpha: dark ? 0.3 : 0.26, focusTrunk: true }
+  const skinLines: StripeOptions = { show: fade?.skin, pattern: 'around', density: 120, width: 0.06, line: p.body, fill: p.body, lineAlpha: dark ? 0.6 : 0.55, fillAlpha: 0.0, rim: p.bodyRim, rimAlpha: dark ? 0.62 : 0.5, rimPower: 1.7, focusTrunk: true }
   return {
     // Up to the neck the trunk's skin shows its far wall (the lungs, writing depth, hide it where they lie in front).
     skin: stripeMaterial({ ...skinLines, neck: 'without' }),
+    // Arms and legs: the same lines, running round each limb (a limb is about a third of the trunk's girth).
+    limbs: stripeMaterial({ ...skinLines, limb: true, density: 44, side: 'back' }),
     // The neck shows its near wall instead, like the head above it, so the lines run on from the neck over the
     // skull without a step, also round the back where the trunk's far wall would show the throat from inside.
     // (The trunk's skin is wound inside out, so its near wall is the back side.)
