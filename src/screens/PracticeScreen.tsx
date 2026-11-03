@@ -120,7 +120,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   }
 
   if (completed && summary && showFlow) {
-    return <CompletionFlow exercise={exercise} summary={summary} sessionId={session.sessionId} scale={scale} initialStep="feel" />
+    return <CompletionFlow exercise={exercise} summary={summary} sessionId={session.sessionId} scale={scale} initialStep="feel" onBack={() => setShowFlow(false)} />
   }
 
   const active = s.status === 'running' || s.status === 'paused'

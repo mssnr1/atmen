@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { BluePage } from '../components/BluePage'
-import { Button } from '../components/Button'
-import { ArrowRightIcon, ChevronRightIcon, ClockIcon, FaceIcon, LungsIcon, ThumbDownIcon, ThumbUpIcon, WaveIcon } from '../components/icons'
+import { Button, IconButton } from '../components/Button'
+import { ArrowLeftIcon, ArrowRightIcon, ChevronRightIcon, ClockIcon, FaceIcon, LungsIcon, ThumbDownIcon, ThumbUpIcon, WaveIcon } from '../components/icons'
 import { Waveform } from '../components/Waveform'
 import { Wordmark } from '../components/Wordmark'
 import type { SessionSummary } from '../engine'
@@ -21,6 +21,8 @@ interface Props {
   scale: number
   /** Where to begin: the practice screen can show its own "well done" over the figure first. */
   initialStep?: Step
+  /** Back from the first page of the flow, e.g. to the figure that is still breathing. */
+  onBack?: () => void
 }
 
 type Step = 'done' | 'feel' | 'summary' | 'next'
@@ -30,13 +32,14 @@ type Step = 'done' | 'feel' | 'summary' | 'next'
  * summary of what actually happened, and a suggestion for what to do next.
  * Everything shown is either from the session itself or what the user said.
  */
-export function CompletionFlow({ exercise, summary, sessionId, scale, initialStep = 'done' }: Props) {
+export function CompletionFlow({ exercise, summary, sessionId, scale, initialStep = 'done', onBack }: Props) {
   const [step, setStep] = useState<Step>(initialStep)
   const feedback = useStore((d) => d.sessions.find((s) => s.id === sessionId)?.feedback)
   const save = (patch: Parameters<typeof store.setFeedback>[1]) => sessionId && store.setFeedback(sessionId, patch)
 
   if (step === 'done') return <WellDone exercise={exercise} summary={summary} rating={feedback?.rating} onRate={(rating) => save({ rating })} onNext={() => setStep('feel')} />
-  if (step === 'feel') return <HowDoYouFeel value={feedback?.feeling} onChange={(feeling) => save({ feeling })} onContinue={() => setStep('summary')} />
+  if (step === 'feel')
+    return <HowDoYouFeel value={feedback?.feeling} onChange={(feeling) => save({ feeling })} onContinue={() => setStep('summary')} onBack={onBack ?? (initialStep === 'feel' ? undefined : () => setStep('done'))} />
   if (step === 'summary')
     return <Summary exercise={exercise} summary={summary} scale={scale} feeling={feedback?.feeling} onDone={() => setStep('next')} />
   return <NextExercise current={exercise} />
@@ -66,7 +69,7 @@ function WellDone({
         aria-pressed={on}
         data-testid={`rate-${r}`}
         onClick={() => onRate(r)}
-        className={`flex size-[3.75rem] items-center md:size-[4.5rem] justify-center rounded-full border-[1.5px] transition ${on ? 'border-white bg-white text-blue' : 'border-white/70 text-white hover:bg-white/10'}`}
+        className={`flex size-14 items-center md:size-[4.5rem] justify-center rounded-full border-[1.5px] transition ${on ? 'border-white bg-white text-blue' : 'border-white/70 text-white hover:bg-white/10'}`}
       >
         {r === 'up' ? <ThumbUpIcon className="size-6" strokeWidth={1.6} /> : <ThumbDownIcon className="size-6" strokeWidth={1.6} />}
       </button>
@@ -117,13 +120,28 @@ function WhitePage({ children, testId }: { children: React.ReactNode; testId: st
   )
 }
 
-function HowDoYouFeel({ value, onChange, onContinue }: { value?: Feeling; onChange: (f: Feeling) => void; onContinue: () => void }) {
+function HowDoYouFeel({ value, onChange, onContinue, onBack }: { value?: Feeling; onChange: (f: Feeling) => void; onContinue: () => void; onBack?: () => void }) {
   const { t } = useI18n()
   const levels: Feeling[] = [1, 2, 3, 4, 5]
   return (
-    <WhitePage testId="feeling">
-      <h1 className="mt-6 text-[2rem] leading-tight font-normal md:mt-16 md:text-[3rem]">{t.feelTitle}</h1>
-      <div role="radiogroup" aria-label={t.feelTitle} className="mt-10 grid grid-cols-5 gap-1 md:mt-14 md:gap-4">
+    <main
+      className="safe-area relative mx-auto flex min-h-dvh max-w-md flex-col overflow-hidden bg-paper px-6 md:max-w-3xl md:px-14 md:pb-10 lg:max-w-5xl"
+      data-testid="feeling"
+    >
+      <FeelRibbon />
+      <header className="relative flex h-12 items-center pt-2">
+        {onBack ? (
+          <IconButton label={t.back} onClick={onBack} className="-ml-2.5 text-ink" data-testid="feeling-back">
+            <ArrowLeftIcon className="size-6" strokeWidth={1.7} />
+          </IconButton>
+        ) : (
+          <Wordmark size={13} className="text-muted" />
+        )}
+      </header>
+      <h1 className="relative mt-[22vh] max-w-[11ch] text-[2.5rem] leading-[1.08] font-semibold tracking-[-0.02em] md:mt-[24vh] md:text-[3.75rem]">
+        {t.feelTitle}
+      </h1>
+      <div role="radiogroup" aria-label={t.feelTitle} className="relative mt-11 grid grid-cols-5 gap-1 md:mt-16 md:gap-6">
         {levels.map((level) => {
           const on = value === level
           return (
@@ -134,22 +152,58 @@ function HowDoYouFeel({ value, onChange, onContinue }: { value?: Feeling; onChan
               aria-checked={on}
               data-testid={`feeling-${level}`}
               onClick={() => onChange(level)}
-              className="flex flex-col items-center gap-2 md:gap-3"
+              className="group flex flex-col items-center gap-2.5 outline-none md:gap-3.5"
             >
-              <span className={`flex size-12 items-center justify-center rounded-full transition md:size-24 ${on ? 'bg-blue text-white' : 'bg-surface text-ink-2'}`}>
-                <FaceIcon mood={level} className="size-7 md:size-12" strokeWidth={1.6} />
+              <span
+                className={`feel-face flex size-14 items-center justify-center rounded-full transition duration-300 group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-blue md:size-24 ${
+                  on ? 'feel-face-on text-accent' : 'bg-surface text-ink-2 ring-1 ring-line group-hover:bg-surface-2'
+                }`}
+              >
+                <FaceIcon mood={level} className="size-7 md:size-11" strokeWidth={1.6} />
               </span>
-              <span className={`text-center text-[0.75rem] leading-tight md:text-[1rem] ${on ? 'text-accent' : 'text-muted'}`}>{t.feelings[level - 1]}</span>
+              <span className={`text-center text-[0.75rem] leading-tight transition md:text-[1rem] ${on ? 'font-medium text-ink' : 'text-muted'}`}>
+                {t.feelings[level - 1]}
+              </span>
             </button>
           )
         })}
       </div>
-      <div className="mt-auto pt-10 pb-4">
+      <div className="relative mt-auto pt-10 pb-4">
         <Button className="w-full" trailingIcon={<ArrowRightIcon className="size-5" />} onClick={onContinue} data-testid="feeling-continue">
           {t.continue}
         </Button>
       </div>
-    </WhitePage>
+    </main>
+  )
+}
+
+/**
+ * A silky ribbon of fine lines sweeping across the top corner, in the accent colour.
+ * It drifts slowly in the resonance rhythm (about 5.5 breaths a minute), so the page
+ * still breathes a little after the exercise. Purely decorative.
+ */
+function FeelRibbon() {
+  const lines = Array.from({ length: 22 }, (_, i) => {
+    const k = i / 21
+    const d = `M-40 ${190 + i * 2.2} C 100 ${170 - i * 2}, 200 ${235 - i * 4.5}, 300 ${130 + i * 0.6} S 430 ${20 + i * 4.5}, 470 ${-10 + i * 4.2}`
+    // Brightest in the middle of the band, fading at both edges.
+    const opacity = 0.12 + 0.6 * Math.sin(Math.PI * k) ** 2
+    return <path key={i} d={d} strokeOpacity={opacity} />
+  })
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[46vh] overflow-hidden md:h-[50vh]">
+      <div className="feel-glow absolute -top-24 -right-16 size-[22rem] rounded-full md:size-[34rem]" />
+      <svg
+        viewBox="0 0 440 260"
+        preserveAspectRatio="xMaxYMin slice"
+        className="feel-ribbon absolute inset-0 size-full text-accent [mask-image:linear-gradient(to_bottom,black_45%,transparent),linear-gradient(to_right,transparent,black_35%)] [mask-composite:intersect]"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={0.7}
+      >
+        {lines}
+      </svg>
+    </div>
   )
 }
 

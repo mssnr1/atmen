@@ -90,6 +90,7 @@ export interface Messages {
   feelTitle: string
   feelings: [string, string, string, string, string]
   continue: string
+  back: string
   niceWork: string
   breathingTime: string
   breathsLabel: string
@@ -235,6 +236,7 @@ const de: Messages = {
   feelTitle: 'Wie fühlst du dich gerade?',
   feelings: ['Viel ruhiger', 'Ruhiger', 'Neutral', 'Angespannter', 'Viel angespannter'],
   continue: 'Weiter',
+  back: 'Zurück',
   niceWork: 'Stark!',
   breathingTime: 'Atemzeit',
   breathsLabel: 'Atemzüge',
@@ -380,6 +382,7 @@ const en: Messages = {
   feelTitle: 'How do you feel right now?',
   feelings: ['Much calmer', 'Calmer', 'Neutral', 'More tense', 'Much more tense'],
   continue: 'Continue',
+  back: 'Back',
   niceWork: 'Nice work!',
   breathingTime: 'Breathing time',
   breathsLabel: 'Breaths',
