@@ -73,8 +73,8 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
 }
 
 const TONES = {
-  primary: 'bg-blue text-white [&_.hint]:text-white/75',
-  soft: 'bg-card/60 text-ink ring-1 ring-line backdrop-blur-xl [&_.hint]:text-muted',
+  primary: 'bg-fluo [&_.hint]:text-on-blue/70',
+  soft: 'bg-transparent text-ink ring-1 ring-ink/50 backdrop-blur-xl [&_.hint]:text-muted',
   alert: 'bg-alert text-white shadow-[0_8px_28px_-10px_var(--color-alert)] [&_.hint]:text-white/80',
 } as const
 
@@ -88,7 +88,7 @@ function Choice({ icon, title, hint, tone, onClick, testId }: { icon: ReactNode;
     >
       <span className="absolute left-5 top-1/2 -translate-y-1/2 [&>svg]:size-6">{icon}</span>
       <span>
-        <span className="block text-[1.0625rem] leading-tight font-medium">{title}</span>
+        <span className="block text-[1.0625rem] leading-tight font-semibold">{title}</span>
         <span className="hint mt-0.5 block text-[0.8125rem] leading-snug">{hint}</span>
       </span>
     </button>

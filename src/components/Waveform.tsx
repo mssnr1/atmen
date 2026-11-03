@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import type { BreathPhase } from '../engine'
 
 type Pt = [number, number]
@@ -44,12 +44,17 @@ export function Waveform({
   className = '',
   animate = false,
   scale = 1,
+  tint,
 }: {
   phases: BreathPhase[]
   className?: string
   animate?: boolean
   scale?: number
+  /** Draw the line as a gradient between two colours (left to right) instead of the text colour. */
+  tint?: [string, string]
 }) {
+  const gradientId = useId()
+  const stroke = tint ? `url(#${CSS.escape(gradientId)})` : 'currentColor'
   const active = phases.filter((p) => p.durationMs > 0 && !p.quiet)
   const inhale = active.find((p) => p.type === 'inhale')?.durationMs ?? 1
   // Exhales longer than the inhale are drawn a little longer still, so 4:6
@@ -134,13 +139,21 @@ export function Waveform({
   const moving = animate && !reduced
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className={`overflow-visible ${className}`} fill="none" aria-hidden>
-      <path d={d} stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" opacity={moving ? 0.38 : 1} />
+      {tint && (
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2={W} y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0" style={{ stopColor: tint[0] }} />
+            <stop offset="1" style={{ stopColor: tint[1] }} />
+          </linearGradient>
+        </defs>
+      )}
+      <path d={d} stroke={stroke} strokeWidth={1.6} strokeLinecap="round" opacity={moving ? 0.38 : 1} />
       {moving && (
         <>
-          <path ref={trail} d={start} stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" opacity={0} />
+          <path ref={trail} d={start} stroke={stroke} strokeWidth={1.6} strokeLinecap="round" opacity={0} />
           <g ref={dot} opacity={0}>
-            <circle r={4.2} fill="currentColor" opacity={0.18} />
-            <circle r={2.1} fill="currentColor" />
+            <circle r={4.2} fill={tint ? tint[1] : 'currentColor'} opacity={0.18} />
+            <circle r={2.1} fill={tint ? tint[1] : 'currentColor'} />
           </g>
         </>
       )}

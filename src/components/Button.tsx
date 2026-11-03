@@ -3,11 +3,11 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 type Variant = 'primary' | 'secondary' | 'white' | 'page' | 'ghost'
 
 const styles: Record<Variant, string> = {
-  primary: 'bg-blue text-white hover:bg-blue-deep',
-  secondary: 'bg-surface text-ink hover:bg-surface-2',
+  primary: 'bg-fluo',
+  secondary: 'border border-ink/55 text-ink hover:bg-ink/5',
   white: 'bg-white text-night hover:bg-white/90',
   /** The accent button on the full-colour pages: white in light mode, violet at night. */
-  page: 'bg-page-button text-page-button-ink hover:opacity-90',
+  page: 'bg-fluo',
   ghost: 'text-ink-2 hover:bg-surface',
 }
 
@@ -22,7 +22,7 @@ export function Button({ variant = 'primary', icon, trailingIcon, className = ''
   return (
     <button
       type="button"
-      className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-6 text-[1.0625rem] font-medium whitespace-nowrap transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue disabled:opacity-40 [&>svg]:shrink-0 ${styles[variant]} ${className}`}
+      className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-6 text-[1.0625rem] font-semibold whitespace-nowrap transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue disabled:opacity-40 [&>svg]:shrink-0 ${styles[variant]} ${className}`}
       {...rest}
     >
       {icon}

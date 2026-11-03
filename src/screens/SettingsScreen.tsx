@@ -18,7 +18,7 @@ export function SettingsScreen() {
   return (
     <div className="flex min-h-dvh flex-col bg-paper">
       <main className="safe-area mx-auto w-full max-w-md flex-1 px-5 md:max-w-3xl md:px-14 lg:max-w-6xl lg:px-16">
-        <h1 className="mt-10 text-[1.875rem] font-normal tracking-[-0.01em] md:mt-10 md:text-[3rem]">{t.settingsTitle}</h1>
+        <h1 className="mt-10 text-[1.875rem] font-semibold tracking-[-0.02em] md:mt-10 md:text-[3rem]">{t.settingsTitle}</h1>
         <p className="mt-2 text-[0.9375rem] text-muted md:text-[1.0625rem]">{t.defaultsHint}</p>
 
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start lg:gap-12">

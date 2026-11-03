@@ -7,6 +7,7 @@ import { breathState, type BreathSource } from '../breathState'
 import { intoFrame, simplifiedDiaphragm } from './diaphragmShape'
 import { airwayTree, type Branch } from './airwayTree'
 import { BreathSpecks } from './BreathSpecks'
+import { LungGlow, type GlowBed } from './LungGlow'
 import { addCalmMorph } from './face'
 import { withHolesFilled } from './holes'
 import { simplifiedLung } from './lungShape'
@@ -136,10 +137,14 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
   // 0 while breathing; eases to 1 once the exercise is done: the lungs fade out, the skin glows a little more.
   const done = useRef(0)
   const fade = useMemo<Fade>(() => ({ inner: { value: 1 }, skin: { value: 1 } }), [])
+  // Height range of the lungs, for their colour gradient from base to top (set once the model is known).
+  const lungGradient = useMemo(() => ({ value: new THREE.Vector2(1.1, 1.45) }), [])
+  // The bed of glowing specks under the lungs.
+  const bed = useMemo<GlowBed>(() => ({ y: 0, x: 0, z: 0, rx: 0, rz: 0 }), [])
   const materials = useMemo(() => {
     // Contour-stripe look: the lungs show the breath by lighting up from the bottom as they fill.
-    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges, fade) }
-  }, [theme, level, edges, fade])
+    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges, fade, lungGradient) }
+  }, [theme, level, edges, fade, lungGradient])
   const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat' | 'calm'; gain: number }[]>([])
   const calm = useRef(0)
   const beat = useRef(0)
@@ -292,6 +297,12 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
       if ((o as THREE.Mesh).isMesh && /^Lung_/.test(o.name)) lungs.expandByObject(o)
     })
     lungRange.current = lungs.isEmpty() ? null : [lungs.min.y, lungs.max.y]
+    if (!lungs.isEmpty()) {
+      lungGradient.value.set(lungs.min.y, lungs.max.y)
+      const c = lungs.getCenter(new THREE.Vector3())
+      const size = lungs.getSize(new THREE.Vector3())
+      Object.assign(bed, { y: lungs.min.y - 0.025, x: c.x, z: c.z, rx: size.x * 0.62, rz: size.z * 0.45 })
+    }
     return () => Object.values(materials).forEach((m) => m.dispose())
   }, [model, materials])
 
@@ -349,6 +360,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     <group>
       <primitive object={model} />
       <BreathSpecks engine={engine} />
+      <LungGlow engine={engine} bed={bed} show={fade.inner} />
     </group>
   )
 }

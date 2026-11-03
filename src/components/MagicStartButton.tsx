@@ -141,7 +141,7 @@ export function MagicStartButton({ onClick, children, testId }: { onClick: () =>
       <button
         type="button"
         onClick={onClick}
-        className="magic-start pointer-events-auto relative h-14 rounded-full bg-paper px-12 text-[1.0625rem] font-medium text-accent transition hover:bg-surface active:scale-95"
+        className="magic-start pointer-events-auto relative h-14 rounded-full bg-fluo px-12 text-[1.0625rem] font-semibold transition active:scale-95"
         data-testid={testId}
       >
         {children}
