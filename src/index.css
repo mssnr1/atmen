@@ -20,8 +20,8 @@
   --color-blue: #8c7bff;
   --color-blue-deep: #7a68f5;
   --color-blue-soft: #efecff;
-  /* Text on a filled accent or on the lavender buttons. */
-  --color-on-blue: #0b0f16;
+  /* Text and icons on the filled accent (selected segments): light on the deeper violet by day, ink on lavender at night. */
+  --color-on-blue: #ffffff;
   /* Used air, breathed out. */
   --color-violet: #9a8cff;
   /* Raised surfaces: cards, sheets, the selected segment. */
@@ -109,7 +109,7 @@
 /* The lavender pill of the style guide: primary buttons and the main choice on the start screen. */
 .bg-fluo {
   background: linear-gradient(100deg, #d6ccff 0%, #c7bbff 35%, #9a8cff 100%);
-  color: var(--color-on-blue);
+  color: var(--color-night);
   box-shadow: 0 8px 28px -10px rgb(154 140 255 / 0.65);
 }
 /* The "atmen" logo: heavy, tightly set, lavender to indigo with a soft glow. */

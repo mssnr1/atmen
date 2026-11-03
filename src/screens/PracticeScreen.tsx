@@ -330,7 +330,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
                 className={`rounded-[18px] px-2 py-3.5 text-center transition ${on ? 'bg-fluo' : 'bg-surface text-ink hover:bg-surface-2'}`}
               >
                 <span className="block text-[1.0625rem] tabular-nums">{paceText(exercise, o.scale, lang)}</span>
-                <span className={`mt-0.5 block text-[0.8125rem] ${on ? 'text-on-blue/70' : 'text-muted'}`}>{o.label[lang]}</span>
+                <span className={`mt-0.5 block text-[0.8125rem] ${on ? 'text-night/70' : 'text-muted'}`}>{o.label[lang]}</span>
               </button>
             )
           })}

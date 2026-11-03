@@ -54,7 +54,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
 }
 
 const TONES = {
-  primary: 'bg-fluo [&_.hint]:text-on-blue/70',
+  primary: 'bg-fluo [&_.hint]:text-night/70',
   soft: 'bg-transparent text-ink ring-1 ring-ink/50 backdrop-blur-xl [&_.hint]:text-muted',
   alert: 'bg-alert text-white shadow-[0_8px_28px_-10px_var(--color-alert)] [&_.hint]:text-white/80',
 } as const
