@@ -85,6 +85,9 @@ const AIRWAY_BRANCHES: Branch[] = [
 /** The geometry with only the triangles whose centre lies above `floor` (world height) and in front of `back` (world z). */
 function noseOnly(geometry: THREE.BufferGeometry, world: THREE.Matrix4, floor: number, back: number): THREE.BufferGeometry {
   const out = geometry.clone()
+  // A clone shares its source's userData object; give it its own, or marking the cut copy would mark
+  // the uncut source too, and the next copy of the model would skip the cut and show mouth and throat.
+  out.userData = { ...geometry.userData }
   const index = geometry.index
   const pos = geometry.attributes.position
   if (!index) return out
@@ -151,6 +154,9 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     model.traverse((o) => o.userData.lungBack && stale.push(o))
     stale.forEach((o) => o.removeFromParent())
     const backs: [THREE.Mesh, THREE.Mesh][] = []
+    // The cuts below (nose, lungs) work in world space: a fresh copy of the model may not have its
+    // world matrices yet, and a cut made with the wrong matrix keeps the mouth and throat.
+    model.updateMatrixWorld(true)
     let diaphragm: THREE.Mesh | null = null
     const lungMeshes: THREE.Mesh[] = []
     model.traverse((o) => {
