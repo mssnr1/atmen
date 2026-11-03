@@ -10,6 +10,13 @@ import { presetIndex, rhythmText } from '../lib/exerciseText'
 import { startPractice } from '../lib/route'
 import { store, useStore } from '../storage/store'
 
+/** Each exercise's curve in two colours of the style guide. */
+const WAVE_TINTS: Record<string, [string, string]> = {
+  resonance: ['var(--color-lavender)', 'var(--color-sky)'],
+  energy: ['var(--color-mint)', 'var(--color-sky)'],
+  relax: ['var(--color-indigo)', 'var(--color-lavender)'],
+}
+
 /**
  * Exercise selection: one large card per exercise, driven by the exercise configs.
  * A tap only selects a card (the top one is selected at first); the selected card opens up
@@ -23,7 +30,7 @@ export function HomeScreen() {
   return (
     <div className="flex min-h-dvh flex-col bg-paper">
       <main className="safe-area mx-auto w-full max-w-md flex-1 px-5 pb-24 md:pb-28 md:max-w-3xl md:px-14 lg:max-w-6xl lg:px-16">
-        <h1 className="mt-10 mb-7 text-[1.875rem] leading-[1.15] font-normal tracking-[-0.01em] md:mt-8 md:mb-9 md:text-[2.5rem]">
+        <h1 className="mt-10 mb-7 text-[1.875rem] leading-[1.15] font-semibold tracking-[-0.02em] md:mt-8 md:mb-9 md:text-[2.5rem]">
           {t.chooseTitle[0]}
           <br />
           {t.chooseTitle[1]}
@@ -50,7 +57,7 @@ export function HomeScreen() {
                 >
                   <span className="flex items-start justify-between gap-3 lg:flex-col-reverse lg:justify-end lg:gap-6">
                     <span>
-                      <span className="block text-[1.25rem] font-normal text-ink md:text-[1.625rem]">{text.name}</span>
+                      <span className="block text-[1.125rem] font-semibold text-ink md:text-[1.5rem]">{text.name}</span>
                       <span className="mt-1 block text-[0.875rem] leading-snug text-muted md:text-[1rem]">
                         {text.purpose[0]}
                         <br />
@@ -58,7 +65,7 @@ export function HomeScreen() {
                       </span>
                     </span>
                     <span className="flex items-center pt-2 lg:pt-0">
-                      <Waveform phases={e.pattern.phases} animate={on} scale={scale} className={`h-7 w-20 md:h-10 md:w-28 ${on ? 'text-accent' : 'text-ink-2'}`} />
+                      <Waveform phases={e.pattern.phases} animate={on} scale={scale} tint={WAVE_TINTS[e.id]} className={`h-7 w-20 md:h-10 md:w-28 ${on ? 'text-accent' : 'text-ink-2'}`} />
                     </span>
                   </span>
                   <span className="mt-5 block text-[0.8125rem] text-muted md:text-[0.9375rem] lg:mt-auto lg:pt-8">{rhythmText(e, scale, lang, t)}</span>

@@ -85,8 +85,8 @@ function hexToRgb(hex: string): [number, number, number] {
 }
 
 const PALETTES = {
-  light: { base: '#f6f7fb', a: '#8fb0ff', b: '#9a7cff', c: '#ffffff' },
-  dark: { base: '#141312', a: '#3f238a', b: '#9b74ff', c: '#3a2470' },
+  light: { base: '#f7f7fc', a: '#b9adff', b: '#9fe3ff', c: '#ffffff' },
+  dark: { base: '#0b0f16', a: '#2b2f8a', b: '#8a7cff', c: '#0f5a6e' },
 }
 
 /** The breath, 0..1, eased, at `ms` into a cycle of inhale `inMs` and exhale `outMs`. */

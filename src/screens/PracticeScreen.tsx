@@ -233,7 +233,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
               type="button"
               onClick={() => setShowFlow(true)}
               disabled={!summary}
-              className="mt-7 flex h-14 items-center gap-2 rounded-full border border-line bg-surface px-10 text-[1.0625rem] text-ink transition hover:bg-surface-2 active:scale-95 disabled:opacity-50"
+              className="mt-7 flex h-14 items-center gap-2 rounded-full border border-line bg-surface/80 px-10 text-[1.0625rem] font-semibold text-ink transition hover:bg-surface-2 active:scale-95 disabled:opacity-50"
               data-testid="completion-next"
             >
               {t.next}
@@ -278,11 +278,11 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             <RestartIcon className="size-5" strokeWidth={1.5} />
           </IconButton>
           {s.status === 'running' ? (
-            <IconButton label={t.pause} onClick={session.pause} className={`${compact ? '!size-12' : 'size-16'} bg-surface hover:bg-surface-2`} data-testid="pause">
+            <IconButton label={t.pause} onClick={session.pause} className={`${compact ? '!size-12' : 'size-16'} bg-fluo`} data-testid="pause">
               <PauseIcon className="size-6" />
             </IconButton>
           ) : s.status === 'paused' ? (
-            <IconButton label={t.resume} onClick={session.resume} className={`${compact ? '!size-12' : 'size-16'} border border-line bg-surface hover:bg-surface-2`} data-testid="resume">
+            <IconButton label={t.resume} onClick={session.resume} className={`${compact ? '!size-12' : 'size-16'} bg-fluo`} data-testid="resume">
               <PlayIcon className="ml-1 size-6" />
             </IconButton>
           ) : (
@@ -290,7 +290,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
               type="button"
               onClick={start}
               disabled={leadIn}
-              className="h-14 rounded-full border border-line bg-surface px-10 text-[1.0625rem] text-ink transition hover:bg-surface-2 active:scale-95 disabled:opacity-50"
+              className="bg-fluo h-14 rounded-full px-10 text-[1.0625rem] font-semibold transition active:scale-95 disabled:opacity-50"
               data-testid="start"
             >
               {t.start}
@@ -327,10 +327,10 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
                 aria-checked={on}
                 data-testid={`pace-${i}`}
                 onClick={() => setPace({ preset: i })}
-                className={`rounded-[18px] px-2 py-3.5 text-center transition ${on ? 'bg-blue text-white' : 'bg-surface text-ink hover:bg-surface-2'}`}
+                className={`rounded-[18px] px-2 py-3.5 text-center transition ${on ? 'bg-fluo' : 'bg-surface text-ink hover:bg-surface-2'}`}
               >
                 <span className="block text-[1.0625rem] tabular-nums">{paceText(exercise, o.scale, lang)}</span>
-                <span className={`mt-0.5 block text-[0.8125rem] ${on ? 'text-white/80' : 'text-muted'}`}>{o.label[lang]}</span>
+                <span className={`mt-0.5 block text-[0.8125rem] ${on ? 'text-night/70' : 'text-muted'}`}>{o.label[lang]}</span>
               </button>
             )
           })}

@@ -69,7 +69,7 @@ function WellDone({
         aria-pressed={on}
         data-testid={`rate-${r}`}
         onClick={() => onRate(r)}
-        className={`flex size-14 items-center md:size-[4.5rem] justify-center rounded-full border-[1.5px] transition ${on ? 'border-white bg-white text-blue' : 'border-white/70 text-white hover:bg-white/10'}`}
+        className={`flex size-14 items-center md:size-[4.5rem] justify-center rounded-full border-[1.5px] transition ${on ? 'border-white bg-white text-night' : 'border-white/70 text-white hover:bg-white/10'}`}
       >
         {r === 'up' ? <ThumbUpIcon className="size-6" strokeWidth={1.6} /> : <ThumbDownIcon className="size-6" strokeWidth={1.6} />}
       </button>
@@ -81,7 +81,7 @@ function WellDone({
         <Wordmark />
       </header>
       <section className="flex flex-1 flex-col justify-center py-8">
-        <h1 className="text-[2.75rem] leading-tight font-normal md:text-[4.5rem] lg:text-[5rem]">{t.wellDone}</h1>
+        <h1 className="text-[2.75rem] leading-tight font-bold tracking-[-0.02em] md:text-[4.5rem] lg:text-[5rem]">{t.wellDone}</h1>
         <p className="mt-4 text-[1.125rem] leading-snug text-white/85 md:mt-5 md:text-[1.625rem]" data-testid="completion-text">
           {t.completed(t.minutesLong(minutes), exercise.text[lang].name)}
         </p>
@@ -113,7 +113,7 @@ function WhitePage({ children, testId }: { children: React.ReactNode; testId: st
   return (
     <main className="safe-area mx-auto flex min-h-dvh max-w-md flex-col bg-paper px-6 md:max-w-3xl md:px-14 md:pb-10 lg:max-w-5xl" data-testid={testId}>
       <header className="pt-6">
-        <Wordmark size={13} className="text-muted" />
+        <Wordmark size={18} className="opacity-90" />
       </header>
       {children}
     </main>
@@ -135,7 +135,7 @@ function HowDoYouFeel({ value, onChange, onContinue, onBack }: { value?: Feeling
             <ArrowLeftIcon className="size-6" strokeWidth={1.7} />
           </IconButton>
         ) : (
-          <Wordmark size={13} className="text-muted" />
+          <Wordmark size={18} className="opacity-90" />
         )}
       </header>
       <h1 className="relative mt-[22vh] max-w-[11ch] text-[2.5rem] leading-[1.08] font-semibold tracking-[-0.02em] md:mt-[24vh] md:text-[3.75rem]">
@@ -218,7 +218,7 @@ function Summary({ exercise, summary, scale, feeling, onDone }: { exercise: Exer
   ]
   return (
     <WhitePage testId="summary">
-      <h1 className="mt-6 text-[2rem] leading-tight font-normal md:mt-16 md:text-[3rem]">{t.niceWork}</h1>
+      <h1 className="mt-6 text-[2rem] leading-tight font-bold tracking-[-0.02em] md:mt-16 md:text-[3rem]">{t.niceWork}</h1>
       <p className="mt-1 text-[0.9375rem] text-muted md:text-[1.125rem]">{exercise.text[lang].name}</p>
       <dl className="mt-8 grid grid-cols-2 gap-3 md:mt-12 md:gap-4">
         {tiles.map(({ icon, value, label, id }) => (
@@ -247,7 +247,7 @@ function NextExercise({ current }: { current: Exercise }) {
   const text = next.text[lang]
   return (
     <WhitePage testId="next-exercise">
-      <h1 className="mt-6 text-[2rem] leading-tight font-normal md:mt-16 md:text-[3rem]">{t.keepGoing}</h1>
+      <h1 className="mt-6 text-[2rem] leading-tight font-bold tracking-[-0.02em] md:mt-16 md:text-[3rem]">{t.keepGoing}</h1>
       <p className="mt-1 text-[1.0625rem] text-muted md:text-[1.25rem]">{t.tryAnother}</p>
       <button
         type="button"

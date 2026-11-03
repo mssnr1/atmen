@@ -11,7 +11,7 @@ export function LearnScreen() {
   return (
     <div className="flex min-h-dvh flex-col bg-paper">
       <main className="safe-area mx-auto w-full max-w-md flex-1 px-5 md:max-w-3xl md:px-14 lg:max-w-6xl lg:px-16">
-        <h1 className="mt-10 text-[1.875rem] font-normal tracking-[-0.01em] md:mt-10 md:text-[3rem]">{t.learnTitle}</h1>
+        <h1 className="mt-10 text-[1.875rem] font-semibold tracking-[-0.02em] md:mt-10 md:text-[3rem]">{t.learnTitle}</h1>
         <p className="mt-2 text-[0.9375rem] text-muted md:text-[1.0625rem]">{t.learnIntro}</p>
 
         <article className="mt-8 rounded-[22px] bg-blue-page p-6 text-white md:p-8" data-testid="learn-basics">
@@ -21,7 +21,7 @@ export function LearnScreen() {
               <section key={p.title} className="py-6 first:pt-0 last:pb-0 md:py-0">
                 <WelcomeArt index={i} className="mb-5 h-12 w-32 text-page-mark" />
                 {p.eyebrow && <p className="text-[0.875rem] tracking-[0.08em] text-white/70">{p.eyebrow}</p>}
-                <h3 className="mt-1 text-[1.625rem] leading-tight font-normal tracking-[-0.01em] text-balance">{p.title}</h3>
+                <h3 className="mt-1 text-[1.625rem] leading-tight font-semibold tracking-[-0.02em] text-balance">{p.title}</h3>
                 <div className="mt-4 space-y-3 text-[0.9375rem] leading-relaxed text-white/85">
                   {p.lines.map((line) => (
                     <p key={line}>{line}</p>

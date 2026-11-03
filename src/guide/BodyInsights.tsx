@@ -81,7 +81,7 @@ function Column({ items, labels, className }: { items: BodyInsight[]; labels: { 
             <p className="mt-0.5 text-[0.625rem] leading-tight text-muted [hyphens:auto] md:text-[0.6875rem]">{it.term}</p>
           </div>
           {/* What it does. */}
-          <div className="border-t border-accent/20 bg-accent/[0.07] px-2.5 pt-1.5 pb-1.5 md:px-4 md:pt-2 md:pb-3">
+          <div className="border-t border-mint/25 bg-linear-to-br from-mint/[0.14] to-sky/[0.08] px-2.5 pt-1.5 pb-1.5 md:px-4 md:pt-2 md:pb-3">
             <Label icon={<OutcomeIcon />}>{labels.impact}</Label>
             <p className="hud-glow mt-1 text-[0.75rem] leading-snug text-accent md:text-[0.9375rem]">{it.impact}</p>
             {it.value && <p className="mt-0.5 hidden text-[0.6875rem] leading-tight text-muted tabular-nums md:block">{it.value}</p>}

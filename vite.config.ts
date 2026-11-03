@@ -14,8 +14,8 @@ export default defineConfig({
       includeAssets: ['icon.svg'],
       pwaAssets: { config: true, overrideManifestIcons: true, injectThemeColor: false },
       manifest: {
-        name: 'atmen',
-        short_name: 'atmen',
+        name: 'Fluo',
+        short_name: 'Fluo',
         description: 'Die Kunst, besser zu atmen. Geführte Atemübungen.',
         theme_color: '#ffffff',
         background_color: '#ffffff',

@@ -255,7 +255,7 @@ function Card({ it, labels, small }: { it: BodyInsight; labels: { place: string;
         <p className="mt-1.5 text-[1.125rem] leading-tight break-words text-ink [hyphens:auto]">{it.place}</p>
         <p className="mt-1 text-[0.8125rem] leading-snug text-muted [hyphens:auto]">{it.term}</p>
       </div>
-      <div className="relative border-l border-accent/20 bg-accent/[0.07] px-3.5 pt-3 pb-3">
+      <div className="relative border-l border-mint/25 bg-linear-to-br from-mint/[0.14] to-sky/[0.08] px-3.5 pt-3 pb-3">
         <span className="absolute top-3 right-3 flex" aria-hidden>
           <span className="hud-dot" />
         </span>

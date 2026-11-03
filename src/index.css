@@ -1,96 +1,158 @@
 @import "tailwindcss";
 
+@import "@fontsource-variable/inter";
+
 @theme {
-  /* Light system from the concept: white, soft greys, one blue. */
-  --color-paper: #ffffff;
-  --color-surface: #f4f5f7;
-  --color-surface-2: #eceef2;
-  --color-line: #e6e8ec;
-  --color-ink: #111214;
-  --color-ink-2: #3a3d44;
-  --color-muted: #8a8f99;
-  --color-blue: #2f6bf5;
-  --color-blue-deep: #2259db;
-  --color-blue-soft: #e9f0fe;
+  /* Style guide (FLUO reference): ink and surface tones, lavender and indigo as the brand,
+     mint and sky as fresh accents. Light theme: the same hues on a pale lavender white. */
+  --color-lavender: #a898ff;
+  --color-indigo: #7d6cf5;
+  --color-mint: #3fcf9c;
+  --color-sky: #38bdf8;
+  --color-paper: #f7f7fc;
+  --color-surface: #eeeef8;
+  --color-surface-2: #e3e3f1;
+  --color-line: #dcdcec;
+  --color-ink: #151826;
+  --color-ink-2: #3b4058;
+  --color-muted: #7a7f98;
+  /* The filled accent (switches, selected pace, progress): indigo. */
+  --color-blue: #8c7bff;
+  --color-blue-deep: #7a68f5;
+  --color-blue-soft: #efecff;
+  /* Text and icons on the filled accent (selected segments): light on the deeper violet by day, ink on lavender at night. */
+  --color-on-blue: #ffffff;
   /* Used air, breathed out. */
-  --color-violet: #8b5cf6;
+  --color-violet: #9a8cff;
   /* Raised surfaces: cards, sheets, the selected segment. */
   --color-card: #ffffff;
   --color-thumb: #ffffff;
   /* The welcome and completion screens. */
-  --color-blue-page: #2f6bf5;
+  --color-blue-page: #1f2140;
   /* Text on white controls, the same in both themes. */
-  --color-night: #111214;
-  /* Phase word on the practice screen, drawn as specks of air in the accent blue. */
-  --color-breath: #2f6bf5;
-  /* Blue for text and small accents; stays light enough to read on dark pages. */
-  --color-accent: #2f6bf5;
+  --color-night: #0b0f16;
+  /* Phase word on the practice screen, drawn as specks of air. */
+  --color-breath: #6f5cf0;
+  /* Indigo for text and small accents; stays light enough to read on dark pages. */
+  --color-accent: #6f5cf0;
   /* The translucent practice panel. */
-  --color-panel: rgb(255 255 255 / 0.18);
+  --color-panel: rgb(247 247 252 / 0.32);
   /* The heads-up insight cards: more opaque than the panel so their text stands off the figure. */
-  --color-insight: rgb(255 255 255 / 0.52);
+  --color-insight: rgb(255 255 255 / 0.6);
   /* Drawings, page dots and arrow button on the welcome screens (the logo stays white). */
-  --color-page-mark: #ffffff;
-  --color-page-dot: #ffffff;
-  --color-page-button: #ffffff;
-  --color-page-button-ink: #111214;
+  --color-page-mark: #c7bbff;
+  --color-page-dot: #c7bbff;
+  --color-page-button: #c7bbff;
+  --color-page-button-ink: #0b0f16;
   /* Fresh air in the 3D lungs. */
-  --color-air: #4a82ff;
-  --color-air-used: #a855f7;
+  --color-air: #3b9ae6;
+  --color-air-used: #8c7bff;
   /* The red of the acute-help button. */
   --color-alert: #e5484d;
   --font-sans:
-    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter",
-    "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
+    "Helvetica Neue", sans-serif;
 }
 
-/* Dark theme: warm clay greys for every surface, magic violet as the only colour.
-   Breathed-out air is a pale lavender, so in and out differ by brightness, not hue. */
+/* Dark theme, the style guide's own: ink background, navy surfaces, lavender as the main colour. */
 :root {
   /* The breathing bubbles behind the start and acute-help screens. */
-  --bubble-air: rgb(74 130 255 / 0.16);
-  --bubble-air-core: rgb(140 178 255 / 0.32);
-  --bubble-used: rgb(168 85 247 / 0.1);
-  --bubble-used-core: rgb(196 150 255 / 0.2);
+  --bubble-air: rgb(125 211 252 / 0.14);
+  --bubble-air-core: rgb(154 140 255 / 0.26);
+  --bubble-used: rgb(167 243 208 / 0.1);
+  --bubble-used-core: rgb(199 187 255 / 0.2);
 }
 
 :root.dark {
-  --bubble-air: rgb(122 72 230 / 0.22);
-  --bubble-air-core: rgb(170 130 255 / 0.3);
-  --bubble-used: rgb(183 166 220 / 0.1);
-  --bubble-used-core: rgb(210 196 240 / 0.16);
-  --color-paper: #141312;
-  --color-surface: #1f1d1b;
-  --color-surface-2: #2d2a27;
-  --color-line: #2a2724;
-  --color-ink: #f2f3f5;
-  --color-ink-2: #cdc8c2;
-  --color-muted: #958f88;
-  --color-blue: #6d3fd6;
-  --color-blue-deep: #5b31b8;
-  --color-blue-soft: #24211f;
-  --color-violet: #b7a6dc;
-  --color-card: #1a1817;
-  --color-thumb: #3d3935;
-  --color-blue-page: #1c1a18;
-  --color-breath: #c3a6ff;
-  --color-accent: #b89aff;
-  --color-panel: rgb(30 28 26 / 0.42);
-  --color-insight: rgb(38 35 32 / 0.58);
-  /* The deeper violet of the Learn cards, which Jan prefers for drawings. */
-  --color-page-mark: #6d3fd6;
-  --color-page-dot: #6d3fd6;
-  --color-page-button: #6d3fd6;
-  --color-page-button-ink: #ffffff;
-  --color-air: #9a6bff;
-  --color-air-used: #b7a6dc;
+  --color-lavender: #c7bbff;
+  --color-indigo: #9a8cff;
+  --color-mint: #a7f3d0;
+  --color-sky: #7dd3fc;
+  --bubble-air: rgb(154 140 255 / 0.2);
+  --bubble-air-core: rgb(199 187 255 / 0.26);
+  --bubble-used: rgb(125 211 252 / 0.1);
+  --bubble-used-core: rgb(167 243 208 / 0.14);
+  --color-paper: #0b0f16;
+  --color-surface: #151826;
+  --color-surface-2: #1f2633;
+  --color-line: #2e3750;
+  --color-ink: #f4f3ff;
+  --color-ink-2: #c9cbe0;
+  --color-muted: #8b91ab;
+  --color-blue: #b3a6ff;
+  --color-blue-deep: #9a8cff;
+  --color-blue-soft: #1c1f36;
+  --color-on-blue: #0b0f16;
+  --color-violet: #c7bbff;
+  --color-card: #151826;
+  --color-thumb: #2e3750;
+  --color-blue-page: #10142a;
+  --color-breath: #c7bbff;
+  --color-accent: #c7bbff;
+  --color-panel: rgb(11 15 22 / 0.42);
+  --color-insight: rgb(21 24 38 / 0.62);
+  --color-page-mark: #c7bbff;
+  --color-page-dot: #c7bbff;
+  --color-page-button: #c7bbff;
+  --color-page-button-ink: #0b0f16;
+  --color-air: #7dd3fc;
+  --color-air-used: #c7bbff;
   --color-alert: #e5534b;
-  /* The particle aura around the figure, in the night violet (light theme colours live in Aura.tsx). */
-  --aura-cool: #3a1f72;
-  --aura-warm: #8a5cf5;
-  --aura-rose: #b08cff;
-  --aura-glow: #8a5cf5;
-  --aura-spark: #e8dcff;
+  /* The particle aura around the figure (light theme colours live in Aura.tsx). */
+  --aura-cool: #1c2350;
+  --aura-warm: #6f5cf0;
+  --aura-rose: #9a8cff;
+  --aura-glow: #7dd3fc;
+  --aura-spark: #e6f6ff;
+}
+
+/* The lavender pill of the style guide: primary buttons and the main choice on the start screen. */
+.bg-fluo {
+  background: linear-gradient(100deg, #d6ccff 0%, #c7bbff 35%, #9a8cff 100%);
+  color: var(--color-night);
+  box-shadow: 0 8px 28px -10px rgb(154 140 255 / 0.65);
+}
+/* The "FLUO" logo: heavy, tightly set, lavender to indigo with a soft glow. */
+.logo-atmen {
+  display: inline-block;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  padding-right: 0.06em;
+  background: linear-gradient(170deg, color-mix(in srgb, var(--color-lavender) 55%, #fff) 0%, var(--color-lavender) 40%, var(--color-indigo) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 0.18em rgb(154 140 255 / 0.45));
+}
+/* Letters open a little and the glow grows on the inhale (5.5 s in, 5.5 s out). */
+.logo-breathe {
+  animation: logo-breathe 11s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes logo-breathe {
+  0%,
+  100% {
+    letter-spacing: -0.045em;
+    filter: drop-shadow(0 0 0.12em rgb(154 140 255 / 0.35));
+  }
+  50% {
+    letter-spacing: 0.02em;
+    filter: drop-shadow(0 0 0.3em rgb(154 140 255 / 0.6));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-breathe {
+    animation: none;
+  }
+}
+.fluo-glow {
+  background:
+    radial-gradient(60% 45% at 85% 12%, rgb(154 140 255 / 0.38), transparent 70%),
+    radial-gradient(55% 40% at 5% 55%, rgb(167 243 208 / 0.14), transparent 70%),
+    radial-gradient(70% 50% at 50% 0%, rgb(125 211 252 / 0.1), transparent 70%);
+}
+.bg-fluo:hover {
+  filter: brightness(1.04);
 }
 
 html {
