@@ -198,7 +198,6 @@
   --insight-impact: linear-gradient(100deg, rgb(226 219 255 / 0.97) 0%, rgb(226 228 250 / 0.97) 40%, rgb(206 238 236 / 0.97) 75%, rgb(188 240 220 / 0.97) 100%);
   --insight-edge-place: linear-gradient(140deg, rgb(150 130 250 / 0.75), rgb(150 130 250 / 0.3));
   --insight-edge-impact: linear-gradient(90deg, rgb(150 130 250 / 0.7), rgb(63 207 156 / 0.75));
-  --insight-glow: 0 8px 22px -10px rgb(111 92 240 / 0.35);
   --insight-impact-a: rgb(226 219 255 / 0.97);
   --insight-impact-b: rgb(226 228 250 / 0.97);
   --insight-impact-c: rgb(188 240 220 / 0.97);
@@ -206,21 +205,36 @@
 :root.dark {
   --insight-place: linear-gradient(140deg, rgb(92 82 146 / 0.97) 0%, rgb(62 58 106 / 0.97) 55%, rgb(47 51 84 / 0.97) 100%);
   --insight-impact: linear-gradient(100deg, rgb(98 84 150 / 0.97) 0%, rgb(60 61 102 / 0.97) 40%, rgb(60 90 110 / 0.97) 75%, rgb(80 135 132 / 0.97) 100%);
-  --insight-edge-place: linear-gradient(140deg, rgb(199 187 255 / 0.6), rgb(199 187 255 / 0.18));
+  --insight-edge-place: linear-gradient(140deg, rgb(199 187 255 / 0.75), rgb(199 187 255 / 0.22));
   --insight-edge-impact: linear-gradient(90deg, rgb(199 187 255 / 0.55), rgb(167 243 208 / 0.6));
-  --insight-glow: 0 8px 24px -10px rgb(154 140 255 / 0.45);
   --insight-impact-a: rgb(98 84 150 / 0.97);
   --insight-impact-b: rgb(60 61 102 / 0.97);
   --insight-impact-c: rgb(80 135 132 / 0.97);
+}
+/* Pebble: a soft raised stone, lit from above (sheen and bright top edge), shaded toward its bottom. */
+:root {
+  --insight-pebble: inset 0 1.5px 0 rgb(255 255 255 / 0.95), inset 0 14px 20px -12px rgb(255 255 255 / 0.85), inset 0 -16px 24px -14px rgb(90 70 200 / 0.3), inset 0 -3px 8px -3px rgb(150 130 250 / 0.4);
+  --insight-lift: 0 12px 26px -14px rgb(80 60 180 / 0.45), 0 2px 6px -2px rgb(80 60 180 / 0.18);
+  --insight-sheen: rgb(255 255 255 / 0.55);
+  --insight-glow-impact: 10px 4px 24px -12px rgb(63 207 156 / 0.45);
+}
+:root.dark {
+  --insight-pebble: inset 0 1.5px 0 rgb(255 255 255 / 0.28), inset 0 14px 20px -12px rgb(255 255 255 / 0.2), inset 0 -16px 24px -14px rgb(0 0 0 / 0.55), inset 0 -3px 8px -3px rgb(199 187 255 / 0.4);
+  --insight-lift: 0 14px 30px -14px rgb(0 0 0 / 0.75), 0 0 24px -10px rgb(154 140 255 / 0.4);
+  --insight-sheen: rgb(255 255 255 / 0.2);
+  --insight-glow-impact: 10px 4px 26px -12px rgb(167 243 208 / 0.4);
 }
 .fluo-tile,
 .fluo-insight {
   position: relative;
   isolation: isolate;
-  box-shadow: var(--insight-glow);
-  /* Nearly opaque glass: whatever lies behind is blurred away, never read through. */
+  box-shadow: var(--insight-pebble), var(--insight-lift);
+  /* Opaque glass: whatever lies behind is blurred away, never read through. */
   -webkit-backdrop-filter: blur(24px) saturate(1.5);
   backdrop-filter: blur(24px) saturate(1.5);
+}
+.fluo-tile-impact {
+  box-shadow: var(--insight-pebble), var(--insight-lift), var(--insight-glow-impact);
 }
 .fluo-tile-place,
 .fluo-insight {
@@ -228,6 +242,17 @@
 }
 .fluo-tile-impact {
   background: var(--insight-impact);
+}
+/* The pebble's sheen: light falling on its upper left, under the text. */
+.fluo-tile::before,
+.fluo-insight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(120% 85% at 18% -12%, var(--insight-sheen), transparent 62%);
+  pointer-events: none;
 }
 /* The glowing edge: a 1px gradient ring cut out of a full gradient. */
 .fluo-tile::after,

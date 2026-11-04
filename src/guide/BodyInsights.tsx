@@ -1,5 +1,4 @@
 import type React from 'react'
-import { useId } from 'react'
 import { useI18n } from '../i18n'
 import { bodyInsights, insightsShown, type BodyInsight } from './insights'
 
@@ -95,47 +94,19 @@ function ImpactText({ it, labels, size }: { it: BodyInsight; labels: Labels; siz
   )
 }
 
-/** The guide's two tiles: location in violet glass, impact in glass from violet to mint; side by side or one above the other. */
+/**
+ * The guide's two tiles, the same during and after the exercise: location in violet glass, impact in glass from
+ * violet to mint, both opaque pebbles with a glowing edge; side by side or one above the other.
+ */
 export function InsightTiles({ it, labels, size, dir = 'row', className = '' }: { it: BodyInsight; labels: Labels; size: Size; dir?: 'row' | 'col'; className?: string }) {
   const t = TEXT[size]
   return (
     <div className={`grid gap-2 ${dir === 'row' ? 'grid-cols-2' : 'grid-cols-1'} ${className}`} data-testid={`insight-${it.id}`}>
       <p className="sr-only">{it.title}</p>
-      <div className={`fluo-tile fluo-tile-place rounded-[16px] ${t.pad}`}>
+      <div className={`fluo-tile fluo-tile-place rounded-[20px] ${t.pad}`}>
         <PlaceText it={it} labels={labels} size={size} />
       </div>
-      <div className={`fluo-tile fluo-tile-impact rounded-[16px] ${t.pad}`}>
-        <ImpactText it={it} labels={labels} size={size} />
-      </div>
-    </div>
-  )
-}
-
-/**
- * The guide's joined card (the opened list): location on the left in violet glass, impact on the right in
- * glass from violet to mint, the two meeting along a soft S-shaped edge.
- */
-export function InsightJoined({ it, labels, size, className = '' }: { it: BodyInsight; labels: Labels; size: Size; className?: string }) {
-  const t = TEXT[size]
-  const id = useId()
-  return (
-    <div className={`fluo-insight grid grid-cols-2 overflow-hidden rounded-[16px] ${className}`} data-testid={`insight-${it.id}`}>
-      <p className="sr-only">{it.title}</p>
-      <div className={`relative z-[1] ${t.pad}`}>
-        <PlaceText it={it} labels={labels} size={size} />
-      </div>
-      <div className={`relative z-[1] ${t.pad}`}>
-        <svg className="pointer-events-none absolute inset-y-0 right-0 -left-5 -z-10 h-full w-[calc(100%+1.25rem)]" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
-          <defs>
-            <linearGradient id={id} x1="0" x2="1" y1="0" y2="0">
-              <stop offset="0" style={{ stopColor: 'var(--insight-impact-a)' }} />
-              <stop offset="0.45" style={{ stopColor: 'var(--insight-impact-b)' }} />
-              <stop offset="1" style={{ stopColor: 'var(--insight-impact-c)' }} />
-            </linearGradient>
-          </defs>
-          <path d="M18 0H100V100H0C5 100 9 95 9 85V18C9 7 12 0 18 0Z" fill={`url(#${id})`} />
-          <path d="M18 0C12 0 9 7 9 18V85C9 95 5 100 0 100" fill="none" stroke="var(--color-lavender)" strokeOpacity={0.55} strokeWidth={1} vectorEffect="non-scaling-stroke" />
-        </svg>
+      <div className={`fluo-tile fluo-tile-impact rounded-[20px] ${t.pad}`}>
         <ImpactText it={it} labels={labels} size={size} />
       </div>
     </div>
@@ -147,8 +118,8 @@ function Column({ items, labels, className }: { items: BodyInsight[]; labels: La
     <div className={`absolute flex w-[clamp(7.5rem,21%,15rem)] flex-col gap-2.5 lg:w-[clamp(21rem,28%,29rem)] lg:gap-3 ${className}`}>
       {items.map((it) => (
         <div key={it.id} role="listitem" className="insight-in">
-          {/* Wide screens: the guide's joined card; narrower ones: its two tiles, one above the other. */}
-          <InsightJoined it={it} labels={labels} size="desktop" className="hidden lg:grid" />
+          {/* The guide's two tiles: side by side on wide screens, one above the other on narrower ones. */}
+          <InsightTiles it={it} labels={labels} size="desktop" className="hidden lg:grid" />
           <InsightTiles it={it} labels={labels} size="tablet" dir="col" className="lg:hidden" />
         </div>
       ))}
