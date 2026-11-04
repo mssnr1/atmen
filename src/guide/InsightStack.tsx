@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ChevronDownIcon } from '../components/icons'
 import { useI18n } from '../i18n'
-import { InsightJoined, InsightTiles, OutcomeIcon, TargetIcon } from './BodyInsights'
+import { InsightTiles, OutcomeIcon, TargetIcon } from './BodyInsights'
 import { bodyInsights, insightsShown, type BodyInsight } from './insights'
 
 /** How many older cards peek out above the newest one. */
@@ -166,7 +166,7 @@ export function InsightStack({
               className="relative origin-bottom will-change-transform"
               style={{ zIndex: newestFirst.length - i }}
             >
-              <Card it={it} labels={labels} small={false} joined />
+              <Card it={it} labels={labels} small={false} />
             </div>
           ))}
         </div>
@@ -211,7 +211,7 @@ export function InsightStack({
                 </div>
               ) : (
                 // The cards behind are bare shells: their text would show through the translucent front card.
-                <div className={`fluo-insight h-full ${small ? 'rounded-[14px]' : 'rounded-[16px]'}`} />
+                <div className={`fluo-insight h-full ${small ? 'rounded-[14px]' : 'rounded-[20px]'}`} />
               )}
             </div>
           )
@@ -226,8 +226,8 @@ export function InsightStack({
   )
 }
 
-/** The guide's tiles side by side (closed stack), its joined card (opened list), or one slim line. */
-function Card({ it, labels, small, joined }: { it: BodyInsight; labels: { place: string; impact: string }; small: boolean; joined?: boolean }) {
+/** The guide's two tiles side by side (closed stack and opened list alike), or one slim line. */
+function Card({ it, labels, small }: { it: BodyInsight; labels: { place: string; impact: string }; small: boolean }) {
   if (small) {
     return (
       <div className="fluo-insight flex h-full items-center gap-2 rounded-[14px] px-3 py-2.5" data-testid={`insight-${it.id}`}>
@@ -240,5 +240,5 @@ function Card({ it, labels, small, joined }: { it: BodyInsight; labels: { place:
       </div>
     )
   }
-  return joined ? <InsightJoined it={it} labels={labels} size="phone" /> : <InsightTiles it={it} labels={labels} size="phone" className="h-full" />
+  return <InsightTiles it={it} labels={labels} size="phone" className="h-full" />
 }
