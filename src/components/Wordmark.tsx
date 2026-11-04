@@ -3,7 +3,8 @@ import { useId } from 'react'
 /**
  * The FLUO logo, traced from the logo artwork so it looks the same everywhere:
  * heavy, rounded letters in pale lavender with a faint glow. `size` is the letter height in px; `breathe` lets the glow
- * swell slowly with the resonance rhythm (start screen).
+ * swell slowly with the resonance rhythm (start screen). Drawn as an outline: the same letter shapes,
+ * traced by a thin lavender gradient line instead of filled.
  */
 export function Wordmark({ size = 22, className = '', breathe = false }: { size?: number; className?: string; breathe?: boolean }) {
   const id = useId()
@@ -13,6 +14,7 @@ export function Wordmark({ size = 22, className = '', breathe = false }: { size?
       viewBox="0 0 950.3 230.7"
       height={size * (230.7 / 220)}
       width={size * (950.3 / 220)}
+      overflow="visible"
       className={`logo-fluo ${breathe ? 'logo-breathe' : ''} ${className}`}
       role="img"
       aria-label="Fluo"
@@ -25,7 +27,14 @@ export function Wordmark({ size = 22, className = '', breathe = false }: { size?
         </linearGradient>
       </defs>
       {/* Traced from Jan's FLUO logo image. */}
-      <path fill={fill} fillRule="evenodd" d={FLUO_PATH} />
+      <path
+        fill="none"
+        stroke={fill}
+        strokeWidth={Math.max(1.25, size / 30)}
+        strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
+        d={FLUO_PATH}
+      />
     </svg>
   )
 }
