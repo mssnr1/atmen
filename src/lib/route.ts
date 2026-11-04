@@ -2,11 +2,12 @@ import { useSyncExternalStore } from 'react'
 import { audioCues } from '../feedback/audio'
 
 /** Minimal hash router: "#/practice/resonance" -> ["practice", "resonance"]. */
-export type Route = { name: 'home' } | { name: 'learn' } | { name: 'settings' } | { name: 'welcome' } | { name: 'sos' } | { name: 'practice'; exerciseId: string }
+export type Route = { name: 'home' } | { name: 'learn' } | { name: 'settings' } | { name: 'welcome' } | { name: 'sos' } | { name: 'practice'; exerciseId: string } | { name: 'exercise'; exerciseId: string }
 
 function parse(hash: string): Route {
   const [name, id] = hash.replace(/^#\/?/, '').split('/')
   if (name === 'practice' && id) return { name: 'practice', exerciseId: id }
+  if (name === 'exercise' && id) return { name: 'exercise', exerciseId: id }
   if (name === 'learn' || name === 'settings' || name === 'welcome' || name === 'sos') return { name }
   return { name: 'home' }
 }
@@ -22,7 +23,7 @@ export function useRoute(): Route {
 }
 
 export function navigate(route: Route): void {
-  window.location.hash = route.name === 'home' ? '/' : route.name === 'practice' ? `/practice/${route.exerciseId}` : `/${route.name}`
+  window.location.hash = route.name === 'home' ? '/' : route.name === 'practice' || route.name === 'exercise' ? `/${route.name}/${route.exerciseId}` : `/${route.name}`
 }
 
 /**

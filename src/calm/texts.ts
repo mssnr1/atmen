@@ -3,6 +3,8 @@ import type { Language } from "../i18n";
 /** Texts of the start screen and the acute-help mode. */
 export interface CalmText {
   start: {
+    title: [string, string];
+    lead: [string, string];
     training: { title: string; hint: string };
     stressed: { title: string; hint: string };
     panic: { title: string; hint: string };
@@ -33,13 +35,15 @@ export interface CalmText {
 
 const de: CalmText = {
   start: {
-    training: { title: "Training", hint: "Übung wählen und üben" },
+    title: ["Dein Atem", "als Werkzeug."],
+    lead: ["Stress reduzieren, Fokus aufbauen", "und mehr in Balance kommen."],
+    training: { title: "Training starten", hint: "Übung wählen und üben" },
     stressed: {
-      title: "Ich bin gerade gestresst",
+      title: "Ich bin gestresst",
       hint: "Mit langem Ausatmen runterfahren",
     },
     panic: {
-      title: "Ich habe eine Panikattacke",
+      title: "Akute Hilfe bei Panik",
       hint: "oder brauche jetzt sofort Hilfe",
     },
   },
@@ -87,13 +91,15 @@ const de: CalmText = {
 
 const en: CalmText = {
   start: {
-    training: { title: "Training", hint: "Choose an exercise and practise" },
+    title: ["Your breath", "as a tool."],
+    lead: ["Reduce stress, build focus", "and feel more in balance."],
+    training: { title: "Start training", hint: "Choose an exercise and practise" },
     stressed: {
-      title: "I’m stressed right now",
+      title: "I’m feeling stressed",
       hint: "Wind down with a long exhale",
     },
     panic: {
-      title: "I’m having a panic attack",
+      title: "Acute help in a panic",
       hint: "or I need help right now",
     },
   },

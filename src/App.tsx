@@ -3,7 +3,7 @@ import { getExercise } from './exercises'
 import { onShowStart, useRoute } from './lib/route'
 import { useApplyTheme } from './lib/theme'
 import { EmergencyScreen } from './screens/EmergencyScreen'
-import { HomeScreen } from './screens/HomeScreen'
+import { ExerciseScreen, HomeScreen } from './screens/HomeScreen'
 import { LearnScreen } from './screens/LearnScreen'
 import { PracticeScreen } from './screens/PracticeScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
@@ -32,6 +32,7 @@ function Screen() {
   const exercise = route.name === 'practice' ? getExercise(route.exerciseId) : undefined
   if (exercise) return <PracticeScreen key={exercise.id} exercise={exercise} />
   if (route.name === 'sos') return <EmergencyScreen />
+  if (route.name === 'exercise') return <ExerciseScreen key={route.exerciseId} exerciseId={route.exerciseId} />
   if (route.name === 'welcome' || (!welcomeSeen && route.name === 'home')) return <WelcomeScreen />
   if (route.name === 'learn') return <LearnScreen />
   if (route.name === 'settings') return <SettingsScreen />

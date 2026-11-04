@@ -122,7 +122,7 @@ export interface Messages {
 
 const de: Messages = {
   appName: 'Fluo',
-  splashTagline: 'die vergessene Superpower',
+  splashTagline: 'Dein Atem als Werkzeug',
   welcome: [
     {
       eyebrow: 'Wusstest du?',
@@ -268,7 +268,7 @@ const de: Messages = {
 
 const en: Messages = {
   appName: 'Fluo',
-  splashTagline: 'the forgotten superpower',
+  splashTagline: 'Your breath as a tool',
   welcome: [
     {
       eyebrow: 'Did you know?',

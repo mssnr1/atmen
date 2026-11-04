@@ -26,6 +26,9 @@ const SKIN_BOOST = 0.1
 
 export const MODEL_URL = `${import.meta.env.BASE_URL}models/atmen-anatomy.glb`
 
+/** Draw order of the skin's colour; its depth goes just before, the depth is cleared just after (see `PARTS`). */
+const SKIN_ORDER = 0.2
+
 /** Which look and draw order each object of the model gets. */
 const PARTS: Record<string, { kind: MaterialKind; order: number; hidden?: boolean }> = {
   // The heart stays out of the picture so the lungs and diaphragm read clearly.
@@ -40,13 +43,14 @@ const PARTS: Record<string, { kind: MaterialKind; order: number; hidden?: boolea
   Bronchi: { kind: 'airway', order: 2.2 },
   Nasal_Cavity: { kind: 'airway', order: 2.2 },
   Diaphragm: { kind: 'diaphragm', order: 4 },
-  // Its far wall goes before the neck and the head (which write depth), so they hide none of it.
-  Body_Shell: { kind: 'skin', order: 2.3 },
-  // Right after the neck (2.4, see below); it writes depth and hides what lies inside or behind it (see `head` in stripes.ts).
-  Head: { kind: 'skin', order: 2.5 },
-  // Arms and legs: drawn like the trunk's skin (far wall), lines running round each limb.
-  Arms: { kind: 'skin', order: 2.3 },
-  Legs: { kind: 'skin', order: 2.3 },
+  // The skin goes first: its depth (order 0.1, see `skinDepth` in stripes.ts), then its colour, which
+  // shows only the surface the eye looks at. Then the depth is cleared (order 0.5), so lungs, airways
+  // and nose drawn after it stay visible inside the body.
+  Body_Shell: { kind: 'skin', order: SKIN_ORDER },
+  Head: { kind: 'skin', order: SKIN_ORDER },
+  // Arms and legs: lines running round each limb.
+  Arms: { kind: 'skin', order: SKIN_ORDER },
+  Legs: { kind: 'skin', order: SKIN_ORDER },
 }
 
 /** Objects whose skin lines run round their own long axis (see `addLimbAxis`). */
@@ -200,7 +204,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         }
       }
       if (LIMBS.has(mesh.name) && !mesh.geometry.getAttribute('axis')) addLimbAxis(mesh.geometry, 0.01 / mesh.getWorldScale(new THREE.Vector3()).x)
-      mesh.material = mesh.name === 'Head' ? materials.head : LIMBS.has(mesh.name) ? materials.limbs : materials[part.kind]
+      mesh.material = LIMBS.has(mesh.name) ? materials.limbs : materials[part.kind]
       // The anatomical diaphragm folds over itself in the front view; a simplified sheet under the
       // lungs takes its place once the lungs are known (see below).
       if (part.kind === 'diaphragm') {
@@ -233,13 +237,11 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         mesh.geometry = noseOnly(mesh.geometry, mesh.matrixWorld, NOSE_FLOOR, NOSE_BACK)
         mesh.geometry.userData.noseOnly = true
       }
-      // Second copies: the inner wall of the head (filling the gaps under the jaw) and the near wall of the neck.
-      if (mesh.name === 'Head' || mesh.name === 'Body_Shell') {
+      // The skin's depth, drawn just before its colour, so only its nearest surface shows (see `skinDepth`).
+      if (part.kind === 'skin') {
         const copy = mesh.clone(false)
-        copy.material = mesh.name === 'Head' ? materials.headInner : materials.skinNeck
-        // The neck just before the head, so each hides what of the other lies behind it; the head's inner
-        // wall after everything else, so it shows only where neither covers it.
-        copy.renderOrder = mesh.name === 'Head' ? 6.2 : 2.4
+        copy.material = materials.skinDepth
+        copy.renderOrder = SKIN_ORDER - 0.1
         copy.userData.lungBack = true
         backs.push([mesh, copy])
         const inhale = mesh.morphTargetDictionary?.Inhale
@@ -270,6 +272,18 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
       }
     })
     for (const [src, back] of backs) src.parent?.add(back)
+    // After the skin, its depth is cleared: what lies inside the body (lungs, airways, nose) is drawn
+    // after it and stays visible, hiding only itself where it should (a lung in front of an airway).
+    const clearDepth = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ transparent: true, colorWrite: false, depthWrite: false }))
+    clearDepth.renderOrder = SKIN_ORDER + 0.3
+    clearDepth.frustumCulled = false
+    clearDepth.userData.lungBack = true
+    clearDepth.onBeforeRender = (renderer) => {
+      // A clear leaves depth untouched while depth writes are off (as after the skin's colour).
+      renderer.state.buffers.depth.setMask(true)
+      renderer.clearDepth()
+    }
+    model.add(clearDepth)
     // Narrowing is lost across the traverse callback, hence the explicit type.
     const sheetOwner = diaphragm as THREE.Mesh | null
     if (SHOW_DIAPHRAGM && sheetOwner?.parent && lungMeshes.length) {

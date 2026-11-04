@@ -13,7 +13,7 @@ interface Props<T extends string | number> {
 /** A row of mutually exclusive options. */
 export function Segmented<T extends string | number>({ label, options, value, onChange, disabled, className = '' }: Props<T>) {
   return (
-    <div role="radiogroup" aria-label={label} className={`flex gap-1 rounded-2xl bg-surface p-1 ${disabled ? 'opacity-40' : ''} ${className}`}>
+    <div role="radiogroup" aria-label={label} className={`flex gap-1 rounded-[18px] bg-surface-2/80 p-1 ring-1 ring-line/60 ${disabled ? 'opacity-40' : ''} ${className}`}>
       {options.map((o) => {
         const selected = o.value === value
         return (
@@ -26,8 +26,8 @@ export function Segmented<T extends string | number>({ label, options, value, on
             aria-label={o.icon ? o.label : undefined}
             disabled={disabled}
             onClick={() => onChange(o.value)}
-            className={`min-h-10 flex-1 rounded-xl px-3 text-[0.9375rem] transition-colors focus-visible:outline-2 focus-visible:outline-blue ${
-              selected ? 'bg-blue font-medium text-on-blue shadow-[0_2px_10px_-4px_rgb(154_140_255/0.6)]' : 'text-muted hover:text-ink'
+            className={`min-h-11 flex-1 rounded-[14px] px-3 text-[1rem] font-bold transition-colors focus-visible:outline-2 focus-visible:outline-blue ${
+              selected ? 'seg-on' : 'text-ink hover:bg-ink/5'
             }`}
           >
             {o.icon ?? o.label}

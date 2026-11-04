@@ -226,14 +226,14 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             <p className="w-full text-breath" aria-live="polite">
               <ParticleWord text={t.wellDone.replace(/\.$/, '').toLowerCase()} className="h-[5.5rem]" fontSize={72} />
             </p>
-            <p className="text-[1.3125rem] leading-snug text-breath md:text-[1.5rem]" data-testid="completion-text">
+            <p className="text-[1.375rem] leading-snug font-bold text-ink md:text-[1.625rem]" data-testid="completion-text">
               {t.afterglow[exercise.id] ?? t.afterglow.default}
             </p>
             <button
               type="button"
               onClick={() => setShowFlow(true)}
               disabled={!summary}
-              className="mt-7 flex h-14 items-center gap-2 rounded-full border border-line bg-surface/80 px-10 text-[1.0625rem] font-semibold text-ink transition hover:bg-surface-2 active:scale-95 disabled:opacity-50"
+              className="mt-7 flex h-14 items-center gap-2 rounded-full bg-surface-2/90 px-10 text-[1.0625rem] font-bold text-ink ring-1 ring-line transition hover:bg-surface-2 active:scale-95 disabled:opacity-50"
               data-testid="completion-next"
             >
               {t.next}
@@ -272,7 +272,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             label={t.restart}
             disabled={!active}
             onClick={session.skipToEnd}
-            className={`${compact ? '!size-10' : 'size-12'} border border-line`}
+            className={`${compact ? '!size-10' : 'size-12'} bg-surface-2/80 ring-1 ring-line backdrop-blur`}
             data-testid="restart"
           >
             <RestartIcon className="size-5" strokeWidth={1.5} />
@@ -296,7 +296,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
               {t.start}
             </button>
           )}
-          <IconButton label={t.openSettings} onClick={() => setSheetOpen(true)} className={`${compact ? '!size-10' : 'size-12'} border border-line`} data-testid="open-settings">
+          <IconButton label={t.openSettings} onClick={() => setSheetOpen(true)} className={`${compact ? '!size-10' : 'size-12'} bg-surface-2/80 ring-1 ring-line backdrop-blur`} data-testid="open-settings">
             <SlidersIcon className="size-5" strokeWidth={1.5} />
           </IconButton>
         </div>
