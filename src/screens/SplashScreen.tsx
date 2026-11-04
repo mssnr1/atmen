@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { calmText } from '../calm/texts'
 import { ArrowRightIcon, LifebuoyIcon } from '../components/icons'
-import { FluoWaves } from '../components/FluoWaves'
+import { FluoAir } from '../components/FluoAir'
 import { Wordmark } from '../components/Wordmark'
 import { useI18n } from '../i18n'
 import { navigate, startPractice } from '../lib/route'
@@ -52,7 +52,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
           {c.lead[1]}
         </p>
       </header>
-      <FluoWaves className="pointer-events-none relative -mt-2 -ml-[6%] h-[24vh] w-[112%] max-w-none flex-none md:h-[28vh]" />
+      <FluoAir className="pointer-events-none relative -mt-2 -ml-[6%] h-[24vh] w-[112%] max-w-none flex-none md:h-[28vh]" />
       <nav className="start-choices relative mx-auto mt-auto mb-2 flex w-full max-w-md flex-col items-center gap-3.5 px-6 md:mb-10 md:max-w-lg" data-testid="start-choices">
         <button
           type="button"
