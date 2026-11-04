@@ -1,7 +1,11 @@
 import * as THREE from 'three'
 
-/** A stretch of airway: a polyline in world metres with a radius at its start and its end. */
-export type Branch = { points: [number, number, number][]; r0: number; r1: number }
+/**
+ * A stretch of airway: a polyline in world metres with a radius at its start and its end. With `w0`/`w1`
+ * the section is an ellipse instead of a circle: `r` across the airway within the side view (the
+ * plane of the polyline and the body's left-right axis' normal), `w` from left to right.
+ */
+export type Branch = { points: [number, number, number][]; r0: number; r1: number; w0?: number; w1?: number; radii?: number[]; widths?: number[] }
 
 /**
  * The windpipe and both main bronchi as one smooth piece. The model's trachea
@@ -11,23 +15,29 @@ export type Branch = { points: [number, number, number][]; r0: number; r1: numbe
  * surface is extracted with surface nets and smoothed. The top is cut flat and
  * left open where the throat continues; the bronchi end inside the lungs.
  */
-export function airwayTree(branches: Branch[], { top, cell = 0.0011, blend = 0.008 }: { top: number; cell?: number; blend?: number }): THREE.BufferGeometry {
-  // Segments with their radii, for the distance field.
-  const segs: { a: THREE.Vector3; b: THREE.Vector3; ra: number; rb: number }[] = []
+export function airwayTree(
+  branches: Branch[],
+  { top, front = Infinity, cell = 0.0011, blend = 0.008 }: { top: number; front?: number; cell?: number; blend?: number },
+): THREE.BufferGeometry {
+  // Segments with their radii (and widths, for elliptical sections), for the distance field.
+  const segs: { a: THREE.Vector3; b: THREE.Vector3; ra: number; rb: number; wa: number; wb: number }[] = []
   for (const br of branches) {
     const pts = br.points.map((p) => new THREE.Vector3(...p))
     const lengths = [0]
     for (let i = 1; i < pts.length; i++) lengths.push(lengths[i - 1] + pts[i].distanceTo(pts[i - 1]))
     const total = lengths[lengths.length - 1] || 1
     for (let i = 1; i < pts.length; i++) {
-      const r = (s: number) => br.r0 + (br.r1 - br.r0) * (s / total)
-      segs.push({ a: pts[i - 1], b: pts[i], ra: r(lengths[i - 1]), rb: r(lengths[i]) })
+      const w0 = br.w0 ?? br.r0
+      const w1 = br.w1 ?? br.r1
+      const r = (j: number) => br.radii?.[j] ?? br.r0 + (br.r1 - br.r0) * (lengths[j] / total)
+      const w = (j: number) => br.widths?.[j] ?? br.radii?.[j] ?? w0 + (w1 - w0) * (lengths[j] / total)
+      segs.push({ a: pts[i - 1], b: pts[i], ra: r(i - 1), rb: r(i), wa: w(i - 1), wb: w(i) })
     }
   }
 
   const box = new THREE.Box3()
   for (const s of segs) {
-    const m = Math.max(s.ra, s.rb) + blend + cell * 3
+    const m = Math.max(s.ra, s.rb, s.wa, s.wb) + blend + cell * 3
     box.expandByPoint(s.a.clone().addScalar(m)).expandByPoint(s.a.clone().addScalar(-m))
     box.expandByPoint(s.b.clone().addScalar(m)).expandByPoint(s.b.clone().addScalar(-m))
   }
@@ -35,6 +45,8 @@ export function airwayTree(branches: Branch[], { top, cell = 0.0011, blend = 0.0
   const ab = new THREE.Vector3()
   const ap = new THREE.Vector3()
   const p = new THREE.Vector3()
+  const across = new THREE.Vector3()
+  const side = new THREE.Vector3(1, 0, 0)
   // Polynomial smooth minimum: blends two distances over `blend` metres.
   const smin = (x: number, y: number) => {
     const h = Math.max(blend - Math.abs(x - y), 0) / blend
@@ -47,11 +59,26 @@ export function airwayTree(branches: Branch[], { top, cell = 0.0011, blend = 0.0
       ab.subVectors(s.b, s.a)
       ap.subVectors(p, s.a)
       const t = THREE.MathUtils.clamp(ap.dot(ab) / ab.lengthSq(), 0, 1)
-      const dist = ap.addScaledVector(ab, -t).length() - (s.ra + (s.rb - s.ra) * t)
+      const r = s.ra + (s.rb - s.ra) * t
+      const w = s.wa + (s.wb - s.wa) * t
+      const q = ap.addScaledVector(ab, -t)
+      let dist: number
+      if (w === r) dist = q.length() - r
+      else {
+        // Elliptical section: across the airway in the side view `r`, left to right `w`; along the
+        // axis (past the ends) like across. Distance estimate of an ellipsoid with these radii.
+        across.crossVectors(ab, side).normalize()
+        const u = q.dot(across)
+        const x = q.x
+        const along = Math.sqrt(Math.max(q.lengthSq() - u * u - x * x, 0))
+        const k0 = Math.hypot(u / r, x / w, along / r)
+        const k1 = Math.hypot(u / (r * r), x / (w * w), along / (r * r))
+        dist = k1 > 0 ? (k0 * (k0 - 1)) / k1 : -Math.min(r, w)
+      }
       d = d === Infinity ? dist : smin(d, dist)
     }
-    // Cut flat at the top, where the throat takes over.
-    return Math.max(d, y - top)
+    // Cut flat at the top, where the throat takes over, and at the front, where the nose takes over.
+    return Math.max(d, y - top, z - front)
   }
 
   // Sample the field on a grid.
@@ -119,12 +146,15 @@ export function airwayTree(branches: Branch[], { top, cell = 0.0011, blend = 0.0
           quad(vertexOf[cellAt(i - 1, j - 1, k)], vertexOf[cellAt(i, j - 1, k)], vertexOf[cellAt(i, j, k)], vertexOf[cellAt(i - 1, j, k)], here)
       }
 
-  // Drop the flat cap at the top: the throat continues there.
+  // Drop the flat caps at the top and the front: the throat and the nose continue there.
   const kept: number[] = []
   const capY = top - cell * 0.75
+  const capZ = front - cell * 0.75
+  const onCap = (q: number) => positions[q * 3 + 1] > capY || positions[q * 3 + 2] > capZ
   for (let t = 0; t < index.length; t += 3) {
     const ys = [index[t], index[t + 1], index[t + 2]].map((q) => positions[q * 3 + 1])
-    if (ys.every((y) => y > capY)) continue
+    const zs = [index[t], index[t + 1], index[t + 2]].map((q) => positions[q * 3 + 2])
+    if (ys.every((y) => y > capY) || zs.every((z) => z > capZ)) continue
     kept.push(index[t], index[t + 1], index[t + 2])
   }
 
@@ -145,7 +175,7 @@ export function airwayTree(branches: Branch[], { top, cell = 0.0011, blend = 0.0
     const f = it % 2 === 0 ? 0.6 : -0.63
     for (let q = 0; q < count; q++) {
       const near = links[q]
-      if (!near.size || cur[q * 3 + 1] > capY) {
+      if (!near.size || onCap(q)) {
         next.set(cur.subarray(q * 3, q * 3 + 3), q * 3)
         continue
       }

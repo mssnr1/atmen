@@ -80,14 +80,67 @@ const AIRWAY_TOP = 1.4606
 const NOSE_FLOOR = 1.552
 /** Behind this depth (world z) the upper throat (nasopharynx, wider than the nose, with side flaps) is left out too. */
 const NOSE_BACK = 0.047
+/** The nose's open back end once cut (world metres): middle height, half its height, half its width. */
+const NOSE_OPENING = { y: 1.5722, r: 0.0198, w: 0.012 }
+/** The throat tube is cut open here (world z), just inside the nose's back end, where the nose takes over. */
+const THROAT_FRONT = 0.0495
+/** Radii of the throat's bend forward into the nose (world metres): its front wall's and its back wall's. */
+const THROAT_INNER = 0.014
+const THROAT_OUTER = 0.04
+const TRACHEA_R = 0.0105
 const CARINA: [number, number, number] = [-0.0005, 1.362, -0.013]
 const AIRWAY_BRANCHES: Branch[] = [
   { points: [[0, AIRWAY_TOP + 0.004, 0.01], [-0.0004, 1.4257, 0.005], [-0.0004, 1.3904, -0.0033], CARINA], r0: 0.0105, r1: 0.0095 },
-  // Up the back of the throat into the back of the nose, so nose and windpipe join without mouth or throat.
-  { points: [[0, AIRWAY_TOP + 0.004, 0.01], [0, 1.483, 0.02], [0, 1.53, 0.03], [0, 1.56, 0.042], [0, 1.566, 0.056]], r0: 0.0105, r1: 0.008 },
+  // Up the back of the throat and forward into the back of the nose, so nose and windpipe flow into one
+  // airway without mouth or throat (see `throat`).
+  throat(),
   { points: [CARINA, [0.027, 1.335, -0.018], [0.044, 1.321, -0.021], [0.062, 1.306, -0.02]], r0: 0.0078, r1: 0.0058 },
   { points: [CARINA, [-0.014, 1.348, -0.017], [-0.031, 1.318, -0.021], [-0.044, 1.297, -0.026]], r0: 0.0078, r1: 0.0058 },
 ]
+
+/**
+ * The throat: straight up from the windpipe at its width, then in one round bend forward into the back
+ * of the nose, widening on the way to the nose's back opening (`NOSE_OPENING`), so the two meet flush.
+ * The bend is drawn by its two walls, each a quarter circle: the front wall turns from the windpipe's
+ * front into the nose's floor, the back wall from the windpipe's back into the nose's roof. The tube
+ * runs midway between them, as wide as they are apart.
+ */
+function throat(): Branch {
+  const y0 = AIRWAY_TOP + 0.004
+  const z0 = 0.01
+  const backZ = 0.0125
+  const floor = NOSE_OPENING.y - NOSE_OPENING.r
+  const roof = NOSE_OPENING.y + NOSE_OPENING.r
+  const inner = { y: floor - THROAT_INNER, z: backZ + TRACHEA_R + THROAT_INNER, r: THROAT_INNER }
+  const outer = { y: roof - THROAT_OUTER, z: backZ - TRACHEA_R + THROAT_OUTER, r: THROAT_OUTER }
+  const wall = (c: { y: number; z: number; r: number }, a: number) => [c.y + c.r * Math.sin(a), c.z - c.r * Math.cos(a)]
+  const points: [number, number, number][] = []
+  const radii: number[] = []
+  const widths: number[] = []
+  const at = (y: number, z: number, r: number, grow: number) => {
+    points.push([0, y, z])
+    radii.push(r)
+    widths.push(TRACHEA_R + (NOSE_OPENING.w - TRACHEA_R) * THREE.MathUtils.smoothstep(grow, 0, 1))
+  }
+  // Up the back of the neck to where the bend starts.
+  const bendY = (wall(inner, 0)[0] + wall(outer, 0)[0]) / 2
+  const steps = 8
+  for (let i = 0; i < steps; i++) {
+    const f = i / steps
+    at(y0 + (bendY - y0) * f, z0 + (backZ - z0) * f, TRACHEA_R, 0)
+  }
+  // Round the bend, midway between its walls.
+  const arc = 14
+  for (let i = 0; i <= arc; i++) {
+    const a = ((Math.PI / 2) * i) / arc
+    const [yi, zi] = wall(inner, a)
+    const [yo, zo] = wall(outer, a)
+    at((yi + yo) / 2, (zi + zo) / 2, Math.hypot(yo - yi, zo - zi) / 2, i / arc)
+  }
+  // Straight on into the nose, past the cut, so the open end is a clean section.
+  at(NOSE_OPENING.y, THROAT_FRONT + 0.008, NOSE_OPENING.r, 1)
+  return { points, r0: TRACHEA_R, r1: NOSE_OPENING.r, radii, widths }
+}
 
 /** The geometry with only the triangles whose centre lies above `floor` (world height) and in front of `back` (world z). */
 function noseOnly(geometry: THREE.BufferGeometry, world: THREE.Matrix4, floor: number, back: number): THREE.BufferGeometry {
@@ -221,7 +274,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         mesh.visible = false
         let tree = mesh.geometry.userData.tree as THREE.BufferGeometry | undefined
         if (!tree) {
-          tree = airwayTree(AIRWAY_BRANCHES, { top: 1.7 })
+          tree = airwayTree(AIRWAY_BRANCHES, { top: 1.7, front: THROAT_FRONT })
           tree.applyMatrix4(mesh.parent.matrixWorld.clone().invert())
           mesh.geometry.userData.tree = tree
         }
