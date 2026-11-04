@@ -1,79 +1,146 @@
 /**
- * Soft ambient pads for breathing in and out, synthesised with the Web Audio API.
+ * A breath sound for breathing in and out, synthesised with the Web Audio API.
  *
- * - Breathing in: a bright, airy chord (D add9) that slowly swells while a
- *   low-pass filter opens, like light coming up.
- * - Breathing out: a lower, warmer chord (G maj7) that blooms quickly and then
- *   settles and fades while the filter closes.
+ * There are no notes or chords: each breath is shaped noise, like air moving
+ * through nose, throat and chest.
  *
- * Each pad overlaps the next by a few seconds and everything runs through a
- * shared reverb, so the sound feels like one continuous surface. All functions
- * take a BaseAudioContext so the same code renders offline (for previews).
+ * - Body: deep brown noise behind a low-pass filter. This is the dark, full
+ *   "whoosh" of a strong breath.
+ * - Air: a quiet, softly band-passed layer on top so the breath stays airy,
+ *   kept low so it never turns hissy or tinny.
+ * - Throat: two gentle resonances (around 320 Hz and 750 Hz) give the noise a
+ *   vowel-like colour, the open "hhh" of a relaxed throat.
+ * - Breathing in rises smoothly and the filters open a little as the air speeds
+ *   up; breathing out starts fuller and darker and sinks away like a sigh.
+ * - Slow random wobble on level and filter imitates the turbulence of real air.
+ *
+ * A short, dark room reverb glues the breaths together. During quiet pauses the
+ * breath falls silent, as a held breath does. All functions take a
+ * BaseAudioContext so the same code renders offline (for previews).
  */
 
 export type PadKind = 'inhale' | 'exhale'
 
-const INHALE_CHORD = [293.66, 440.0, 659.25, 739.99, 880.0] // D4 A4 E5 F#5 A5
-const EXHALE_CHORD = [196.0, 293.66, 369.99, 493.88] // G3 D4 F#4 B4
-/** Relative loudness of each chord note; the top notes stay in the background. */
-const INHALE_LEVELS = [1, 0.85, 0.6, 0.45, 0.22]
-const EXHALE_LEVELS = [1, 0.8, 0.65, 0.45]
-
-/** How long a pad keeps sounding after its phase ends, overlapping the next one. */
-export const PAD_RELEASE_S = 3
+/** How long a breath keeps sounding after its phase ends (its tail into the next). */
+export const PAD_RELEASE_S = 1.6
 
 export interface PadBus {
-  /** Where pad voices connect to. */
+  /** Where breath voices connect to. */
   input: AudioNode
-  waveSoft: PeriodicWave
-  waveBright: PeriodicWave
-  noise: AudioBuffer
+  /** Brown noise: most energy in the lows, for the body of the breath. */
+  brown: AudioBuffer
+  /** Pink noise: a little brighter, for the air on top. */
+  pink: AudioBuffer
 }
 
-/** A scheduled pad that can be faded out and stopped early. */
+/** A scheduled breath that can be faded out and stopped early. */
 export interface PadVoice {
   out: GainNode
   sources: AudioScheduledSourceNode[]
   endsAt: number
 }
 
+interface BreathShape {
+  /** Overall loudness at the fullest point of the breath. */
+  peak: number
+  /** Envelope as [fraction of phase, level 0..1] points, smoothly ramped between. */
+  env: [number, number][]
+  /** Body low-pass cut-off at start and end of the phase (Hz). */
+  bodyFrom: number
+  bodyTo: number
+  /** Air band-pass centre at start and end of the phase (Hz). */
+  airFrom: number
+  airTo: number
+  /** Level of the air layer relative to the body. */
+  air: number
+}
+
+const INHALE: BreathShape = {
+  peak: 0.3,
+  // Gentle start, steady fullness, softening just before the top.
+  env: [
+    [0, 0],
+    [0.08, 0.35],
+    [0.22, 0.75],
+    [0.45, 0.92],
+    [0.7, 1],
+    [0.88, 0.8],
+    [1, 0.35],
+  ],
+  bodyFrom: 340,
+  bodyTo: 620,
+  airFrom: 650,
+  airTo: 1050,
+  air: 0.4,
+}
+
+const EXHALE: BreathShape = {
+  peak: 0.28,
+  // Fuller at once, then a long sinking release like a sigh.
+  env: [
+    [0, 0],
+    [0.07, 0.45],
+    [0.16, 1],
+    [0.35, 0.85],
+    [0.6, 0.55],
+    [0.82, 0.28],
+    [1, 0.1],
+  ],
+  bodyFrom: 520,
+  bodyTo: 240,
+  airFrom: 800,
+  airTo: 420,
+  air: 0.3,
+}
+
 /**
- * Build the shared pad chain: compressor → dry + reverb → destination.
- * Call once per AudioContext.
+ * Build the shared breath chain: warm EQ → gentle compressor → dry + dark
+ * reverb → destination. Call once per AudioContext.
  */
 export function createPadBus(ctx: BaseAudioContext, destination: AudioNode): PadBus {
   const input = ctx.createGain()
   input.gain.value = 1
 
+  // A touch more chest, a little less edge.
+  const low = ctx.createBiquadFilter()
+  low.type = 'lowshelf'
+  low.frequency.value = 220
+  low.gain.value = 5
+  const high = ctx.createBiquadFilter()
+  high.type = 'highshelf'
+  high.frequency.value = 2500
+  high.gain.value = -8
+  // Nothing below the rumble range, so the low end stays clean.
+  const hp = ctx.createBiquadFilter()
+  hp.type = 'highpass'
+  hp.frequency.value = 70
+  hp.Q.value = 0.5
+
   const comp = ctx.createDynamicsCompressor()
-  comp.threshold.value = -18
-  comp.ratio.value = 3
-  comp.attack.value = 0.05
-  comp.release.value = 0.4
-  input.connect(comp)
+  comp.threshold.value = -20
+  comp.ratio.value = 2.5
+  comp.attack.value = 0.08
+  comp.release.value = 0.5
+
+  input.connect(hp).connect(low).connect(high).connect(comp)
 
   const dry = ctx.createGain()
-  dry.gain.value = 0.7
+  dry.gain.value = 0.85
   const wet = ctx.createGain()
-  wet.gain.value = 0.55
+  wet.gain.value = 0.3
   const reverb = ctx.createConvolver()
-  reverb.buffer = reverbImpulse(ctx, 4.5)
+  reverb.buffer = reverbImpulse(ctx, 2.6)
   comp.connect(dry).connect(destination)
   comp.connect(reverb).connect(wet).connect(destination)
 
-  return {
-    input,
-    waveSoft: harmonicWave(ctx, [1, 0.35, 0.12, 0.05, 0.02]),
-    waveBright: harmonicWave(ctx, [1, 0.5, 0.3, 0.2, 0.12, 0.08, 0.05, 0.03]),
-    noise: noiseBuffer(ctx, 3),
-  }
+  return { input, brown: brownNoise(ctx, 6), pink: pinkNoise(ctx, 6) }
 }
 
 /**
- * Schedule one pad.
+ * Schedule one breath.
  * @param start  audio-clock time the phase begins (may lie in the past to join mid-phase)
  * @param dur    phase length in seconds
- * @param hold   seconds of quiet pause after the phase, during which the pad lingers
+ * @param hold   seconds of quiet pause after the phase; the breath is silent then
  */
 export function schedulePad(
   ctx: BaseAudioContext,
@@ -83,94 +150,96 @@ export function schedulePad(
   dur: number,
   hold = 0,
 ): PadVoice {
-  const inhale = kind === 'inhale'
-  const chord = inhale ? INHALE_CHORD : EXHALE_CHORD
-  const levels = inhale ? INHALE_LEVELS : EXHALE_LEVELS
+  void hold // a held breath is silent; the reverb tail carries into the pause
+  const shape = kind === 'inhale' ? INHALE : EXHALE
   const end = start + dur
-  const holdEnd = end + hold
-  const stopAt = holdEnd + PAD_RELEASE_S + 0.1
-  const peak = inhale ? 0.26 : 0.24
+  const stopAt = end + PAD_RELEASE_S + 0.1
 
   const out = ctx.createGain()
   out.gain.value = 1
   out.connect(bus.input)
 
-  // Volume envelope.
+  // Volume envelope, with a soft tail after the phase ends.
   const env = ctx.createGain()
   const g = env.gain
-  g.setValueAtTime(0.0001, start)
-  if (inhale) {
-    // Slow swell that keeps growing until the top of the breath.
-    g.linearRampToValueAtTime(peak * 0.25, start + dur * 0.35)
-    g.linearRampToValueAtTime(peak, end)
-    if (hold > 0) g.linearRampToValueAtTime(peak * 0.75, holdEnd)
-  } else {
-    // Quick warm bloom, then settle and fade with the outgoing air.
-    const attack = Math.min(1.2, dur * 0.25)
-    g.linearRampToValueAtTime(peak, start + attack)
-    g.linearRampToValueAtTime(peak * 0.55, start + dur * 0.6)
-    g.linearRampToValueAtTime(peak * 0.3, end)
-    if (hold > 0) g.linearRampToValueAtTime(peak * 0.18, holdEnd)
-  }
-  g.setTargetAtTime(0.0001, holdEnd, PAD_RELEASE_S / 4)
+  g.setValueAtTime(0, start)
+  for (const [at, level] of shape.env.slice(1)) g.linearRampToValueAtTime(level * shape.peak, start + at * dur)
+  g.setTargetAtTime(0, end, 0.25)
   env.connect(out)
 
-  // Filter: opens on the way in, closes on the way out.
-  const filter = ctx.createBiquadFilter()
-  filter.type = 'lowpass'
-  filter.Q.value = 0.6
-  const f = filter.frequency
-  if (inhale) {
-    f.setValueAtTime(380, start)
-    f.exponentialRampToValueAtTime(2600, end)
-    f.setTargetAtTime(900, holdEnd, PAD_RELEASE_S / 3)
-  } else {
-    f.setValueAtTime(1500, start)
-    f.exponentialRampToValueAtTime(520, end)
-    f.setTargetAtTime(350, holdEnd, PAD_RELEASE_S / 3)
-  }
-  filter.connect(env)
-
+  // Slow turbulence: two unrelated slow wobbles on the level.
+  const wobble = ctx.createGain()
+  wobble.gain.value = 1
+  wobble.connect(env)
   const sources: AudioScheduledSourceNode[] = []
-  const wave = inhale ? bus.waveBright : bus.waveSoft
-
-  // Two slightly detuned oscillators per note give the slow, shimmering chorus.
-  chord.forEach((freq, i) => {
-    const noteGain = ctx.createGain()
-    noteGain.gain.value = levels[i] * 0.5
-    noteGain.connect(filter)
-    for (const cents of [-7, 7]) {
-      const osc = ctx.createOscillator()
-      osc.setPeriodicWave(wave)
-      osc.frequency.value = freq
-      osc.detune.value = cents + (i % 2 ? 2 : -2)
-      osc.connect(noteGain)
-      sources.push(osc)
-    }
-  })
-
-  // A breath of air: filtered noise that follows the same envelope.
-  const air = ctx.createBufferSource()
-  air.buffer = bus.noise
-  air.loop = true
-  const airFilter = ctx.createBiquadFilter()
-  airFilter.type = 'bandpass'
-  airFilter.Q.value = 0.8
-  if (inhale) {
-    airFilter.frequency.setValueAtTime(700, start)
-    airFilter.frequency.exponentialRampToValueAtTime(2400, end)
-  } else {
-    airFilter.frequency.setValueAtTime(1600, start)
-    airFilter.frequency.exponentialRampToValueAtTime(500, end)
+  const lfo = (rate: number, depth: number, target: AudioParam) => {
+    const osc = ctx.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.value = rate * (0.85 + Math.random() * 0.3)
+    const d = ctx.createGain()
+    d.gain.value = depth
+    osc.connect(d).connect(target)
+    sources.push(osc)
   }
+  lfo(0.37, 0.08, wobble.gain)
+  lfo(1.1, 0.05, wobble.gain)
+
+  // Throat colour: two broad, gentle resonances.
+  const f1 = ctx.createBiquadFilter()
+  f1.type = 'peaking'
+  f1.frequency.value = kind === 'inhale' ? 340 : 300
+  f1.Q.value = 1.1
+  f1.gain.value = 6
+  const f2 = ctx.createBiquadFilter()
+  f2.type = 'peaking'
+  f2.frequency.value = kind === 'inhale' ? 780 : 680
+  f2.Q.value = 1.4
+  f2.gain.value = 3
+  f1.connect(f2).connect(wobble)
+
+  // Body: deep noise behind a moving low-pass.
+  const body = ctx.createBufferSource()
+  body.buffer = bus.brown
+  body.loop = true
+  const bodyLp = ctx.createBiquadFilter()
+  bodyLp.type = 'lowpass'
+  bodyLp.Q.value = 0.5
+  bodyLp.frequency.setValueAtTime(shape.bodyFrom, start)
+  bodyLp.frequency.exponentialRampToValueAtTime(shape.bodyTo, end)
+  const bodyLp2 = ctx.createBiquadFilter()
+  bodyLp2.type = 'lowpass'
+  bodyLp2.Q.value = 0.5
+  bodyLp2.frequency.value = 1400
+  lfo(0.23, 40, bodyLp.frequency)
+  const bodyGain = ctx.createGain()
+  bodyGain.gain.value = 1
+  body.connect(bodyLp).connect(bodyLp2).connect(bodyGain).connect(f1)
+  sources.push(body)
+
+  // Air: a soft, low-placed band of pink noise on top.
+  const air = ctx.createBufferSource()
+  air.buffer = bus.pink
+  air.loop = true
+  const airBp = ctx.createBiquadFilter()
+  airBp.type = 'bandpass'
+  airBp.Q.value = 0.7
+  airBp.frequency.setValueAtTime(shape.airFrom, start)
+  airBp.frequency.exponentialRampToValueAtTime(shape.airTo, end)
+  const airLp = ctx.createBiquadFilter()
+  airLp.type = 'lowpass'
+  airLp.frequency.value = 1800
+  airLp.Q.value = 0.5
+  lfo(0.5, 60, airBp.frequency)
   const airGain = ctx.createGain()
-  airGain.gain.value = inhale ? 0.22 : 0.16
-  air.connect(airFilter).connect(airGain).connect(env)
+  airGain.gain.value = shape.air
+  air.connect(airBp).connect(airLp).connect(airGain).connect(f1)
   sources.push(air)
 
   const t0 = Math.max(start, ctx.currentTime)
   for (const s of sources) {
-    s.start(t0)
+    // Start the noise loops at random points so no two breaths sound identical.
+    if (s instanceof AudioBufferSourceNode && s.buffer) s.start(t0, Math.random() * s.buffer.duration)
+    else s.start(t0)
     s.stop(stopAt)
   }
   sources[sources.length - 1].onended = () => out.disconnect()
@@ -195,18 +264,24 @@ export function fadeOutPad(ctx: BaseAudioContext, voice: PadVoice, seconds = 0.4
   voice.endsAt = now + seconds + 0.05
 }
 
-function harmonicWave(ctx: BaseAudioContext, amps: number[]): PeriodicWave {
-  const real = new Float32Array(amps.length + 1)
-  const imag = new Float32Array(amps.length + 1)
-  amps.forEach((a, i) => (imag[i + 1] = a))
-  return ctx.createPeriodicWave(real, imag)
-}
-
-function noiseBuffer(ctx: BaseAudioContext, seconds: number): AudioBuffer {
+function brownNoise(ctx: BaseAudioContext, seconds: number): AudioBuffer {
   const len = Math.floor(ctx.sampleRate * seconds)
   const buf = ctx.createBuffer(1, len, ctx.sampleRate)
   const data = buf.getChannelData(0)
-  // Pinkish noise (Paul Kellet's filter) sounds softer than white noise.
+  let last = 0
+  for (let i = 0; i < len; i++) {
+    last = (last + (Math.random() * 2 - 1) * 0.02) / 1.02
+    data[i] = last * 3.5
+  }
+  smoothLoop(data, ctx.sampleRate)
+  return buf
+}
+
+function pinkNoise(ctx: BaseAudioContext, seconds: number): AudioBuffer {
+  const len = Math.floor(ctx.sampleRate * seconds)
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate)
+  const data = buf.getChannelData(0)
+  // Paul Kellet's economy pink filter.
   let b0 = 0
   let b1 = 0
   let b2 = 0
@@ -217,10 +292,21 @@ function noiseBuffer(ctx: BaseAudioContext, seconds: number): AudioBuffer {
     b2 = 0.57 * b2 + w * 1.0526913
     data[i] = (b0 + b1 + b2 + w * 0.1848) * 0.12
   }
+  smoothLoop(data, ctx.sampleRate)
   return buf
 }
 
-/** A long, smooth stereo reverb tail made from decaying noise. */
+/** Cross-fade the end of a noise buffer into its start so the loop has no click. */
+function smoothLoop(data: Float32Array, rate: number): void {
+  const n = Math.min(Math.floor(rate * 0.05), data.length >> 2)
+  for (let i = 0; i < n; i++) {
+    const t = i / n
+    const j = data.length - n + i
+    data[j] = data[j] * (1 - t) + data[i] * t
+  }
+}
+
+/** A short, dark stereo room made from decaying, low-passed noise. */
 function reverbImpulse(ctx: BaseAudioContext, seconds: number): AudioBuffer {
   const len = Math.floor(ctx.sampleRate * seconds)
   const buf = ctx.createBuffer(2, len, ctx.sampleRate)
@@ -229,9 +315,9 @@ function reverbImpulse(ctx: BaseAudioContext, seconds: number): AudioBuffer {
     let lp = 0
     for (let i = 0; i < len; i++) {
       const t = i / len
-      // Slight low-pass so the tail is dark and soft rather than hissy.
-      lp = lp * 0.6 + (Math.random() * 2 - 1) * 0.4
-      data[i] = lp * Math.pow(1 - t, 3) * Math.min(1, i / (ctx.sampleRate * 0.03))
+      // Strong low-pass so the tail is warm, never hissy.
+      lp = lp * 0.82 + (Math.random() * 2 - 1) * 0.18
+      data[i] = lp * Math.pow(1 - t, 4) * Math.min(1, i / (ctx.sampleRate * 0.02))
     }
   }
   return buf
