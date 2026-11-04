@@ -8,6 +8,8 @@ import { intoFrame, simplifiedDiaphragm } from './diaphragmShape'
 import { airwayTree, type Branch } from './airwayTree'
 import { BreathSpecks } from './BreathSpecks'
 import { LungGlow, type GlowBed } from './LungGlow'
+import { heartbeat } from './heartbeat'
+import { ImpactEffects } from './ImpactEffects'
 import { addCalmMorph } from './face'
 import { withHolesFilled } from './holes'
 import { simplifiedLung } from './lungShape'
@@ -112,11 +114,7 @@ function noseOnly(geometry: THREE.BufferGeometry, world: THREE.Matrix4, floor: n
   return out
 }
 
-/** A heartbeat shape over one beat (0..1): a strong contraction, then a smaller one. */
-export function heartbeat(phase: number): number {
-  const g = (c: number, w: number) => Math.exp(-(((phase - c) / w) ** 2))
-  return Math.min(1, g(0.12, 0.07) + 0.45 * g(0.36, 0.08))
-}
+export { heartbeat }
 
 /** Seconds per beat for the illustrative heartbeat; not the user's pulse. */
 const BEAT_S = 60 / 62
@@ -143,12 +141,14 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
   const fade = useMemo<Fade>(() => ({ inner: { value: 1 }, skin: { value: 1 } }), [])
   // Height range of the lungs, for their colour gradient from base to top (set once the model is known).
   const lungGradient = useMemo(() => ({ value: new THREE.Vector2(1.1, 1.45) }), [])
+  // How strongly the lungs' outline lights up with the "more volume" card (set by ImpactEffects).
+  const lungPulse = useMemo(() => ({ value: 0 }), [])
   // The bed of glowing specks under the lungs.
   const bed = useMemo<GlowBed>(() => ({ y: 0, x: 0, z: 0, rx: 0, rz: 0 }), [])
   const materials = useMemo(() => {
     // Contour-stripe look: the lungs show the breath by lighting up from the bottom as they fill.
-    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges, fade, lungGradient) }
-  }, [theme, level, edges, fade, lungGradient])
+    return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges, fade, lungGradient, lungPulse) }
+  }, [theme, level, edges, fade, lungGradient, lungPulse])
   const morphs = useRef<{ mesh: THREE.Mesh; index: number; kind: 'breath' | 'beat' | 'calm'; gain: number }[]>([])
   const calm = useRef(0)
   const beat = useRef(0)
@@ -375,6 +375,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
       <primitive object={model} />
       <BreathSpecks engine={engine} />
       <LungGlow engine={engine} bed={bed} show={fade.inner} />
+      <ImpactEffects engine={engine} model={model} lungPulse={lungPulse} />
     </group>
   )
 }
