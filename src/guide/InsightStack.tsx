@@ -83,7 +83,6 @@ export function InsightStack({
 
   // Open, each card glides up out of the stack to its place in the list; closing, they slide back down into it.
   const list = useRef<HTMLDivElement>(null)
-  const veil = useRef<HTMLDivElement>(null)
   const fold = useRef<HTMLDivElement>(null)
   const items = useRef<(HTMLDivElement | null)[]>([])
   const [closing, setClosing] = useState(false)
@@ -104,7 +103,6 @@ export function InsightStack({
       if (!el) return
       el.animate([stackPose(el, i), { transform: 'none', opacity: 1 }], { duration: OPEN_MS, delay: i * STAGGER_MS, easing: EASE, fill: 'backwards' })
     })
-    veil.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: OPEN_MS * 0.8, easing: 'ease-out', fill: 'backwards' })
     fold.current?.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 500, delay: OPEN_MS * 0.45, easing: EASE, fill: 'backwards' })
   }, [expanded, stackPose])
   const close = () => {
@@ -116,8 +114,6 @@ export function InsightStack({
     const runs = els.map((el, i) =>
       el.animate([{ transform: 'none', opacity: 1 }, stackPose(el, i)], { duration: CLOSE_MS, delay: (last - i) * STAGGER_MS, easing: EASE_IN_OUT, fill: 'forwards' }).finished,
     )
-    const total = CLOSE_MS + last * STAGGER_MS
-    veil.current?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: total, easing: 'ease-in-out', fill: 'forwards' })
     fold.current?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: 'ease-out', fill: 'forwards' })
     void Promise.all(runs)
       .catch(() => {})
@@ -131,8 +127,7 @@ export function InsightStack({
   if (expanded) {
     return (
       <>
-      {/* Keys keep React from reusing the faded-out veil as the closed stack. */}
-      <div key="veil" ref={veil} className={`pointer-events-none absolute inset-x-0 z-[5] bg-paper/55 backdrop-blur-[6px] transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`} style={{ top, bottom }} aria-hidden />
+      {/* No veil behind the opened list: only the cards themselves are frosted glass. */}
       <div
         key="list"
         ref={list}

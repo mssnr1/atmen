@@ -191,25 +191,25 @@
 /*
  * Insight cards of the style guide: violet glass for "location" (lighter at the top left), and for "impact" a
  * glass running from violet on the left to mint on the right, each with a fine glowing edge in the same hues.
- * Both are opaque with a background blur (Jan): the figure behind never shows through.
+ * Both are frosted glass (Jan): half see-through with a strong background blur on the card itself.
  */
 :root {
-  --insight-place: linear-gradient(140deg, rgb(236 232 255 / 0.97) 0%, rgb(220 212 255 / 0.97) 55%, rgb(208 200 252 / 0.97) 100%);
-  --insight-impact: linear-gradient(100deg, rgb(226 219 255 / 0.97) 0%, rgb(226 228 250 / 0.97) 40%, rgb(206 238 236 / 0.97) 75%, rgb(188 240 220 / 0.97) 100%);
+  --insight-place: linear-gradient(140deg, rgb(236 232 255 / 0.5) 0%, rgb(220 212 255 / 0.5) 55%, rgb(208 200 252 / 0.5) 100%);
+  --insight-impact: linear-gradient(100deg, rgb(226 219 255 / 0.5) 0%, rgb(226 228 250 / 0.5) 40%, rgb(206 238 236 / 0.5) 75%, rgb(188 240 220 / 0.5) 100%);
   --insight-edge-place: linear-gradient(140deg, rgb(150 130 250 / 0.75), rgb(150 130 250 / 0.3));
   --insight-edge-impact: linear-gradient(90deg, rgb(150 130 250 / 0.7), rgb(63 207 156 / 0.75));
-  --insight-impact-a: rgb(226 219 255 / 0.97);
-  --insight-impact-b: rgb(226 228 250 / 0.97);
-  --insight-impact-c: rgb(188 240 220 / 0.97);
+  --insight-impact-a: rgb(226 219 255 / 0.5);
+  --insight-impact-b: rgb(226 228 250 / 0.5);
+  --insight-impact-c: rgb(188 240 220 / 0.5);
 }
 :root.dark {
-  --insight-place: linear-gradient(140deg, rgb(92 82 146 / 0.97) 0%, rgb(62 58 106 / 0.97) 55%, rgb(47 51 84 / 0.97) 100%);
-  --insight-impact: linear-gradient(100deg, rgb(98 84 150 / 0.97) 0%, rgb(60 61 102 / 0.97) 40%, rgb(60 90 110 / 0.97) 75%, rgb(80 135 132 / 0.97) 100%);
+  --insight-place: linear-gradient(140deg, rgb(92 82 146 / 0.45) 0%, rgb(62 58 106 / 0.45) 55%, rgb(47 51 84 / 0.45) 100%);
+  --insight-impact: linear-gradient(100deg, rgb(98 84 150 / 0.45) 0%, rgb(60 61 102 / 0.45) 40%, rgb(60 90 110 / 0.45) 75%, rgb(80 135 132 / 0.45) 100%);
   --insight-edge-place: linear-gradient(140deg, rgb(199 187 255 / 0.75), rgb(199 187 255 / 0.22));
   --insight-edge-impact: linear-gradient(90deg, rgb(199 187 255 / 0.55), rgb(167 243 208 / 0.6));
-  --insight-impact-a: rgb(98 84 150 / 0.97);
-  --insight-impact-b: rgb(60 61 102 / 0.97);
-  --insight-impact-c: rgb(80 135 132 / 0.97);
+  --insight-impact-a: rgb(98 84 150 / 0.45);
+  --insight-impact-b: rgb(60 61 102 / 0.45);
+  --insight-impact-c: rgb(80 135 132 / 0.45);
 }
 /* Pebble: a soft raised stone, lit from above (sheen and bright top edge), shaded toward its bottom. */
 :root {
@@ -229,9 +229,9 @@
   position: relative;
   isolation: isolate;
   box-shadow: var(--insight-pebble), var(--insight-lift);
-  /* Opaque glass: whatever lies behind is blurred away, never read through. */
-  -webkit-backdrop-filter: blur(24px) saturate(1.5);
-  backdrop-filter: blur(24px) saturate(1.5);
+  /* Frosted glass: the card itself blurs what lies behind it (the figure shows through only as soft colour). */
+  -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  backdrop-filter: blur(22px) saturate(1.7);
 }
 .fluo-tile-impact {
   box-shadow: var(--insight-pebble), var(--insight-lift), var(--insight-glow-impact);
