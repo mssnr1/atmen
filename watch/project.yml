@@ -1,0 +1,45 @@
+# Generates FluoWatch.xcodeproj with XcodeGen (brew install xcodegen; xcodegen generate).
+name: FluoWatch
+options:
+  bundleIdPrefix: de.fluo
+  deploymentTarget:
+    watchOS: "10.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+targets:
+  FluoWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: FluoWatch
+        excludes:
+          - "Fonts/LICENSE.txt"
+          - "Frames/**"
+      - path: FluoWatch/Frames
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.fluo.watch
+        PRODUCT_NAME: Fluo
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Fluo
+        INFOPLIST_KEY_WKWatchOnly: YES
+        INFOPLIST_KEY_WKApplication: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+    info:
+      path: FluoWatch/Info.plist
+      properties:
+        CFBundleDisplayName: Fluo
+        WKApplication: true
+        WKWatchOnly: true
+        UIAppFonts:
+          - Inter-Medium.otf
+          - Inter-SemiBold.otf
+        WKBackgroundModes:
+          - mindfulness
