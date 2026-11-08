@@ -76,14 +76,30 @@ const BREATH_GAIN: Record<string, number> = { Body_Shell: 2.6, Arms: 2.6, Lung_L
  * airway; the bronchi end inside the lungs, which hide their ends).
  */
 const AIRWAY_TOP = 1.4606
-/** Below this height the model's throat (mouth and lower pharynx) is left out; the nose above stays. */
-const NOSE_FLOOR = 1.552
-/** Behind this depth (world z) the upper throat (nasopharynx, wider than the nose, with side flaps) is left out too. */
-const NOSE_BACK = 0.047
-/** The nose's open back end once cut (world metres): middle height, half its height, half its width. */
-const NOSE_OPENING = { y: 1.5722, r: 0.0198, w: 0.012 }
-/** The throat tube is cut open here (world z), just inside the nose's back end, where the nose takes over. */
-const THROAT_FRONT = 0.0495
+/**
+ * The nasal cavity, front to back from its back end, as the model has it (world metres): depth z, floor,
+ * roof and half its width. The airway is built along it, so nose, throat and windpipe are one surface
+ * with the same lines everywhere, instead of the model's nasal cavity with its folds and inner walls.
+ */
+const NOSE_PROFILE: [z: number, floor: number, roof: number, w: number][] = [
+  [0.053, 1.554, 1.5928, 0.0102],
+  [0.057, 1.5544, 1.5942, 0.0101],
+  [0.061, 1.5546, 1.5952, 0.0101],
+  [0.065, 1.5545, 1.5961, 0.01],
+  [0.069, 1.5545, 1.5968, 0.0098],
+  [0.073, 1.5546, 1.5965, 0.0098],
+  [0.077, 1.5545, 1.5955, 0.01],
+  [0.081, 1.554, 1.5935, 0.0107],
+  [0.085, 1.553, 1.592, 0.0114],
+  [0.089, 1.552, 1.59, 0.0116],
+  [0.093, 1.5512, 1.5878, 0.0112],
+  [0.097, 1.5513, 1.5826, 0.0102],
+  [0.101, 1.5514, 1.5773, 0.0085],
+]
+/** The nose's front, slanting down under the bridge: the airway is cut off beyond it (see `Branch.clip`). */
+const NOSE_FRONT = { point: [0, 1.5878, 0.093] as [number, number, number], normal: [0, 0.39, 0.92] as [number, number, number] }
+/** Where the throat's bend ends at the back of the nose: middle height, half its height, half its width. */
+const NOSE_OPENING = { y: 1.5722, r: 0.0198, w: 0.0105 }
 /** Radii of the throat's bend forward into the nose (world metres): its front wall's and its back wall's. */
 const THROAT_INNER = 0.014
 const THROAT_OUTER = 0.04
@@ -91,16 +107,17 @@ const TRACHEA_R = 0.0105
 const CARINA: [number, number, number] = [-0.0005, 1.362, -0.013]
 const AIRWAY_BRANCHES: Branch[] = [
   { points: [[0, AIRWAY_TOP + 0.004, 0.01], [-0.0004, 1.4257, 0.005], [-0.0004, 1.3904, -0.0033], CARINA], r0: 0.0105, r1: 0.0095 },
-  // Up the back of the throat and forward into the back of the nose, so nose and windpipe flow into one
-  // airway without mouth or throat (see `throat`).
+  // Up the back of the throat and forward through the nose, so nose and windpipe are one airway
+  // without mouth or throat (see `throat`).
   throat(),
   { points: [CARINA, [0.027, 1.335, -0.018], [0.044, 1.321, -0.021], [0.062, 1.306, -0.02]], r0: 0.0078, r1: 0.0058 },
   { points: [CARINA, [-0.014, 1.348, -0.017], [-0.031, 1.318, -0.021], [-0.044, 1.297, -0.026]], r0: 0.0078, r1: 0.0058 },
 ]
 
 /**
- * The throat: straight up from the windpipe at its width, then in one round bend forward into the back
- * of the nose, widening on the way to the nose's back opening (`NOSE_OPENING`), so the two meet flush.
+ * Throat and nose: straight up from the windpipe at its width, then in one round bend forward into the
+ * back of the nose, widening on the way to the nose's size (`NOSE_OPENING`), and on along the nose
+ * (`NOSE_PROFILE`).
  * The bend is drawn by its two walls, each a quarter circle: the front wall turns from the windpipe's
  * front into the nose's floor, the back wall from the windpipe's back into the nose's roof. The tube
  * runs midway between them, as wide as they are apart.
@@ -137,34 +154,13 @@ function throat(): Branch {
     const [yo, zo] = wall(outer, a)
     at((yi + yo) / 2, (zi + zo) / 2, Math.hypot(yo - yi, zo - zi) / 2, i / arc)
   }
-  // Straight on into the nose, past the cut, so the open end is a clean section.
-  at(NOSE_OPENING.y, THROAT_FRONT + 0.008, NOSE_OPENING.r, 1)
-  return { points, r0: TRACHEA_R, r1: NOSE_OPENING.r, radii, widths }
-}
-
-/** The geometry with only the triangles whose centre lies above `floor` (world height) and in front of `back` (world z). */
-function noseOnly(geometry: THREE.BufferGeometry, world: THREE.Matrix4, floor: number, back: number): THREE.BufferGeometry {
-  const out = geometry.clone()
-  // A clone shares its source's userData object; give it its own, or marking the cut copy would mark
-  // the uncut source too, and the next copy of the model would skip the cut and show mouth and throat.
-  out.userData = { ...geometry.userData }
-  const index = geometry.index
-  const pos = geometry.attributes.position
-  if (!index) return out
-  const v = new THREE.Vector3()
-  const keep: number[] = []
-  for (let i = 0; i < index.count; i += 3) {
-    let y = 0
-    let z = 0
-    for (let k = 0; k < 3; k++) {
-      v.fromBufferAttribute(pos, index.getX(i + k)).applyMatrix4(world)
-      y += v.y / 3
-      z += v.z / 3
-    }
-    if (y > floor && z > back) keep.push(index.getX(i), index.getX(i + 1), index.getX(i + 2))
+  // On through the nose to its front, where it ends round inside the nose.
+  for (const [z, floor, roof, w] of NOSE_PROFILE) {
+    points.push([0, (floor + roof) / 2, z])
+    radii.push((roof - floor) / 2)
+    widths.push(w)
   }
-  out.setIndex(keep)
-  return out
+  return { points, r0: TRACHEA_R, r1: NOSE_OPENING.r, radii, widths, clip: NOSE_FRONT }
 }
 
 export { heartbeat }
@@ -274,7 +270,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         mesh.visible = false
         let tree = mesh.geometry.userData.tree as THREE.BufferGeometry | undefined
         if (!tree) {
-          tree = airwayTree(AIRWAY_BRANCHES, { top: 1.7, front: THROAT_FRONT })
+          tree = airwayTree(AIRWAY_BRANCHES, { top: 1.7 })
           tree.applyMatrix4(mesh.parent.matrixWorld.clone().invert())
           mesh.geometry.userData.tree = tree
         }
@@ -284,11 +280,10 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         backs.push([mesh, airway])
         return
       }
-      // Of the nose and throat only the nose is drawn: the mouth and throat below its floor and the
-      // upper throat behind it are left out, and the airway tube above runs up to meet its back.
-      if (mesh.name === 'Nasal_Cavity' && !mesh.geometry.userData.noseOnly) {
-        mesh.geometry = noseOnly(mesh.geometry, mesh.matrixWorld, NOSE_FLOOR, NOSE_BACK)
-        mesh.geometry.userData.noseOnly = true
+      // The nose is part of the airway built above (see `throat`).
+      if (mesh.name === 'Nasal_Cavity') {
+        mesh.visible = false
+        return
       }
       // The skin's depth, drawn just before its colour, so only its nearest surface shows (see `skinDepth`).
       if (part.kind === 'skin') {

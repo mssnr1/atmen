@@ -5,7 +5,7 @@ import * as THREE from 'three'
  * the section is an ellipse instead of a circle: `r` across the airway within the side view (the
  * plane of the polyline and the body's left-right axis' normal), `w` from left to right.
  */
-export type Branch = { points: [number, number, number][]; r0: number; r1: number; w0?: number; w1?: number; radii?: number[]; widths?: number[] }
+export type Branch = { points: [number, number, number][]; r0: number; r1: number; w0?: number; w1?: number; radii?: number[]; widths?: number[]; clip?: { point: [number, number, number]; normal: [number, number, number] } }
 
 /**
  * The windpipe and both main bronchi as one smooth piece. The model's trachea
@@ -17,10 +17,10 @@ export type Branch = { points: [number, number, number][]; r0: number; r1: numbe
  */
 export function airwayTree(
   branches: Branch[],
-  { top, front = Infinity, cell = 0.0011, blend = 0.008 }: { top: number; front?: number; cell?: number; blend?: number },
+  { top, cell = 0.0011, blend = 0.008 }: { top: number; cell?: number; blend?: number },
 ): THREE.BufferGeometry {
   // Segments with their radii (and widths, for elliptical sections), for the distance field.
-  const segs: { a: THREE.Vector3; b: THREE.Vector3; ra: number; rb: number; wa: number; wb: number }[] = []
+  const segs: { a: THREE.Vector3; b: THREE.Vector3; ra: number; rb: number; wa: number; wb: number; branch: number }[] = []
   for (const br of branches) {
     const pts = br.points.map((p) => new THREE.Vector3(...p))
     const lengths = [0]
@@ -31,7 +31,7 @@ export function airwayTree(
       const w1 = br.w1 ?? br.r1
       const r = (j: number) => br.radii?.[j] ?? br.r0 + (br.r1 - br.r0) * (lengths[j] / total)
       const w = (j: number) => br.widths?.[j] ?? br.radii?.[j] ?? w0 + (w1 - w0) * (lengths[j] / total)
-      segs.push({ a: pts[i - 1], b: pts[i], ra: r(i - 1), rb: r(i), wa: w(i - 1), wb: w(i) })
+      segs.push({ a: pts[i - 1], b: pts[i], ra: r(i - 1), rb: r(i), wa: w(i - 1), wb: w(i), branch: branches.indexOf(br) })
     }
   }
 
@@ -52,9 +52,20 @@ export function airwayTree(
     const h = Math.max(blend - Math.abs(x - y), 0) / blend
     return Math.min(x, y) - (h * h * blend) / 4
   }
+  // A branch's clip plane, if it has one, with a rounded edge.
+  const clips = branches.map((br) =>
+    br.clip ? { point: new THREE.Vector3(...br.clip.point), normal: new THREE.Vector3(...br.clip.normal).normalize() } : null,
+  )
+  const clipped = (b: number, dist: number) => {
+    const c = clips[b]
+    if (!c) return dist
+    return -smin(-dist, -ap.subVectors(p, c.point).dot(c.normal))
+  }
   const field = (x: number, y: number, z: number) => {
     p.set(x, y, z)
     let d = Infinity
+    let own = Infinity
+    let branch = -1
     for (const s of segs) {
       ab.subVectors(s.b, s.a)
       ap.subVectors(p, s.a)
@@ -75,10 +86,16 @@ export function airwayTree(
         const k1 = Math.hypot(u / (r * r), x / (w * w), along / (r * r))
         dist = k1 > 0 ? (k0 * (k0 - 1)) / k1 : -Math.min(r, w)
       }
-      d = d === Infinity ? dist : smin(d, dist)
+      // The pieces of one branch join plainly (it is one tube); branches blend smoothly into each other.
+      if (s.branch !== branch) {
+        if (branch >= 0) d = d === Infinity ? clipped(branch, own) : smin(d, clipped(branch, own))
+        branch = s.branch
+        own = dist
+      } else own = Math.min(own, dist)
     }
-    // Cut flat at the top, where the throat takes over, and at the front, where the nose takes over.
-    return Math.max(d, y - top, z - front)
+    d = d === Infinity ? clipped(branch, own) : smin(d, clipped(branch, own))
+    // Cut flat at the top.
+    return Math.max(d, y - top)
   }
 
   // Sample the field on a grid.
@@ -146,15 +163,12 @@ export function airwayTree(
           quad(vertexOf[cellAt(i - 1, j - 1, k)], vertexOf[cellAt(i, j - 1, k)], vertexOf[cellAt(i, j, k)], vertexOf[cellAt(i - 1, j, k)], here)
       }
 
-  // Drop the flat caps at the top and the front: the throat and the nose continue there.
+  // Drop the flat cap at the top.
   const kept: number[] = []
   const capY = top - cell * 0.75
-  const capZ = front - cell * 0.75
-  const onCap = (q: number) => positions[q * 3 + 1] > capY || positions[q * 3 + 2] > capZ
   for (let t = 0; t < index.length; t += 3) {
     const ys = [index[t], index[t + 1], index[t + 2]].map((q) => positions[q * 3 + 1])
-    const zs = [index[t], index[t + 1], index[t + 2]].map((q) => positions[q * 3 + 2])
-    if (ys.every((y) => y > capY) || zs.every((z) => z > capZ)) continue
+    if (ys.every((y) => y > capY)) continue
     kept.push(index[t], index[t + 1], index[t + 2])
   }
 
@@ -175,7 +189,7 @@ export function airwayTree(
     const f = it % 2 === 0 ? 0.6 : -0.63
     for (let q = 0; q < count; q++) {
       const near = links[q]
-      if (!near.size || onCap(q)) {
+      if (!near.size || positions[q * 3 + 1] > capY) {
         next.set(cur.subarray(q * 3, q * 3 + 3), q * 3)
         continue
       }
