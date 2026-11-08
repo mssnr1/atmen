@@ -1,7 +1,7 @@
 # Generates FluoWatch.xcodeproj with XcodeGen (brew install xcodegen; xcodegen generate).
 name: FluoWatch
 options:
-  bundleIdPrefix: de.fluo
+  bundleIdPrefix: de.janmeissner.fluo
   deploymentTarget:
     watchOS: "10.0"
   createIntermediateGroups: true
@@ -25,7 +25,7 @@ targets:
         buildPhase: resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: de.fluo.watch
+        PRODUCT_BUNDLE_IDENTIFIER: de.janmeissner.fluo.watch
         PRODUCT_NAME: Fluo
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Fluo
