@@ -23,6 +23,10 @@ const EDGE_LAYER = 5
 const EDGE_RIM_PX = 18
 /** Seconds the lungs take to fade out (and the skin to brighten) after the exercise; about three times this until it settles. */
 const FADE_TAU = 1.1
+/** How much the skin shows before the exercise starts (1 = as during it), so lungs and airways stand out. */
+const IDLE_SKIN = 0.5
+/** Seconds the skin takes to come up to its full strength once the exercise starts. */
+const IDLE_TAU = 0.6
 /** How much more the skin shows once the lungs have faded out. */
 const SKIN_BOOST = 0.1
 
@@ -187,6 +191,8 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
   const lungRange = useRef<[number, number] | null>(null)
   // 0 while breathing; eases to 1 once the exercise is done: the lungs fade out, the skin glows a little more.
   const done = useRef(0)
+  // 1 before the exercise starts, eases to 0 once it runs: the skin is quieter until then.
+  const idle = useRef(1)
   const fade = useMemo<Fade>(() => ({ inner: { value: 1 }, skin: { value: 1 } }), [])
   // Height range of the lungs, for their colour gradient from base to top (set once the model is known).
   const lungGradient = useMemo(() => ({ value: new THREE.Vector2(1.1, 1.45) }), [])
@@ -377,7 +383,8 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     done.current += ((snapshot.status === 'completed' ? 1 : 0) - done.current) * (1 - Math.exp(-dt / FADE_TAU))
     const d = done.current < 0.001 ? 0 : done.current > 0.999 ? 1 : done.current
     fade.inner.value = 1 - d
-    fade.skin.value = 1 + SKIN_BOOST * d
+    idle.current += ((snapshot.status === 'idle' ? 1 : 0) - idle.current) * (1 - Math.exp(-dt / IDLE_TAU))
+    fade.skin.value = (1 - (1 - IDLE_SKIN) * idle.current) * (1 + SKIN_BOOST * d)
     // While they fade the lungs stop hiding what lies behind them, and once gone they are not drawn at all.
     for (const m of [materials.lung, materials.lungBack]) {
       m.depthWrite = d === 0
