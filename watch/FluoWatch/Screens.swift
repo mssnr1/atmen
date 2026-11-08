@@ -23,6 +23,10 @@ struct RootView: View {
                 } onCancel: { running = nil }
             }
         }
+        #if DEBUG
+        // `-autostart` opens Resonance straight away (simulator checks can't tap Start).
+        .onAppear { if ProcessInfo.processInfo.arguments.contains("-autostart") { running = Exercise.all[0] } }
+        #endif
         .fullScreenCover(isPresented: Binding(get: { finished != nil }, set: { if !$0 { finished = nil } })) {
             if let f = finished {
                 DoneView(exercise: f.0, cycles: f.1) { finished = nil }
