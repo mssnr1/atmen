@@ -95,6 +95,7 @@ struct PracticeView: View {
     @State private var lastCycle = -1
     @State private var tapAt: Date = .distantPast
     @State private var keeper = SessionKeeper()
+    @State private var rattle = BreathRattle()
     @State private var done = false
 
     private var cycles: Int { exercise.cycles(forMinutes: minutes) }
@@ -143,27 +144,29 @@ struct PracticeView: View {
         .ignoresSafeArea()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button { keeper.stop(); onCancel() } label: { Image(systemName: "xmark") }
+                Button { rattle.stop(); keeper.stop(); onCancel() } label: { Image(systemName: "xmark") }
             }
         }
         .onAppear {
-            start = Date()
+            let now = Date()
+            start = now
             keeper.start()
+            rattle.start(exercise: exercise, cycles: cycles, from: now)
             cue(.inhale)
         }
-        .onDisappear { keeper.stop() }
+        .onDisappear { rattle.stop(); keeper.stop() }
     }
 
     private func cue(_ p: BreathPhase) {
         guard p != lastPhase else { return }
         lastPhase = p
-        Haptics.cue(p)
         if p != .hold { tapAt = Date() }
     }
 
     private func finish() {
         guard !done else { return }
         done = true
+        rattle.stop()
         Haptics.done()
         keeper.stop()
         onFinish(cycles)

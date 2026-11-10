@@ -1,7 +1,7 @@
 # Fluo for Apple Watch (test app)
 
 A first native watchOS version of Fluo: choose an exercise, breathe with the
-pre-rendered 3D figure from the web app, wrist taps on inhale/exhale, insight
+pre-rendered 3D figure from the web app, a wrist rattle that swells with the inhale and fades with the exhale, insight
 cards and the "gut gemacht" end screen.
 
 - `FluoWatch/Frames/` – one Resonance breath rendered from the web app's 3D
