@@ -25,17 +25,29 @@ src/
   visualization/  How a breath is shown. Reads the engine, never drives it.
     breathState.ts    snapshot → lung volume + airflow rate, shared by every mode
     modes.ts          mode registry (Simple, Anatomical)
-    abstract/         Simple mode: the expanding circle
+    abstract/         Simple mode: the breath sign, its lines filling with light
     anatomy3d/        Anatomical mode: three.js / React Three Fiber
       AnatomyModel.tsx  loads the GLB, drives lung/diaphragm/belly morphs from the engine, heartbeat
       airflow3d.ts      where the air volume is for a breath state (nose → trachea → bronchi → lungs)
       AirVolume.tsx     the air as soft translucent sprites
       Anatomy3DVisualization.tsx  canvas, camera, orbit/zoom/pan limits, reset view, fallback
-  guide/        Four-segment indicator for the current breath phase
+  stage/        The one room: a single figure behind every screen
+    Stage.tsx         mounts the visualization once; screens are layers over it
+    stage.ts          useStage(): a screen says what the figure breathes with and how it is framed
+    ambient.ts        the figure's own calm breath outside a session, and the last exhale before one
+  guide/        Body notes shown while breathing
+  lib/
+    breathClock.ts    the one ambient rhythm (5.5 s in, 5.5 s out) for figure, wordmark and breath sign
+    suggest.ts        which exercise fits now: own answers before/after, else time of day
+    weekRings.ts      the history as breath rings
+  components/   Buttons, breath sign, wordmark, mood scale, page frame
+  screens/      Start, FirstBreath, Practice (with its end), Exercise, History, Learn, Settings, Emergency
 blender/        Reproducible Blender scripts, .blend source, preview render, model docs and licence
-  components/   Buttons, duration picker
-  screens/      Home, Practice, Completion
 ```
+
+**Light is breath.** Lavender and sky are only ever the breath (lungs, breath sign, history rings);
+buttons and cards are neutral, mint marks an effect, red marks acute help. The night look is the
+default; the day look draws the figure in ink on paper.
 
 **Timing.** Every position is computed from elapsed clock time, never from counted frames or ticks.
 The animation samples the engine each frame; the 50 ms ticker only decides when events fire.

@@ -21,9 +21,9 @@ const isIos = () => /iPhone|iPod/.test(navigator.userAgent) || (navigator.platfo
 
 /**
  * Hides the browser's own bars. Where the browser can't do that (iPhone), it
- * explains how to open Fluo from the Home Screen instead.
+ * explains how to open Fluo from the Home Screen instead. `withLabel` renders it as a settings row.
  */
-export function FullscreenButton() {
+export function FullscreenButton({ withLabel = false }: { withLabel?: boolean }) {
   const { t } = useI18n()
   const [on, setOn] = useState(isFullscreen)
   const [hintOpen, setHintOpen] = useState(false)
@@ -57,9 +57,17 @@ export function FullscreenButton() {
 
   return (
     <>
-      <IconButton label={on ? t.exitFullscreen : t.fullscreen} pressed={on} onClick={toggle} data-testid="fullscreen">
-        {on ? <FullscreenExitIcon className="size-5" strokeWidth={1.5} /> : <FullscreenIcon className="size-5" strokeWidth={1.5} />}
-      </IconButton>
+      {withLabel ? (
+        // A whole settings row, so nothing is left over where full screen is not on offer.
+        <button type="button" onClick={toggle} aria-pressed={on} data-testid="fullscreen" className="flex w-full items-center justify-between gap-4 py-3 text-left text-[0.9375rem] font-medium text-ink">
+          {on ? t.exitFullscreen : t.fullscreen}
+          {on ? <FullscreenExitIcon className="size-5 text-ink-2" strokeWidth={1.5} /> : <FullscreenIcon className="size-5 text-ink-2" strokeWidth={1.5} />}
+        </button>
+      ) : (
+        <IconButton label={on ? t.exitFullscreen : t.fullscreen} pressed={on} onClick={toggle} data-testid="fullscreen">
+          {on ? <FullscreenExitIcon className="size-5" strokeWidth={1.5} /> : <FullscreenIcon className="size-5" strokeWidth={1.5} />}
+        </IconButton>
+      )}
       {/* Portalled, so the sheet sits above the controls rather than inside the header's layer. */}
       {!supported &&
         createPortal(

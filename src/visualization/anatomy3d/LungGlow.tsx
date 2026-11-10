@@ -73,8 +73,8 @@ export function LungGlow({ engine, bed, show }: { engine: BreathSource; bed: Glo
 
   useEffect(() => {
     const dark = theme === 'dark'
-    material.uniforms.uLow.value.set(dark ? '#7dd3fc' : '#38bdf8')
-    material.uniforms.uHigh.value.set(dark ? '#c7bbff' : '#8c7bff')
+    material.uniforms.uLow.value.set(dark ? '#7dd3fc' : '#4f7fd9')
+    material.uniforms.uHigh.value.set(dark ? '#c7bbff' : '#6f5cf0')
     material.blending = dark ? THREE.AdditiveBlending : THREE.NormalBlending
     material.needsUpdate = true
   }, [theme, material])

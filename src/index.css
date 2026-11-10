@@ -1,286 +1,72 @@
 @import "tailwindcss";
 
-@import "@fontsource-variable/nunito";
+@import "@fontsource-variable/figtree";
 
+/*
+ * "Licht ist Atem": one dark room, one material (fine light lines), one rhythm.
+ * Colour roles: lavender and sky are breath light and appear only where breath is (figure, breath sign,
+ * history rings). Buttons and cards are neutral. Mint stands for an effect, red for acute help.
+ *
+ * The default tokens are the day look "Atlas" (paper white, the figure as an ink drawing);
+ * `:root.dark` is the night look, the app's default.
+ */
 @theme {
-  /* Style guide (FLUO reference): ink and surface tones, lavender and indigo as the brand,
-     mint and sky as fresh accents. Light theme: the same hues on a pale lavender white. */
-  --color-lavender: #a898ff;
-  --color-indigo: #7d6cf5;
-  --color-mint: #3fcf9c;
-  --color-sky: #38bdf8;
-  --color-paper: #f7f7fc;
-  --color-surface: #eeeef8;
-  --color-surface-2: #e3e3f1;
-  --color-line: #dcdcec;
-  --color-ink: #151826;
-  --color-ink-2: #3b4058;
-  --color-muted: #7a7f98;
-  /* The filled accent (switches, selected pace, progress): indigo. */
-  --color-blue: #8c7bff;
-  --color-blue-deep: #7a68f5;
-  --color-blue-soft: #efecff;
-  /* Text and icons on the filled accent (selected segments): light on the deeper violet by day, ink on lavender at night. */
-  --color-on-blue: #ffffff;
-  /* Used air, breathed out. */
-  --color-violet: #9a8cff;
-  /* Raised surfaces: cards, sheets, the selected segment. */
-  --color-card: #ffffff;
+  --color-paper: #f4f5f3;
+  --color-surface: #ebece8;
+  --color-surface-2: #e0e2dd;
+  --color-line: #d2d5ce;
+  --color-ink: #1a1f33;
+  --color-ink-2: #5a6078;
+  --color-muted: #6c7287;
+  /* Raised surfaces: sheets and the knob of a switch. */
+  --color-card: #fbfbf9;
   --color-thumb: #ffffff;
-  /* The welcome and completion screens. */
-  --color-blue-page: #1f2140;
-  /* Text on white controls, the same in both themes. */
-  --color-night: #0b0f16;
-  /* Phase word on the practice screen, drawn as specks of air. */
+  /* Filled controls (primary button, selected segment, switch): neutral, never breath light. */
+  --color-solid: #1a1f33;
+  --color-on-solid: #f4f5f3;
+  /* Breath light, from the top of a breath (lavender) to its base (sky). */
   --color-breath: #6f5cf0;
-  /* Indigo for text and small accents; stays light enough to read on dark pages. */
-  --color-accent: #6f5cf0;
-  /* The translucent practice panel. */
-  --color-panel: rgb(247 247 252 / 0.32);
-  /* The heads-up insight cards: more opaque than the panel so their text stands off the figure. */
-  --color-insight: rgb(255 255 255 / 0.6);
-  /* Drawings, page dots and arrow button on the welcome screens (the logo stays white). */
-  --color-page-mark: #c7bbff;
-  --color-page-dot: #c7bbff;
-  --color-page-button: #c7bbff;
-  --color-page-button-ink: #0b0f16;
-  /* Fresh air in the 3D lungs. */
-  --color-air: #3b9ae6;
-  --color-air-used: #8c7bff;
-  /* The red of the acute-help button. */
-  --color-alert: #e5484d;
+  --color-breath-2: #4f7fd9;
+  /* An effect in the body. */
+  --color-effect: #17805f;
+  /* Acute help. */
+  --color-alert: #d93f38;
+  /* The ink of the night page, the same in both looks. */
+  --color-night: #0b0f16;
+  /* The veil under controls that float over the figure. */
+  --color-panel: rgb(244 245 243 / 0.72);
   --font-sans:
-    "Nunito Variable", "Nunito", ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
-    "Helvetica Neue", sans-serif;
+    "Figtree Variable", "Figtree", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
 
-/* Dark theme, the style guide's own: ink background, navy surfaces, lavender as the main colour. */
 :root {
-  /* The breathing bubbles behind the start and acute-help screens. */
-  --bubble-air: rgb(125 211 252 / 0.14);
-  --bubble-air-core: rgb(154 140 255 / 0.26);
-  --bubble-used: rgb(167 243 208 / 0.1);
-  --bubble-used-core: rgb(199 187 255 / 0.2);
+  /* The breath clock (see lib/breathClock.ts) writes --b on elements that breathe; this is its resting value. */
+  --b: 0.62;
 }
 
 :root.dark {
-  --color-lavender: #c7bbff;
-  --color-indigo: #9a8cff;
-  --color-mint: #a7f3d0;
-  --color-sky: #7dd3fc;
-  --bubble-air: rgb(154 140 255 / 0.2);
-  --bubble-air-core: rgb(199 187 255 / 0.26);
-  --bubble-used: rgb(125 211 252 / 0.1);
-  --bubble-used-core: rgb(167 243 208 / 0.14);
   --color-paper: #0b0f16;
-  --color-surface: #151826;
-  --color-surface-2: #1f2633;
-  --color-line: #2e3750;
-  --color-ink: #f4f3ff;
-  --color-ink-2: #c9cbe0;
-  --color-muted: #8b91ab;
-  --color-blue: #b3a6ff;
-  --color-blue-deep: #9a8cff;
-  --color-blue-soft: #1c1f36;
-  --color-on-blue: #0b0f16;
-  --color-violet: #c7bbff;
-  --color-card: #151826;
-  --color-thumb: #2e3750;
-  --color-blue-page: #10142a;
+  --color-surface: #111722;
+  --color-surface-2: #19202e;
+  --color-line: #272c3a;
+  --color-ink: #f1f0fa;
+  --color-ink-2: #a9adc4;
+  --color-muted: #81869f;
+  --color-card: #131926;
+  --color-thumb: #f1f0fa;
+  --color-solid: #f1f0fa;
+  --color-on-solid: #0b0f16;
   --color-breath: #c7bbff;
-  --color-accent: #c7bbff;
-  --color-panel: rgb(11 15 22 / 0.42);
-  --color-insight: rgb(21 24 38 / 0.62);
-  --color-page-mark: #c7bbff;
-  --color-page-dot: #c7bbff;
-  --color-page-button: #c7bbff;
-  --color-page-button-ink: #0b0f16;
-  --color-air: #7dd3fc;
-  --color-air-used: #c7bbff;
-  --color-alert: #e5534b;
-  /* The particle aura around the figure (light theme colours live in Aura.tsx). */
+  --color-breath-2: #7dd3fc;
+  --color-effect: #a7f3d0;
+  --color-alert: #ff6b63;
+  --color-panel: rgb(11 15 22 / 0.6);
+  /* The particle aura around the figure at night (the day colours live in Aura.tsx). */
   --aura-cool: #1c2350;
   --aura-warm: #6f5cf0;
   --aura-rose: #9a8cff;
   --aura-glow: #7dd3fc;
   --aura-spark: #e6f6ff;
-}
-
-/* The lavender pill of the style guide: primary buttons and the main choice on the start screen. */
-.bg-fluo {
-  background: linear-gradient(100deg, #d6ccff 0%, #c7bbff 35%, #9a8cff 100%);
-  color: var(--color-night);
-  box-shadow: 0 8px 28px -10px rgb(154 140 255 / 0.65);
-}
-/* The FLUO logo: a faint lavender glow; on the start screen it swells with the breath (5.5 s in, 5.5 s out). */
-.logo-fluo {
-  --logo-top: #b4a8ff;
-  --logo-bottom: #7d6cf5;
-  display: block;
-  overflow: visible;
-  filter: drop-shadow(0 0 10px rgb(199 187 255 / 0.35));
-}
-:root.dark .logo-fluo,
-.bg-blue-page .logo-fluo {
-  --logo-top: #e6e3ff;
-  --logo-bottom: #d0cdfd;
-}
-:root:not(.dark) .logo-fluo {
-  filter: drop-shadow(0 2px 10px rgb(111 92 240 / 0.35));
-}
-.logo-breathe {
-  animation: logo-breathe 11s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-}
-@keyframes logo-breathe {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 6px rgb(199 187 255 / 0.25));
-  }
-  50% {
-    filter: drop-shadow(0 0 22px rgb(199 187 255 / 0.6));
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .logo-breathe {
-    animation: none;
-  }
-}
-.fluo-wave-front,
-.fluo-wave-back {
-  transform-box: view-box;
-  transform-origin: 50% 100%;
-  animation: fluo-wave 11s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-}
-.fluo-wave-back {
-  animation-delay: -2.5s;
-}
-@keyframes fluo-wave {
-  0%,
-  100% {
-    transform: scaleY(0.94) translateX(0);
-  }
-  50% {
-    transform: scaleY(1.06) translateX(-6px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .fluo-wave-front,
-  .fluo-wave-back {
-    animation: none;
-  }
-}
-/* Selected segment: the lavender gradient with ink text at night; a deeper violet with white text by day. */
-.seg-on {
-  background: linear-gradient(100deg, #d6ccff 0%, #c7bbff 40%, #a596ff 100%);
-  color: var(--color-night);
-  box-shadow: 0 4px 16px -6px rgb(154 140 255 / 0.7);
-}
-:root:not(.dark) .seg-on {
-  background: linear-gradient(100deg, #9d8dff 0%, #8c7bff 50%, #7a68f5 100%);
-  color: #fff;
-}
-/* Cards of the style guide: a navy surface, a little lighter at the top left, with a fine border. */
-.fluo-card {
-  background: linear-gradient(150deg, color-mix(in srgb, var(--color-surface-2) 94%, #fff) 0%, var(--color-surface) 70%);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-line) 80%, transparent), 0 8px 24px -16px rgb(0 0 0 / 0.5);
-}
-:root:not(.dark) .fluo-card {
-  background: linear-gradient(150deg, #ffffff 0%, #f3f2fb 100%);
-  box-shadow: inset 0 0 0 1px var(--color-line), 0 6px 20px -14px rgb(60 50 140 / 0.25);
-}
-/*
- * Insight cards of the style guide: violet glass for "location" (lighter at the top left), and for "impact" a
- * glass running from violet on the left to mint on the right, each with a fine glowing edge in the same hues.
- * Both are frosted glass (Jan): half see-through with a strong background blur on the card itself.
- */
-:root {
-  --insight-place: linear-gradient(140deg, rgb(236 232 255 / 0.5) 0%, rgb(220 212 255 / 0.5) 55%, rgb(208 200 252 / 0.5) 100%);
-  --insight-impact: linear-gradient(100deg, rgb(226 219 255 / 0.5) 0%, rgb(226 228 250 / 0.5) 40%, rgb(206 238 236 / 0.5) 75%, rgb(188 240 220 / 0.5) 100%);
-  --insight-edge-place: linear-gradient(140deg, rgb(150 130 250 / 0.75), rgb(150 130 250 / 0.3));
-  --insight-edge-impact: linear-gradient(90deg, rgb(150 130 250 / 0.7), rgb(63 207 156 / 0.75));
-  --insight-impact-a: rgb(226 219 255 / 0.5);
-  --insight-impact-b: rgb(226 228 250 / 0.5);
-  --insight-impact-c: rgb(188 240 220 / 0.5);
-}
-:root.dark {
-  --insight-place: linear-gradient(140deg, rgb(92 82 146 / 0.45) 0%, rgb(62 58 106 / 0.45) 55%, rgb(47 51 84 / 0.45) 100%);
-  --insight-impact: linear-gradient(100deg, rgb(98 84 150 / 0.45) 0%, rgb(60 61 102 / 0.45) 40%, rgb(60 90 110 / 0.45) 75%, rgb(80 135 132 / 0.45) 100%);
-  --insight-edge-place: linear-gradient(140deg, rgb(199 187 255 / 0.75), rgb(199 187 255 / 0.22));
-  --insight-edge-impact: linear-gradient(90deg, rgb(199 187 255 / 0.55), rgb(167 243 208 / 0.6));
-  --insight-impact-a: rgb(98 84 150 / 0.45);
-  --insight-impact-b: rgb(60 61 102 / 0.45);
-  --insight-impact-c: rgb(80 135 132 / 0.45);
-}
-/* Pebble: a soft raised stone, lit from above (sheen and bright top edge), shaded toward its bottom. */
-:root {
-  --insight-pebble: inset 0 1.5px 0 rgb(255 255 255 / 0.95), inset 0 14px 20px -12px rgb(255 255 255 / 0.85), inset 0 -16px 24px -14px rgb(90 70 200 / 0.3), inset 0 -3px 8px -3px rgb(150 130 250 / 0.4);
-  --insight-lift: 0 12px 26px -14px rgb(80 60 180 / 0.45), 0 2px 6px -2px rgb(80 60 180 / 0.18);
-  --insight-sheen: rgb(255 255 255 / 0.55);
-  --insight-glow-impact: 10px 4px 24px -12px rgb(63 207 156 / 0.45);
-}
-:root.dark {
-  --insight-pebble: inset 0 1.5px 0 rgb(255 255 255 / 0.28), inset 0 14px 20px -12px rgb(255 255 255 / 0.2), inset 0 -16px 24px -14px rgb(0 0 0 / 0.55), inset 0 -3px 8px -3px rgb(199 187 255 / 0.4);
-  --insight-lift: 0 14px 30px -14px rgb(0 0 0 / 0.75), 0 0 24px -10px rgb(154 140 255 / 0.4);
-  --insight-sheen: rgb(255 255 255 / 0.2);
-  --insight-glow-impact: 10px 4px 26px -12px rgb(167 243 208 / 0.4);
-}
-.fluo-tile,
-.fluo-insight {
-  position: relative;
-  isolation: isolate;
-  box-shadow: var(--insight-pebble), var(--insight-lift);
-  /* Frosted glass: the card itself blurs what lies behind it (the figure shows through only as soft colour). */
-  -webkit-backdrop-filter: blur(22px) saturate(1.7);
-  backdrop-filter: blur(22px) saturate(1.7);
-}
-.fluo-tile-impact {
-  box-shadow: var(--insight-pebble), var(--insight-lift), var(--insight-glow-impact);
-}
-.fluo-tile-place,
-.fluo-insight {
-  background: var(--insight-place);
-}
-.fluo-tile-impact {
-  background: var(--insight-impact);
-}
-/* The pebble's sheen: light falling on its upper left, under the text. */
-.fluo-tile::before,
-.fluo-insight::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: radial-gradient(120% 85% at 18% -12%, var(--insight-sheen), transparent 62%);
-  pointer-events: none;
-}
-/* The glowing edge: a 1px gradient ring cut out of a full gradient. */
-.fluo-tile::after,
-.fluo-insight::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  padding: 1px;
-  border-radius: inherit;
-  background: var(--insight-edge-place);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  pointer-events: none;
-}
-.fluo-tile-impact::after,
-.fluo-insight::after {
-  background: var(--insight-edge-impact);
-}
-.fluo-glow {
-  background:
-    radial-gradient(60% 45% at 85% 12%, rgb(154 140 255 / 0.38), transparent 70%),
-    radial-gradient(55% 40% at 5% 55%, rgb(167 243 208 / 0.14), transparent 70%),
-    radial-gradient(70% 50% at 50% 0%, rgb(125 211 252 / 0.1), transparent 70%);
-}
-.bg-fluo:hover {
-  filter: brightness(1.04);
 }
 
 html {
@@ -295,7 +81,7 @@ body,
 }
 
 body {
-  font-weight: 500;
+  font-weight: 400;
   background: var(--color-paper);
   color: var(--color-ink);
   -webkit-tap-highlight-color: transparent;
@@ -303,8 +89,111 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-body.blue-page {
-  background: var(--color-blue-page);
+/* Headlines: Figtree in a light cut, set tight. */
+.display {
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+/* The phase word of the practice screen: light, lower case, widely spaced. */
+.phase-word {
+  font-weight: 300;
+  letter-spacing: 0.16em;
+  text-transform: lowercase;
+}
+
+/*
+ * The breath sign (the o of the wordmark, the app icon, the simple view): a neutral outline with light
+ * lines that fill from below. Each line knows its index (--i); --n1 is the number of lines plus one.
+ * The level comes from --lv if set (a session, a finger), else from the breath clock's --b.
+ */
+.breath-sign {
+  display: block;
+  overflow: visible;
+}
+.breath-sign line {
+  opacity: clamp(var(--rest, 0.14), calc(var(--lv, var(--b)) * var(--n1) - var(--i)), 1);
+}
+
+/* The monoline wordmark: every letter is a single stroke in the weight of the sign's outline. */
+.fluo-mono {
+  display: inline-flex;
+  align-items: flex-end;
+  line-height: 1;
+  --g: 0.25em;
+}
+/* On the start screen the letters breathe apart and together. */
+.fluo-mono.live {
+  --g: calc(0.19em + 0.13em * var(--b));
+}
+.fluo-mono svg {
+  display: block;
+  flex: none;
+  height: 0.8em;
+  overflow: visible;
+}
+.fluo-mono svg + svg {
+  margin-left: var(--g);
+}
+.fluo-mono svg.kern {
+  margin-left: calc(var(--g) - 0.075em);
+}
+
+/* Quiet cards: a surface tone with a hairline, no gradient, no glow. */
+.fluo-card {
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-line);
+}
+/* Notes that float over the figure: frosted, neutral glass. */
+.fluo-tile {
+  background: color-mix(in srgb, var(--color-paper) 58%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 12%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+
+/* Start screen: the figure shows through the middle; the top and the lower third sink into the page. */
+.start-scrim {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-paper) 55%, transparent) 0%,
+    transparent 15%,
+    transparent 46%,
+    color-mix(in srgb, var(--color-paper) 86%, transparent) 66%,
+    var(--color-paper) 86%
+  );
+}
+/* Practice: a soft veil under the top bar and the controls, only while they show. */
+.veil-top {
+  background: linear-gradient(to bottom, var(--color-panel), transparent);
+}
+.veil-bottom {
+  background: linear-gradient(to top, var(--color-panel) 30%, transparent);
+}
+/* Controls that step back while breathing and return on a tap. */
+.chrome {
+  transition:
+    opacity 900ms ease,
+    visibility 0s linear 0s;
+}
+.chrome-off {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none !important;
+  transition:
+    opacity 1400ms ease,
+    visibility 0s linear 1400ms;
+}
+.chrome-off * {
+  pointer-events: none !important;
 }
 
 .safe-area {
@@ -370,8 +259,24 @@ body.blue-page {
     opacity: 0;
   }
 }
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-in {
+  animation: fade-in 900ms ease-out both;
+}
+.fade-up {
+  animation: fade-up 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
 
-/* Welcome card drawings: waves breathe, dotted air flows, the gauge needle sways. */
+/* Introduction drawings: waves breathe, dotted air flows, the gauge needle sways. */
 .art-breathe {
   transform-box: fill-box;
   transform-origin: center;
@@ -408,7 +313,7 @@ body.blue-page {
 .art-needle {
   transform-box: view-box;
   transform-origin: 88px 40px;
-  animation: art-needle 4.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation: art-needle 5.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 @keyframes art-needle {
   0%,
@@ -419,86 +324,8 @@ body.blue-page {
     transform: rotate(5deg);
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .art-breathe,
-  .art-flow,
-  .art-flow-long,
-  .art-needle {
-    animation: none;
-  }
-}
 
-.splash-tagline {
-  animation: fade-in 1000ms ease-out 700ms both;
-}
-
-/* Start screen: the three ways in appear once the logo has breathed in. */
-.start-choices {
-  animation: fade-up 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 1400ms both;
-}
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Breathing bubbles: all grow on the inhale and shrink on the exhale, each drifting on its own. */
-.bubble {
-  will-change: transform, translate;
-}
-@keyframes bubble-breathe {
-  0%,
-  100% {
-    transform: scale(0.8);
-    opacity: 0.6;
-  }
-  50% {
-    transform: scale(1.18);
-    opacity: 1;
-  }
-}
-/* 4 s in, 6 s out: the peak sits at 40 %. */
-@keyframes bubble-breathe-long-out {
-  0%,
-  100% {
-    transform: scale(0.8);
-    opacity: 0.6;
-  }
-  40% {
-    transform: scale(1.18);
-    opacity: 1;
-  }
-}
-@keyframes bubble-drift {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  33% {
-    translate: 3vw -3vh;
-  }
-  66% {
-    translate: -2.5vw 2vh;
-  }
-}
-.sos-fade {
-  animation: fade-in 900ms ease-out both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .bubble {
-    animation: none !important;
-  }
-  .start-choices {
-    animation-duration: 1ms;
-  }
-}
-
-/* Body insight cards drift in like the breath: fade, rise a little, come into focus. */
+/* Body notes drift in like the breath: fade, rise a little, come into focus. */
 .insight-in {
   animation: insight-in 1400ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -514,211 +341,16 @@ body.blue-page {
     filter: none;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
+  .art-breathe,
+  .art-flow,
+  .art-flow-long,
+  .art-needle {
+    animation: none;
+  }
+  .fade-up,
   .insight-in {
     animation: fade-in 600ms ease-out both;
-  }
-}
-
-/* Soft cloud edges for the practice top bar and controls panel: the veil fades out instead of ending in a hard line. */
-.cloud-top {
-  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 2.75rem), transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 2.75rem), transparent 100%);
-}
-.cloud-bottom {
-  -webkit-mask-image:
-    linear-gradient(to top, #000 0, #000 calc(100% - 3.25rem), transparent 100%),
-    linear-gradient(to right, transparent 0, #000 1.5rem, #000 calc(100% - 1.5rem), transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(to top, #000 0, #000 calc(100% - 3.25rem), transparent 100%),
-    linear-gradient(to right, transparent 0, #000 1.5rem, #000 calc(100% - 1.5rem), transparent 100%);
-  mask-composite: intersect;
-}
-
-/* Heads-up look on the insight cards: a soft glow on the accent text and a pulsing status dot. */
-.hud-glow {
-  text-shadow: 0 0 6px color-mix(in srgb, var(--color-accent) 55%, transparent), 0 0 14px color-mix(in srgb, var(--color-accent) 25%, transparent);
-}
-.hud-dot {
-  position: relative;
-  flex: none;
-  width: 5px;
-  height: 5px;
-  border-radius: 9999px;
-  background: var(--color-accent);
-  box-shadow: 0 0 6px var(--color-accent);
-  animation: hud-dot 2.4s ease-in-out infinite;
-}
-.hud-dot::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  border: 1px solid var(--color-accent);
-  animation: hud-ring 2.4s ease-out infinite;
-}
-@keyframes hud-dot {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
-  }
-}
-@keyframes hud-ring {
-  from {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  to {
-    transform: scale(3.2);
-    opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .hud-dot,
-  .hud-dot::after {
-    animation: none;
-  }
-}
-
-/* Home Start pill: page-coloured with an accent outline; a brighter light circles the outline
-   and the glow breathes slowly (11 s, like the resonance rhythm). */
-@property --magic-angle {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
-}
-.magic-start {
-  isolation: isolate;
-  box-shadow:
-    0 4px 18px rgb(0 0 0 / 0.12),
-    0 0 18px color-mix(in srgb, var(--color-accent) 35%, transparent);
-  animation: magic-breathe 11s ease-in-out infinite;
-}
-.magic-start::before,
-.magic-start::after {
-  content: '';
-  position: absolute;
-  inset: -1.5px;
-  z-index: -1;
-  border-radius: inherit;
-  padding: 1.5px;
-  background: conic-gradient(
-    from var(--magic-angle),
-    var(--color-accent) 0deg,
-    var(--color-accent) 50deg,
-    color-mix(in srgb, var(--color-accent) 45%, #fff) 110deg,
-    var(--color-accent) 170deg,
-    var(--color-accent) 360deg
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box exclude,
-    linear-gradient(#000 0 0);
-  animation: magic-spin 5.5s linear infinite;
-  pointer-events: none;
-}
-/* A blurred copy carrying only the travelling light, so it glows. */
-.magic-start::after {
-  inset: -4px;
-  padding: 4px;
-  background: conic-gradient(
-    from var(--magic-angle),
-    transparent 0deg,
-    color-mix(in srgb, var(--color-accent) 50%, transparent) 60deg,
-    var(--color-accent) 110deg,
-    transparent 180deg,
-    transparent 360deg
-  );
-  filter: blur(6px);
-  opacity: 0.9;
-}
-@keyframes magic-spin {
-  to {
-    --magic-angle: 360deg;
-  }
-}
-@keyframes magic-breathe {
-  0%,
-  100% {
-    box-shadow:
-      0 4px 18px rgb(0 0 0 / 0.12),
-      0 0 10px color-mix(in srgb, var(--color-accent) 22%, transparent);
-  }
-  50% {
-    box-shadow:
-      0 4px 18px rgb(0 0 0 / 0.12),
-      0 0 26px color-mix(in srgb, var(--color-accent) 50%, transparent);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .magic-start,
-  .magic-start::before,
-  .magic-start::after {
-    animation: none;
-  }
-}
-
-/* "How do you feel?" after an exercise: the chosen face gets a ring of light,
-   and a silky ribbon drifts in the corner in the resonance rhythm. */
-.feel-pop {
-  animation: feel-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.feel-face-on {
-  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-paper));
-  box-shadow:
-    inset 0 0 0 2px var(--color-accent),
-    0 0 0 5px color-mix(in srgb, var(--color-accent) 12%, transparent),
-    0 0 26px color-mix(in srgb, var(--color-accent) 38%, transparent);
-  animation: feel-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-@keyframes feel-pop {
-  0% {
-    transform: scale(0.9);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-.feel-glow {
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent);
-  filter: blur(10px);
-  animation: feel-breathe 10.9s ease-in-out infinite;
-}
-.feel-ribbon {
-  transform-origin: 80% 10%;
-  animation: feel-drift 10.9s ease-in-out infinite;
-}
-@keyframes feel-drift {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg) scale(1);
-  }
-  45% {
-    transform: translateY(10px) rotate(-2.5deg) scale(1.04);
-  }
-}
-@keyframes feel-breathe {
-  0%,
-  100% {
-    opacity: 0.7;
-    transform: scale(0.94);
-  }
-  45% {
-    opacity: 1;
-    transform: scale(1.06);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .feel-face-on,
-  .feel-glow,
-  .feel-ribbon {
-    animation: none;
   }
 }

@@ -154,7 +154,7 @@ const PARTICLES = 2200
 /** Colours per theme: on white the glow needs more colour to show, on the night page it needs light. */
 const PALETTE = {
   // Light: the app's accent blue, from a pale tint to the full accent. Dark: fallback for the --aura-* tokens.
-  light: { cool: '#dcd6ff', warm: '#9a8cff', rose: '#b9e9ff', glow: '#7d6cf5', spark: '#38bdf8' },
+  light: { cool: '#e7e3ff', warm: '#b3a6ff', rose: '#cfe0ff', glow: '#6f5cf0', spark: '#4f7fd9' },
   dark: { cool: '#1c2350', warm: '#6f5cf0', rose: '#9a8cff', glow: '#7dd3fc', spark: '#e6f6ff' },
 }
 

@@ -16,9 +16,9 @@ export default defineConfig({
       manifest: {
         name: 'Fluo',
         short_name: 'Fluo',
-        description: 'Die Kunst, besser zu atmen. Geführte Atemübungen.',
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
+        description: 'Sieh, was dein Atem in dir bewegt. Geführte Atemübungen.',
+        theme_color: '#0b0f16',
+        background_color: '#0b0f16',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '.',

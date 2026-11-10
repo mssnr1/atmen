@@ -8,6 +8,8 @@ export const relaxBreathing: Exercise = {
   text: {
     de: {
       name: 'Entspannen',
+      short: 'Entspannen',
+      need: 'Runterkommen',
       purpose: ['Weniger Anspannung', 'Zur Ruhe kommen'],
       tagline: 'Langes Ausatmen, 4 Sekunden ein, 8 Sekunden aus',
       summary:
@@ -24,6 +26,8 @@ export const relaxBreathing: Exercise = {
     },
     en: {
       name: 'Relax',
+      short: 'Relax',
+      need: 'Wind down',
       purpose: ['Less tension', 'Wind down'],
       tagline: 'Long exhale, 4 seconds in, 8 seconds out',
       summary:

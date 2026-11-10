@@ -15,8 +15,12 @@ interface Props {
   bottomInset?: number
   /** Height of the bar floating over the top edge; the figure runs on behind it. */
   topInset?: number
-  /** Camera framing: before the start, while breathing (from the lead-in on), or after the exercise. */
+  /** Camera framing: the start screen, before an exercise, while breathing (from the lead-in on), or after it. */
   framing?: Framing
+  /** Nothing is drawn while paused (the figure is hidden behind another screen). */
+  paused?: boolean
+  /** The figure can be turned and zoomed. */
+  interactive?: boolean
 }
 
 /**
@@ -25,16 +29,29 @@ interface Props {
  * mid-session picks up at exactly the current point of the breath without
  * touching the session.
  */
-export function Visualization({ mode, engine, showProgress, bottomInset = 0, topInset = 0, framing = 'idle' }: Props) {
-  // The body runs on behind the floating controls; the abstract view stays clear of them.
-  return mode === 'abstract' ? (
-    <div className="absolute inset-0 flex items-center justify-center" style={{ paddingTop: topInset + 8, paddingBottom: bottomInset + 8 }}>
-      <AbstractVisualization engine={engine} showProgress={showProgress} />
-    </div>
-  ) : (
+export function Visualization({ mode, engine, showProgress, bottomInset = 0, topInset = 0, framing = 'idle', paused = false, interactive = true }: Props) {
+  // The body runs on behind the floating controls; the simple view stays clear of them.
+  if (mode === 'abstract') {
+    // On the start screen the sign sits where the lungs would: in the upper middle, above the text.
+    const pad = framing === 'start' ? { paddingTop: '14dvh', paddingBottom: '46dvh' } : { paddingTop: topInset + 8, paddingBottom: bottomInset + 8 }
+    return (
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-8" style={pad}>
+        {!paused && <AbstractVisualization engine={engine} showProgress={showProgress} />}
+      </div>
+    )
+  }
+  return (
     <div className="absolute inset-0">
       <Suspense fallback={null}>
-        <Anatomy3DVisualization engine={engine} showProgress={showProgress} bottomInset={bottomInset} topInset={topInset} framing={framing} />
+        <Anatomy3DVisualization
+          engine={engine}
+          showProgress={showProgress}
+          bottomInset={bottomInset}
+          topInset={topInset}
+          framing={framing}
+          paused={paused}
+          interactive={interactive}
+        />
       </Suspense>
     </div>
   )

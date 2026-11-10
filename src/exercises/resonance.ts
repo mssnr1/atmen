@@ -8,6 +8,8 @@ export const resonanceBreathing: Exercise = {
   text: {
     de: {
       name: 'Resonanzatmung',
+      short: 'Resonanz',
+      need: 'In Balance kommen',
       purpose: ['Ruhiger Geist', 'Ausgeglichenes Nervensystem'],
       tagline: 'Ruhig und gleichmäßig, etwa 5,5 Atemzüge pro Minute',
       summary:
@@ -24,6 +26,8 @@ export const resonanceBreathing: Exercise = {
     },
     en: {
       name: 'Resonance Breathing',
+      short: 'Resonance',
+      need: 'Find your balance',
       purpose: ['Calm mind', 'Balanced nervous system'],
       tagline: 'Slow, even breaths at about 5.5 per minute',
       summary:

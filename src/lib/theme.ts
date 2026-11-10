@@ -29,8 +29,6 @@ export function useApplyTheme() {
     const root = document.documentElement
     root.classList.toggle('dark', theme === 'dark')
     root.style.colorScheme = theme
-    if (!document.body.classList.contains('blue-page')) {
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', cssColor('--color-paper'))
-    }
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', cssColor('--color-paper'))
   }, [theme])
 }

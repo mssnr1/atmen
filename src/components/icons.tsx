@@ -48,23 +48,6 @@ export const SoundOffIcon = (p: P) => (
     <path d="M16 9.5l5 5M21 9.5l-5 5" />
   </svg>
 )
-export const VibrateIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <rect x="8" y="4" width="8" height="16" rx="2" />
-    <path d="M4.5 9v6M19.5 9v6" />
-  </svg>
-)
-export const VibrateOffIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <rect x="8" y="4" width="8" height="16" rx="2" />
-    <path d="M4 4l16 16" />
-  </svg>
-)
-export const HomeIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <path d="M4 11l8-6.5 8 6.5M6.5 9.5V19h11V9.5" />
-  </svg>
-)
 export const ArrowLeftIcon = (p: P) => (
   <svg {...base} {...p}>
     <path d="M19.5 12h-15M10.5 6l-6 6 6 6" />
@@ -87,8 +70,8 @@ export const ChevronLeftIcon = (p: P) => (
 )
 export const LearnIcon = (p: P) => (
   <svg {...base} {...p}>
-    {/* A plain capital A, as in the style guide's tab bar. */}
-    <path d="M5 20.5L12 3.5l7 17M7.6 14.2h8.8" />
+    {/* An open book. */}
+    <path d="M12 6.6C10.4 5.3 8.3 4.6 6 4.6H3.5v13.3H6c2.3 0 4.4.7 6 2 1.6-1.3 3.7-2 6-2h2.5V4.6H18c-2.3 0-4.4.7-6 2zM12 6.6v13.3" />
   </svg>
 )
 export const GearIcon = (p: P) => (
@@ -108,33 +91,6 @@ export const InfoIcon = (p: P) => (
   <svg {...base} {...p}>
     <circle cx="12" cy="12" r="8.5" />
     <path d="M12 11v5M12 8h.01" />
-  </svg>
-)
-export const ThumbUpIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <path d="M7.5 10.5V20H4.5v-9.5zM7.5 10.5l3.6-6.3c1.4 0 2.4 1.2 2.1 2.6l-.6 3h5c1.3 0 2.2 1.2 1.9 2.4l-1.6 6.2c-.3 1-1.1 1.6-2.1 1.6H7.5" />
-  </svg>
-)
-export const ThumbDownIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <path d="M16.5 13.5V4h3v9.5zM16.5 13.5l-3.6 6.3c-1.4 0-2.4-1.2-2.1-2.6l.6-3h-5c-1.3 0-2.2-1.2-1.9-2.4l1.6-6.2C6.4 4.6 7.2 4 8.2 4h8.3" />
-  </svg>
-)
-export const ClockIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <circle cx="12" cy="12" r="8.5" />
-    <path d="M12 7.5V12l3 2" />
-  </svg>
-)
-export const LungsIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <path d="M12 4v7M12 9.5c-1.5 1.3-2.5 1.8-3.5 2M12 9.5c1.5 1.3 2.5 1.8 3.5 2" />
-    <path d="M8.5 7.5C6 8 4 12.5 4 17c0 1.5 1 2.5 2.5 2.2 2-.4 3.5-1.6 3.5-4.2V9.5c0-1.2-.6-2.2-1.5-2zM15.5 7.5C18 8 20 12.5 20 17c0 1.5-1 2.5-2.5 2.2-2-.4-3.5-1.6-3.5-4.2V9.5c0-1.2.6-2.2 1.5-2z" />
-  </svg>
-)
-export const WaveIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <path d="M3 13c2.5 0 2.5-5 5-5s2.5 8 5 8 2.5-6 5-6 2 2 3 2" />
   </svg>
 )
 export const FaceIcon = ({ mood, ...p }: P & { mood: 1 | 2 | 3 | 4 | 5 }) => {
@@ -164,29 +120,6 @@ export const FullscreenExitIcon = (p: P) => (
     <path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" />
   </svg>
 )
-export const CircleIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <circle cx="12" cy="12" r="8" />
-    <circle cx="12" cy="12" r="4" opacity={0.5} />
-  </svg>
-)
-export const LeafIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <path d="M5 19c0-8 5-13 14-14-.5 9-5.5 14-13 14" />
-    <path d="M5 19c3-4 6-7 9-9" />
-  </svg>
-)
-export const SunIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <circle cx="12" cy="12" r="4" />
-    <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" />
-  </svg>
-)
-export const MoonIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
-  </svg>
-)
 export const LifebuoyIcon = (p: P) => (
   <svg {...base} {...p}>
     <circle cx="12" cy="12" r="8.5" />
@@ -194,20 +127,10 @@ export const LifebuoyIcon = (p: P) => (
     <path d="M6 6l3.5 3.5M18 6l-3.5 3.5M6 18l3.5-3.5M18 18l-3.5-3.5" />
   </svg>
 )
-export const ChevronDownIcon = (p: P) => (
+export const RingsIcon = (p: P) => (
   <svg {...base} {...p}>
-    <path d="M6 9.5l6 6 6-6" />
-  </svg>
-)
-/** Two arrows pointing apart: make bigger. */
-export const MaximizeIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5" />
-  </svg>
-)
-/** Two arrows pointing together: make smaller. */
-export const MinimizeIcon = (p: P) => (
-  <svg {...base} {...p}>
-    <path d="M20 10h-6V4M4 14h6v6M14 10l6.5-6.5M10 14l-6.5 6.5" />
+    <circle cx="12" cy="12" r="2.25" />
+    <circle cx="12" cy="12" r="5.6" />
+    <circle cx="12" cy="12" r="9" />
   </svg>
 )
