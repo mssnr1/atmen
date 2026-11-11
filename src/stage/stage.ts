@@ -22,9 +22,11 @@ export interface StageView {
 interface StageState extends Required<StageView> {
   /** A screen is showing the figure. */
   active: boolean
+  /** A screen that covers the figure wants it made ready behind it. */
+  ahead: boolean
 }
 
-let state: StageState = { active: false, source: ambientSource, framing: 'start', bottomInset: 0, topInset: 0, interactive: false }
+let state: StageState = { active: false, ahead: false, source: ambientSource, framing: 'start', bottomInset: 0, topInset: 0, interactive: false }
 const listeners = new Set<() => void>()
 
 function set(patch: Partial<StageState>) {
@@ -52,4 +54,15 @@ export function useStage({ source, framing, bottomInset = 0, topInset = 0, inter
     set({ active: true, source, framing, bottomInset, topInset, interactive })
   }, [source, framing, bottomInset, topInset, interactive])
   useEffect(() => () => set({ active: false, interactive: false }), [])
+}
+
+/**
+ * Has the figure made ready behind the calling screen, which covers it: loaded, built and drawn once,
+ * then at rest. The screen that shows it next only has to let it fade in.
+ */
+export function useStageAhead() {
+  useEffect(() => {
+    set({ ahead: true })
+    return () => set({ ahead: false })
+  }, [])
 }

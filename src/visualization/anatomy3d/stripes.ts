@@ -42,7 +42,7 @@ export type StripeOptions = {
   /**
    * A second colour toward the bottom: below `range.x` (world height) line, fill and rim take `low`,
    * above `range.y` they keep their own colour, with a smooth blend between (the style guide's gradients).
-   * `fill` is the colour the fill takes instead (the day look: lines grow soft, the paper stays paper).
+   * `fill` is the colour the fill takes instead (the skin: its lines change colour, what lies between them stays as it is).
    */
   gradient?: { low: string; fill?: string; range: { value: THREE.Vector2 } }
   /** Add light instead of covering what lies behind: the surface glows (for the dark page). */
@@ -266,8 +266,10 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     // By day the outline is a drawn line, not a glow.
     rimEdge: dark ? undefined : [0.74, 0.86],
     focusTrunk: true,
-    // By day the lines grow soft toward the belly and the paper stays paper.
-    gradient: { low: p.bodyLow, fill: dark ? undefined : p.bodyBase, range: { value: SKIN_GRADIENT } },
+    // Toward the belly only the lines and the outline change colour (by day they grow soft, at night they
+    // turn to the sky's blue): the fill between them stays what it is at the chest, close to the page.
+    // Taking the low colour too, it made the belly an opaque blue block.
+    gradient: { low: p.bodyLow, fill: p.bodyBase, range: { value: SKIN_GRADIENT } },
     side: 'both',
   }
   const lungGradient = lungRange ? { low: p.lungLow, range: lungRange } : undefined

@@ -269,7 +269,7 @@ export function Anatomy3DVisualization({
   bottomInset?: number
   topInset?: number
   framing?: Framing
-  /** Stop drawing: the figure is hidden behind another screen. */
+  /** Stop drawing: the figure is hidden behind another screen. (A figure not drawn yet is still drawn once: it is being made ready.) */
   paused?: boolean
   /** The figure can be turned and zoomed (not on the start screen). */
   interactive?: boolean
@@ -385,7 +385,7 @@ export function Anatomy3DVisualization({
           <Canvas
             key={life}
             className={shown ? 'fade-in' : 'opacity-0'}
-            frameloop={paused ? 'never' : 'always'}
+            frameloop={paused && shown ? 'never' : 'always'}
             dpr={[1, 1.75]}
             camera={{ fov: FOV, near: 0.05, far: 10, position: defaultPosition(1, 1) }}
             gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
