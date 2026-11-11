@@ -41,10 +41,11 @@ export function usePracticeSession(exercise: Exercise, durationMs: number, pace:
 
   const scheduleAudio = useCallback(
     (fresh: boolean) => {
-      if (!store.get().preferences.audioEnabled) return
+      const { audioEnabled, ringPulse } = store.get().preferences
+      if (!audioEnabled) return
       void audio.unlock().then(() => {
         if (engine.getSnapshot().status === 'running') {
-          audio.scheduleSession(engine.getPlan(), () => engine.sample().elapsedMs, fresh)
+          audio.scheduleSession(engine.getPlan(), () => engine.sample().elapsedMs, fresh, { pulse: ringPulse })
         }
       })
     },
@@ -145,6 +146,14 @@ export function usePracticeSession(exercise: Exercise, durationMs: number, pace:
         store.updatePreferences({ audioEnabled: enabled })
         if (!enabled) return audio.cancel()
         void audio.unlock()
+        if (engine.getSnapshot().status === 'running') scheduleAudio(false)
+      },
+      [engine, scheduleAudio],
+    ),
+    /** The pulse for every ring of the lungs, part of the sound. Takes effect right away, also mid-breath. */
+    setRingPulse: useCallback(
+      (enabled: boolean) => {
+        store.updatePreferences({ ringPulse: enabled })
         if (engine.getSnapshot().status === 'running') scheduleAudio(false)
       },
       [engine, scheduleAudio],

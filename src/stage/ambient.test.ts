@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { AMBIENT_CYCLE_MS, AMBIENT_HALF_MS, ambientAt, breathCurve, REST_LEVEL } from '../lib/breathClock'
+import { AMBIENT_CYCLE_MS, AMBIENT_HALF_MS, ambientAt, breathCurve, inverseBreathCurve, REST_LEVEL } from '../lib/breathClock'
 import { breathState } from '../visualization/breathState'
-import { ambientSnapshot, inverseBreathCurve, settleSource } from './ambient'
+import { ambientSnapshot, settleSource } from './ambient'
 
 describe('ambient breath', () => {
   it('breathes 5.5 s in and 5.5 s out, over and over', () => {

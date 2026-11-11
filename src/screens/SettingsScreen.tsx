@@ -58,6 +58,14 @@ export function SettingsScreen() {
             onChange={(audioEnabled) => store.updatePreferences({ audioEnabled })}
           />
           <Switch
+            label={t.ringPulse}
+            hint={t.ringPulseHint}
+            checked={prefs.ringPulse}
+            disabled={!audioSupported() || !prefs.audioEnabled}
+            onChange={(ringPulse) => store.updatePreferences({ ringPulse })}
+            testId="toggle-pulse"
+          />
+          <Switch
             label={t.vibration}
             checked={prefs.vibrationEnabled}
             disabled={!vibrationSupported()}
