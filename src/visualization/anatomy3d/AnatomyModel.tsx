@@ -7,7 +7,6 @@ import { breathState, type BreathSource } from '../breathState'
 import { intoFrame, simplifiedDiaphragm } from './diaphragmShape'
 import { airwayTree, type Branch } from './airwayTree'
 import { BreathSpecks } from './BreathSpecks'
-import { LungGlow, type GlowBed } from './LungGlow'
 import { heartbeat } from './heartbeat'
 import { ImpactEffects } from './ImpactEffects'
 import { addCalmMorph } from './face'
@@ -202,8 +201,6 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
   const lungGradient = useMemo(() => ({ value: new THREE.Vector2(1.1, 1.45) }), [])
   // How strongly the lungs' outline lights up with the "more volume" card (set by ImpactEffects).
   const lungPulse = useMemo(() => ({ value: 0 }), [])
-  // The bed of glowing specks under the lungs.
-  const bed = useMemo<GlowBed>(() => ({ y: 0, x: 0, z: 0, rx: 0, rz: 0 }), [])
   const materials = useMemo(() => {
     // Contour-stripe look: the lungs show the breath by lighting up from the bottom as they fill.
     return { ...makeMaterials(theme), ...makeStripeMaterials(STRIPE_PALETTES[theme], theme === 'dark', level, edges, fade, lungGradient, lungPulse) }
@@ -369,12 +366,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
       if ((o as THREE.Mesh).isMesh && /^Lung_/.test(o.name)) lungs.expandByObject(o)
     })
     lungRange.current = lungs.isEmpty() ? null : [lungs.min.y, lungs.max.y]
-    if (!lungs.isEmpty()) {
-      lungGradient.value.set(lungs.min.y, lungs.max.y)
-      const c = lungs.getCenter(new THREE.Vector3())
-      const size = lungs.getSize(new THREE.Vector3())
-      Object.assign(bed, { y: lungs.min.y - 0.025, x: c.x, z: c.z, rx: size.x * 0.62, rz: size.z * 0.45 })
-    }
+    if (!lungs.isEmpty()) lungGradient.value.set(lungs.min.y, lungs.max.y)
     return () => Object.values(materials).forEach((m) => m.dispose())
   }, [model, materials])
 
@@ -435,7 +427,6 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     <group>
       <primitive object={model} />
       <BreathSpecks engine={engine} />
-      <LungGlow engine={engine} bed={bed} show={fade.inner} />
       <ImpactEffects engine={engine} model={model} lungPulse={lungPulse} />
     </group>
   )

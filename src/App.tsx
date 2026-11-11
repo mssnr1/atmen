@@ -19,11 +19,26 @@ import { useStore } from './storage/store'
  * Start and practice let it show through; the other pages cover it like a sheet of paper.
  */
 export default function App() {
-  useApplyTheme()
+  const theme = useApplyTheme()
   return (
     <>
       <Stage />
       <Screen />
+      <EdgeTint key={theme} />
+    </>
+  )
+}
+
+/**
+ * Safari on iOS 26 colours its bars above and below the page after what is fixed at the page's edges,
+ * and looks again when something fixed appears there. Two hairlines in the page's colour, made anew
+ * for each look, let the bars follow a change of look without a reload.
+ */
+function EdgeTint() {
+  return (
+    <>
+      <div aria-hidden className="fixed inset-x-0 top-0 z-20 h-[3px] bg-paper" />
+      <div aria-hidden className="fixed inset-x-0 bottom-0 z-20 h-[3px] bg-paper" />
     </>
   )
 }
