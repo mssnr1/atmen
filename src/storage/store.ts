@@ -19,6 +19,7 @@ const defaults: StoredData = {
     durationByExercise: {},
     paceByExercise: {},
     showProgress: false,
+    breathCues: true,
     welcomeSeen: false,
   },
   sessions: [],
