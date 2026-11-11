@@ -17,13 +17,17 @@ type Step = 'ready' | 'in' | 'out' | 'short' | 'done'
  * The very first open: no menu, no introduction, one breath. Holding the sign is breathing in, letting go
  * is breathing out; the light follows the finger. After that the app opens.
  */
-export function FirstBreath() {
+export function FirstBreath({ onDone }: { onDone?: () => void }) {
   const { t } = useI18n()
   const [step, setStep] = useState<Step>('ready')
   const sign = useRef<SVGSVGElement>(null)
   const state = useRef({ hold: false, level: 0, peak: 0, last: 0, frame: 0, done: false })
 
   useEffect(() => () => cancelAnimationFrame(state.current.frame), [])
+  // The figure waits behind this page: fetch it now, so it is there when the page opens.
+  useEffect(() => {
+    if (store.get().preferences.visualizationMode !== 'abstract') void import('../visualization/anatomy3d/Anatomy3DVisualization').catch(() => {})
+  }, [])
 
   const tick = (now: number) => {
     const s = state.current
@@ -61,6 +65,7 @@ export function FirstBreath() {
   }
   const finish = () => {
     store.updatePreferences({ welcomeSeen: true })
+    onDone?.()
     navigate({ name: 'home' })
   }
 

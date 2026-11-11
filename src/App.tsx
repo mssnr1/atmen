@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { getExercise } from './exercises'
 import { useRoute } from './lib/route'
 import { useApplyTheme } from './lib/theme'
@@ -43,9 +43,18 @@ function EdgeTint() {
   )
 }
 
+/**
+ * Development phase: the first breath opens the app every time the start page is loaded, not only the
+ * very first time, so it can be seen and worked on on every device (Jan, 2026-11-11). To be set to
+ * false before the app goes out: then it comes once, as it is meant to.
+ */
+const FIRST_BREATH_EVERY_LOAD = true
+
 function Screen() {
   const route = useRoute()
   const welcomeSeen = useStore((d) => d.preferences.welcomeSeen)
+  // The first breath of this load is done (or the app was opened somewhere else than at its start).
+  const [greeted, setGreeted] = useState(route.name !== 'home')
   // A new page starts at its top.
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -59,6 +68,6 @@ function Screen() {
   if (route.name === 'learn') return <LearnScreen />
   if (route.name === 'settings') return <SettingsScreen />
   // The very first open begins with one breath instead of a menu.
-  if (!welcomeSeen) return <FirstBreath />
+  if (!welcomeSeen || (FIRST_BREATH_EVERY_LOAD && !greeted)) return <FirstBreath onDone={() => setGreeted(true)} />
   return <StartScreen />
 }

@@ -99,6 +99,35 @@ function webglAvailable(): boolean {
   }
 }
 
+/** After the graphics were taken away: how long to wait before building the scene anew, and how often in what time before giving up. */
+const REBUILD_AFTER_MS = 400
+const MAX_REBUILDS = 3
+const REBUILD_WINDOW_MS = 60_000
+/** The stand-in waits this long before it appears, so a figure that is there at once is not preceded by a flicker. */
+const STAND_IN_AFTER_MS = 600
+const STAND_IN_FADE_MS = 700
+
+/**
+ * What stands in the figure's place while the figure is not on screen: it is still loading, or the
+ * graphics were taken away and are being rebuilt. Fades in after a moment and out when the figure comes.
+ */
+function StandIn({ show, children }: { show: boolean; children: ReactNode }) {
+  const [mounted, setMounted] = useState(show)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    if (show) setMounted(true)
+    else setVisible(false)
+    const timer = window.setTimeout(() => (show ? setVisible(true) : setMounted(false)), show ? STAND_IN_AFTER_MS : STAND_IN_FADE_MS)
+    return () => window.clearTimeout(timer)
+  }, [show])
+  if (!mounted) return null
+  return (
+    <div className="pointer-events-none absolute inset-0 transition-opacity ease-out" style={{ opacity: visible ? 1 : 0, transitionDuration: `${STAND_IN_FADE_MS}ms` }} data-testid="figure-stand-in">
+      {children}
+    </div>
+  )
+}
+
 /** Shows the fallback instead of breaking the exercise if the model fails to load or render. */
 class ModelBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
@@ -251,28 +280,80 @@ export function Anatomy3DVisualization({
   const [supported] = useState(webglAvailable)
   // The figure fades in once its first frame is drawn, never while the graphics are still being prepared.
   const [shown, setShown] = useState(false)
+  // A browser can take the graphics away from a page (a phone does, while the page is in the background),
+  // and does not always give them back. The scene is then built anew: `life` counts how often.
+  const [life, setLife] = useState(0)
+  const [lost, setLost] = useState(false)
+  const [gaveUp, setGaveUp] = useState(false)
+  const graphics = useRef<{ life: number; gl: WebGLRenderingContext | WebGL2RenderingContext } | null>(null)
+  const rebuilds = useRef<number[]>([])
+  const lose = (ofLife: number) => {
+    // The scene that was taken down sends this too; only the one on screen counts.
+    if (graphics.current?.life !== ofLife) return
+    graphics.current = null
+    setShown(false)
+    setLost(true)
+  }
+  // Rebuild once the page is in front, where a new scene gets its graphics.
+  useEffect(() => {
+    if (!lost) return
+    let timer = 0
+    const rebuild = () => {
+      window.clearTimeout(timer)
+      if (document.visibilityState !== 'visible') return
+      timer = window.setTimeout(() => {
+        const now = performance.now()
+        rebuilds.current = [...rebuilds.current.filter((t) => now - t < REBUILD_WINDOW_MS), now]
+        // Taken away again and again: the breath sign leads on instead.
+        if (rebuilds.current.length > MAX_REBUILDS) return setGaveUp(true)
+        setLost(false)
+        setLife((n) => n + 1)
+      }, REBUILD_AFTER_MS)
+    }
+    rebuild()
+    document.addEventListener('visibilitychange', rebuild)
+    return () => {
+      window.clearTimeout(timer)
+      document.removeEventListener('visibilitychange', rebuild)
+    }
+  }, [lost])
+  // Not every loss is announced: look when the page comes back to the front.
+  useEffect(() => {
+    const look = () => {
+      const g = graphics.current
+      if (document.visibilityState === 'visible' && g?.gl.isContextLost()) lose(g.life)
+    }
+    document.addEventListener('visibilitychange', look)
+    window.addEventListener('pageshow', look)
+    return () => {
+      document.removeEventListener('visibilitychange', look)
+      window.removeEventListener('pageshow', look)
+    }
+  }, [])
   // "Reset view" only shows once the figure has been turned or zoomed by hand.
   const [moved, setMoved] = useState(false)
   useEffect(() => setMoved(false), [framing])
   // A plain tap (it wakes the controls) is not a move; a drag, a pinch or the wheel is.
   const down = useRef<{ x: number; y: number } | null>(null)
 
-  // Without WebGL the breath sign stands in for the figure, in the same place and rhythm.
+  // The breath sign stands in for the figure, in the same place and rhythm: for good without WebGL
+  // (then with a note), and for as long as the figure is not on screen yet.
   const start = framing === 'start'
-  const fallback = (
+  const sign = (note: boolean) => (
     <div
       className="pointer-events-none relative flex h-full w-full flex-col items-center justify-center px-8"
       style={start ? { paddingTop: '14dvh', paddingBottom: '46dvh' } : { paddingTop: topInset + 8, paddingBottom: bottomInset + 8 }}
     >
       {!paused && <AbstractVisualization engine={engine} showProgress={showProgress} />}
-      {!start && (
+      {note && !start && (
         <p style={{ top: topInset + 4 }} className="absolute px-10 text-center text-note text-muted" data-testid="model-fallback">
           {t.modelFallback}
         </p>
       )}
     </div>
   )
-  if (!supported) return fallback
+  const fallback = sign(true)
+  if (!supported || gaveUp) return fallback
 
   return (
     <div
@@ -302,11 +383,16 @@ export function Anatomy3DVisualization({
           }
         >
           <Canvas
+            key={life}
             className={shown ? 'fade-in' : 'opacity-0'}
             frameloop={paused ? 'never' : 'always'}
             dpr={[1, 1.75]}
             camera={{ fov: FOV, near: 0.05, far: 10, position: defaultPosition(1, 1) }}
             gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+            onCreated={({ gl }) => {
+              graphics.current = { life, gl: gl.getContext() }
+              gl.domElement.addEventListener('webglcontextlost', () => lose(life))
+            }}
             data-testid="anatomy-canvas"
           >
             <ambientLight intensity={1.4} />
@@ -344,6 +430,7 @@ export function Anatomy3DVisualization({
           </Canvas>
         </Suspense>
       </ModelBoundary>
+      <StandIn show={!shown}>{sign(false)}</StandIn>
       {interactive && moved && (
         <button
           type="button"
