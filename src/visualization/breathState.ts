@@ -1,4 +1,5 @@
 import type { EngineSnapshot, PhaseType } from '../engine'
+import { breathCurve } from '../lib/breathClock'
 
 /**
  * The breathing state every visualization draws from, derived from one engine
@@ -25,11 +26,8 @@ export interface BreathState {
  */
 export const usedAir = (phase: PhaseType | 'idle'): 0 | 1 => (phase === 'exhale' ? 1 : 0)
 
-/**
- * How lung volume follows a breath: it starts and ends even more gently than a
- * sine (smootherstep), so each breath ramps up softly, as a real one does.
- */
-export const breathCurve = (t: number) => t * t * t * (t * (6 * t - 15) + 10)
+/** How lung volume follows a breath (smootherstep); shared with the ambient clock, so every breath has one shape. */
+export { breathCurve }
 /** Rate of change of `breathCurve`, normalized to 1 at its peak mid-breath. */
 const breathRate = (t: number) => 16 * t * t * (1 - t) * (1 - t)
 

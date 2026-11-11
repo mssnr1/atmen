@@ -1,43 +1,84 @@
-import { useId } from 'react'
+import { breathRef } from '../lib/breathClock'
 
-/**
- * The FLUO logo, traced from the logo artwork so it looks the same everywhere:
- * heavy, rounded letters in pale lavender with a faint glow. `size` is the letter height in px; `breathe` lets the glow
- * swell slowly with the resonance rhythm (start screen). Drawn as an outline: the same letter shapes,
- * traced by a thin lavender gradient line instead of filled.
+/*
+ * The "fluo" wordmark as a monoline: hook, bar, cup and oval share one stroke weight. Units are 1/1000 em
+ * with the baseline at 0; each glyph is its own svg, .8 em high. The o is the u closed at the top, and it
+ * is the breath sign: light lines inside it fill from below.
  */
-export function Wordmark({ size = 22, className = '', breathe = false }: { size?: number; className?: string; breathe?: boolean }) {
-  const id = useId()
-  const fill = `url(#${CSS.escape(id)})`
+const STROKE = 58
+const F = 'M0,0V-508.5A197.5 197.5 0 0 1 197.5,-706M0,-511H197.5'
+const L = 'M0,0V-735'
+const U = 'M0,-540V-214.5A197.5 197.5 0 0 0 395,-214.5V-540'
+const O = 'M29,-214.5V-325.5A197.5 197.5 0 0 1 424,-325.5V-214.5A197.5 197.5 0 0 1 29,-214.5Z'
+
+/** The inside of the o: centre, the ellipse that cuts the lines. */
+const O_CX = 226.5
+const O_CY = -270
+const O_RX = 138.5
+const O_RY = 194
+
+function Glyph({ x0 = -29, width, d, className }: { x0?: number; width: number; d: string; className?: string }) {
   return (
-    <svg
-      viewBox="0 0 950.3 230.7"
-      height={size * (230.7 / 220)}
-      width={size * (950.3 / 220)}
-      overflow="visible"
-      className={`logo-fluo ${breathe ? 'logo-breathe' : ''} ${className}`}
-      role="img"
-      aria-label="Fluo"
-      data-testid="app-name"
-    >
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" style={{ stopColor: 'var(--logo-top)' }} />
-          <stop offset="1" style={{ stopColor: 'var(--logo-bottom)' }} />
-        </linearGradient>
-      </defs>
-      {/* Traced from Jan's FLUO logo image. */}
-      <path
-        fill="none"
-        stroke={fill}
-        strokeWidth={Math.max(1.25, size / 30)}
-        strokeLinejoin="round"
-        vectorEffect="non-scaling-stroke"
-        d={FLUO_PATH}
-      />
+    <svg viewBox={`${x0} -760 ${width} 800`} style={{ width: `${width / 1000}em` }} className={className} aria-hidden>
+      <path d={d} fill="none" stroke="currentColor" strokeWidth={STROKE} />
     </svg>
   )
 }
 
-const FLUO_PATH =
-  'M841.5 230.7C853.4 229.9 864.7 227.7 874.5 224.3C883.8 221.1 891.6 217.3 899.5 212.1C908.4 206.3 912.9 202.5 920.1 194.9C926.8 188.0 932.5 180.2 937.4 171.1C944.3 158.5 949.0 142.3 950.4 126.7C950.9 120.9 950.6 103.5 949.9 98.7C947.0 78.5 938.7 59.4 925.5 42.8C922.1 38.5 914.8 31.1 910.0 27.1C898.1 17.2 882.4 8.8 868.6 5.0C860.5 2.8 852.8 1.3 844.7 0.5C838.3 -0.2 816.4 -0.2 809.9 0.5C799.3 1.6 790.6 3.5 780.6 6.8C774.5 8.8 764.7 13.5 758.2 17.4C744.3 25.8 732.2 37.5 722.9 51.7C719.7 56.4 719.0 57.7 716.6 62.0C715.0 64.9 711.3 73.8 709.8 78.2C707.5 85.2 706.1 91.1 704.8 100.2C703.9 106.0 703.9 125.3 704.8 131.3C707.5 150.3 713.0 165.0 722.8 179.9C726.9 186.1 730.5 190.5 736.2 196.3C743.0 203.3 750.8 209.6 758.3 214.1C762.4 216.6 772.7 221.7 776.3 223.0C786.9 226.9 800.1 229.8 811.2 230.7C816.3 231.0 835.9 231.0 841.5 230.7ZM580.3 230.2C587.4 229.6 595.8 228.3 601.5 226.8C609.2 224.8 612.8 223.7 618.8 221.1C632.6 215.3 643.7 207.7 654.7 196.4C660.0 191.0 662.7 187.6 666.5 182.0C675.5 168.3 680.6 154.9 683.0 138.1C684.2 129.6 684.4 122.7 684.3 70.3C684.2 22.2 684.1 19.7 683.5 18.0C681.0 10.5 676.2 6.0 669.0 4.2C665.8 3.4 640.8 3.4 637.8 4.2C630.8 6.0 625.7 10.8 623.1 18.2C622.6 19.7 622.5 24.2 622.3 72.7C622.2 120.5 622.1 125.8 621.6 128.8C619.8 139.4 615.6 147.4 608.0 155.0C597.6 165.5 584.7 170.3 567.3 170.3C559.7 170.3 553.4 169.4 547.2 167.3C543.6 166.1 536.2 162.3 533.2 160.2C528.6 156.9 523.3 151.1 519.7 145.5C516.5 140.3 514.0 133.0 513.4 126.5C513.2 124.5 513.0 102.7 512.8 71.7C512.6 14.3 512.8 18.1 510.2 13.2C508.5 9.7 505.8 7.1 502.6 5.5C498.5 3.6 497.2 3.4 483.0 3.2C466.7 2.9 464.8 3.2 459.5 6.6C455.9 9.0 453.2 13.2 452.1 18.3C451.8 20.1 451.7 29.4 451.7 72.8C451.7 105.9 451.8 126.8 452.0 129.9C453.3 147.3 458.4 163.8 467.2 178.4C472.6 187.4 482.0 198.2 490.5 205.2C494.8 208.7 502.9 214.2 508.0 216.9C520.9 223.9 536.2 228.4 552.2 230.0C559.7 230.7 571.7 230.8 580.3 230.2ZM429.2 226.9C434.0 225.6 438.4 223.0 441.6 219.5C443.6 217.3 444.8 215.4 445.9 212.5C447.4 208.4 447.7 206.2 447.7 197.9C447.7 188.4 447.2 185.5 444.8 180.7C443.5 178.0 442.8 177.0 440.0 174.3C436.5 170.8 434.3 169.5 429.7 168.2C427.2 167.5 427.0 167.5 383.0 167.3C333.4 167.1 337.6 167.3 332.2 164.6C330.1 163.5 328.8 162.5 326.5 160.2C323.3 157.0 322.0 154.8 320.6 150.8L319.8 148.5L319.7 83.7C319.5 21.6 319.5 18.8 318.9 17.0C317.0 11.3 313.7 7.4 309.3 5.2C305.0 3.1 303.7 3.0 288.0 3.0C275.2 3.0 273.9 3.1 271.5 3.7C267.9 4.6 265.6 5.8 263.2 8.0C260.8 10.2 259.4 12.5 258.1 16.0L257.2 18.5L257.1 83.0C257.0 124.0 257.1 149.4 257.3 152.8C258.1 165.1 260.8 175.4 266.2 186.0C273.0 199.7 285.6 212.2 299.8 219.2C309.1 223.9 318.7 226.3 331.5 227.4C332.2 227.5 354.0 227.5 379.8 227.5C424.3 227.5 427.0 227.4 429.2 226.9ZM46.9 222.8C52.6 221.8 57.4 218.2 59.8 213.3C61.9 208.9 62.0 207.8 62.0 190.7C62.0 173.5 62.1 172.6 64.3 168.1C66.6 163.4 70.8 160.2 76.9 158.6C79.5 157.9 80.0 157.9 136.0 157.8C198.9 157.6 195.7 157.7 200.5 155.4C206.5 152.4 210.1 148.0 211.7 141.7C212.3 139.5 212.3 138.0 212.3 129.2C212.3 117.0 212.1 115.5 208.9 110.4C206.4 106.4 201.5 102.9 196.5 101.6C195.2 101.3 181.3 101.2 128.7 101.0L62.5 100.8L62.6 99.1C62.7 95.4 66.0 87.5 69.4 82.5C71.6 79.2 75.9 74.7 79.3 72.1C82.5 69.7 88.7 66.6 92.8 65.2C99.3 63.1 94.9 63.3 156.5 63.0C217.5 62.7 215.0 62.8 219.7 60.9C224.9 58.8 229.5 54.6 231.7 49.8C233.8 45.3 234.1 43.9 234.2 34.3C234.4 27.1 234.3 25.3 233.9 23.0C232.7 17.1 230.6 13.2 226.5 9.4C223.7 6.7 220.6 5.0 216.3 3.9L213.5 3.2L155.3 3.2C101.2 3.2 96.9 3.2 93.0 3.8C79.8 5.6 70.5 8.4 59.8 13.5C43.8 21.1 31.7 31.1 20.9 45.3C15.5 52.6 11.4 60.1 7.6 69.7C3.5 80.0 1.1 89.7 0.3 99.5C-0.1 105.3 -0.1 206.3 0.4 208.8C1.2 213.1 3.8 217.2 7.4 219.8C12.0 223.1 13.2 223.3 30.6 223.3C41.4 223.3 44.8 223.2 46.9 222.8ZM819.3 173.0C809.0 172.3 800.3 169.8 792.1 165.1C787.2 162.2 784.0 159.7 779.5 155.2C775.4 151.1 773.1 147.9 770.2 142.7C762.3 128.4 761.4 110.1 767.7 94.3C772.1 83.3 781.4 72.6 791.9 66.6C798.0 63.0 805.0 60.5 811.8 59.2C815.4 58.6 817.0 58.5 827.0 58.5C837.4 58.5 838.4 58.6 842.2 59.3C847.3 60.3 855.1 62.8 858.9 64.8C872.4 71.5 882.9 83.6 887.8 98.0C890.0 104.5 890.5 108.2 890.5 116.5C890.5 123.2 890.4 124.2 889.5 127.9C887.8 135.8 885.9 140.2 880.9 147.6C875.8 155.2 869.7 160.7 861.0 165.5C849.6 171.9 837.0 174.1 819.3 173.0Z'
+/** The light lines inside the o, bottom line first. Small sizes get fewer, bolder lines. */
+function oLines(n: number) {
+  const small = n <= 4
+  const span = O_RY - (small ? 40 : 33)
+  return {
+    width: small ? 26 : 17.5,
+    lines: Array.from({ length: n }, (_, i) => {
+      const f = n === 1 ? 0.5 : i / (n - 1)
+      const y = O_CY + span * (1 - 2 * f)
+      const t = (y - O_CY) / O_RY
+      return { f, y, half: O_RX * Math.sqrt(Math.max(0, 1 - t * t)) - 11 }
+    }),
+  }
+}
+
+interface Props {
+  /** Font size in px; the letters are about .8 of it high. */
+  size?: number
+  /** Breathe with the ambient clock: the letters drift apart on the inhale and the o fills with light. */
+  live?: boolean
+  /** Light lines in the o. Defaults by size: 7 when large, 4 when small. */
+  n?: number
+  className?: string
+}
+
+export function Wordmark({ size = 28, live = false, n, className = '' }: Props) {
+  const count = n ?? (size >= 44 ? 7 : 4)
+  const o = oLines(count)
+  return (
+    <span
+      ref={live ? breathRef : undefined}
+      role="img"
+      aria-label="Fluo"
+      className={`fluo-mono text-ink ${live ? 'live' : ''} ${className}`}
+      style={{ fontSize: size }}
+      data-testid="wordmark"
+    >
+      <Glyph width={226.5} d={F} />
+      <Glyph width={58} d={L} className="kern" />
+      <Glyph width={453} d={U} />
+      <svg viewBox="0 -760 453 800" className="breath-sign" style={{ width: '.453em', ['--n1' as string]: count + 1 }} fill="none" strokeLinecap="round" aria-hidden>
+        <path d={O} stroke="currentColor" strokeWidth={STROKE} />
+        {o.lines.map((l, i) => (
+          <line
+            key={i}
+            x1={(O_CX - l.half).toFixed(1)}
+            x2={(O_CX + l.half).toFixed(1)}
+            y1={l.y.toFixed(1)}
+            y2={l.y.toFixed(1)}
+            strokeWidth={o.width}
+            style={{ stroke: `color-mix(in srgb, var(--color-breath) ${Math.round(l.f * 100)}%, var(--color-breath-2))`, ['--i' as string]: i }}
+          />
+        ))}
+      </svg>
+    </span>
+  )
+}

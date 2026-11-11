@@ -1,14 +1,12 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'white' | 'page' | 'ghost'
+type Variant = 'primary' | 'secondary' | 'ghost'
 
+/** Buttons are neutral: breath light (lavender, sky) belongs to the breath alone. */
 const styles: Record<Variant, string> = {
-  primary: 'bg-fluo',
-  secondary: 'border border-ink/55 text-ink hover:bg-ink/5',
-  white: 'bg-white text-night hover:bg-white/90',
-  /** The accent button on the full-colour pages: white in light mode, violet at night. */
-  page: 'bg-fluo',
-  ghost: 'text-ink-2 hover:bg-surface',
+  primary: 'bg-solid text-on-solid hover:bg-solid/90',
+  secondary: 'text-ink ring-1 ring-inset ring-ink/30 hover:bg-ink/5',
+  ghost: 'text-ink-2 hover:bg-ink/5 hover:text-ink',
 }
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -22,7 +20,7 @@ export function Button({ variant = 'primary', icon, trailingIcon, className = ''
   return (
     <button
       type="button"
-      className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-6 text-[1.0625rem] font-semibold whitespace-nowrap transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue disabled:opacity-40 [&>svg]:shrink-0 ${styles[variant]} ${className}`}
+      className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-6 text-[1.0625rem] font-semibold whitespace-nowrap transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-40 [&>svg]:shrink-0 ${styles[variant]} ${className}`}
       {...rest}
     >
       {icon}
@@ -44,7 +42,7 @@ export function IconButton({ label, pressed, className = '', children, ...rest }
       aria-label={label}
       title={label}
       aria-pressed={pressed}
-      className={`inline-flex size-11 items-center justify-center rounded-full transition hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-blue disabled:opacity-30 ${className}`}
+      className={`inline-flex size-11 items-center justify-center rounded-full transition hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-ink disabled:opacity-30 ${className}`}
       {...rest}
     >
       {children}

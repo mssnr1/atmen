@@ -47,10 +47,10 @@ export function OutcomeIcon({ className = 'size-[0.7rem]' }: { className?: strin
   )
 }
 
-/** A small label: icon plus uppercase word. */
-export function Label({ icon, children, className = 'text-[0.6875rem]' }: { icon: React.ReactNode; children: string; className?: string }) {
+/** A small label: icon plus uppercase word. Mint marks an effect; everything else stays neutral. */
+export function Label({ icon, children, className = 'text-[0.6875rem]', effect = false }: { icon: React.ReactNode; children: string; className?: string; effect?: boolean }) {
   return (
-    <span className={`flex items-center gap-1.5 leading-none font-semibold tracking-[0.06em] text-ink/80 uppercase ${className}`}>
+    <span className={`flex items-center gap-1.5 leading-none font-semibold tracking-[0.1em] uppercase ${effect ? 'text-effect' : 'text-ink-2'} ${className}`}>
       {icon}
       {children}
     </span>
@@ -59,7 +59,7 @@ export function Label({ icon, children, className = 'text-[0.6875rem]' }: { icon
 
 type Size = 'phone' | 'tablet' | 'desktop'
 
-/** Type sizes and padding of the insight cards (style guide: semibold titles, a quieter line below). */
+/** Type sizes and padding of the body notes. */
 const TEXT: Record<Size, { pad: string; label: string; icon: string; title: string; sub: string }> = {
   phone: { pad: 'px-3.5 pt-3 pb-3.5', label: 'text-[0.6875rem]', icon: 'size-[0.75rem]', title: 'mt-2 text-[1.0625rem]', sub: 'mt-1 text-[0.8125rem]' },
   tablet: { pad: 'px-3 pt-2.5 pb-3', label: 'text-[0.625rem]', icon: 'size-[0.6875rem]', title: 'mt-1.5 text-[0.9375rem]', sub: 'mt-0.5 text-[0.6875rem]' },
@@ -75,7 +75,7 @@ function PlaceText({ it, labels, size }: { it: BodyInsight; labels: Labels; size
       <Label icon={<TargetIcon className={t.icon} />} className={t.label}>
         {labels.place}
       </Label>
-      <p className={`${t.title} leading-tight font-semibold break-words text-ink [hyphens:auto]`}>{it.place}</p>
+      <p className={`${t.title} leading-tight font-medium break-words text-ink [hyphens:auto]`}>{it.place}</p>
       <p className={`${t.sub} leading-snug text-ink-2 [hyphens:auto]`}>{it.term}</p>
     </>
   )
@@ -85,28 +85,28 @@ function ImpactText({ it, labels, size }: { it: BodyInsight; labels: Labels; siz
   const t = TEXT[size]
   return (
     <>
-      <Label icon={<OutcomeIcon className={t.icon} />} className={t.label}>
+      <Label icon={<OutcomeIcon className={t.icon} />} className={t.label} effect>
         {labels.impact}
       </Label>
-      <p className={`${t.title} leading-tight font-semibold text-ink [hyphens:auto]`}>{it.impact}</p>
+      <p className={`${t.title} leading-tight font-medium text-ink [hyphens:auto]`}>{it.impact}</p>
       {it.value && <p className={`${t.sub} leading-snug text-ink-2 tabular-nums`}>{it.value}</p>}
     </>
   )
 }
 
 /**
- * The guide's two tiles, the same during and after the exercise: location in violet glass, impact in glass from
- * violet to mint, both opaque pebbles with a glowing edge; side by side or one above the other.
+ * A body note as two quiet glass tiles, where it happens and what it does, side by side or one above the
+ * other. The tiles are neutral; only the word "Wirkung" carries the effect colour.
  */
 export function InsightTiles({ it, labels, size, dir = 'row', className = '' }: { it: BodyInsight; labels: Labels; size: Size; dir?: 'row' | 'col'; className?: string }) {
   const t = TEXT[size]
   return (
     <div className={`grid gap-2 ${dir === 'row' ? 'grid-cols-2' : 'grid-cols-1'} ${className}`} data-testid={`insight-${it.id}`}>
       <p className="sr-only">{it.title}</p>
-      <div className={`fluo-tile fluo-tile-place rounded-[20px] ${t.pad}`}>
+      <div className={`fluo-tile rounded-[18px] ${t.pad}`}>
         <PlaceText it={it} labels={labels} size={size} />
       </div>
-      <div className={`fluo-tile fluo-tile-impact rounded-[20px] ${t.pad}`}>
+      <div className={`fluo-tile rounded-[18px] ${t.pad}`}>
         <ImpactText it={it} labels={labels} size={size} />
       </div>
     </div>

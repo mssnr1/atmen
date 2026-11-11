@@ -14,7 +14,8 @@ const defaults: StoredData = {
     audioEnabled: true,
     vibrationEnabled: true,
     visualizationMode: defaultVisualizationMode,
-    theme: 'light',
+    theme: 'dark',
+    look: 2,
     durationByExercise: {},
     paceByExercise: {},
     showProgress: false,
@@ -35,6 +36,11 @@ function migrate(raw: unknown): StoredData {
   )
   if (!languages.some((l) => l.id === preferences.language)) preferences.language = defaults.preferences.language
   if (!themePreferences.includes(preferences.theme)) preferences.theme = defaults.preferences.theme
+  // The night look became the default with look 2; a choice made before that starts over once.
+  if (preferences.look !== 2) {
+    preferences.theme = 'dark'
+    preferences.look = 2
+  }
   return {
     version: 1,
     preferences,

@@ -13,17 +13,39 @@ export interface Messages {
   /** The app keeps its name in every language. */
   appName: string
   // Welcome
-  splashTagline: string
   /** The intro cards. `eyebrow` sits small above the title, `closing` stands apart below the lines. */
   welcome: { eyebrow?: string; title: string; lines: string[]; closing?: string }[]
   next: string
   skip: string
-  // Exercise selection and navigation
-  chooseTitle: [string, string]
-  nav: { home: string; learn: string; settings: string }
+  // Start
+  /** The one sentence the app stands for. */
+  tagline: string
+  /** The one-tap start: the last exercise again, or a first one. */
+  continueWith: (name: string, minutes: number) => string
+  startWith: (name: string, minutes: number) => string
+  otherExercise: string
+  stressed: string
+  panic: string
+  /** The exercise sheet: tools by what is needed right now. */
+  needTitle: string
+  fitsNow: string
+  adjust: (name: string) => string
+  // The first breath, on the very first open
+  firstBreath: {
+    pad: string
+    hold: string
+    holdSub: string
+    inhaleSub: string
+    exhaleSub: string
+    longer: string
+    welcome: string
+    welcomeSub: string
+  }
+  intro: string
+  // Navigation
+  nav: { history: string; learn: string; settings: string }
   rhythm: (inS: string, outS: string) => string
   nose: string
-  phaseShort: Record<PhaseType, string>
   // Practice
   phase: Record<PhaseType, string>
   seconds: (s: string) => string
@@ -49,12 +71,6 @@ export interface Messages {
   insightImpact: string
   /** Small label before where in the body it happens. */
   insightPlace: string
-  /** Fanning out the stacked insight cards on the phone, and folding them back. */
-  insightsExpand: string
-  insightsCollapse: string
-  /** Growing the shrunk practice panel back to full size, and shrinking it. */
-  panelMaximize: string
-  panelMinimize: string
   breathingPace: string
   breathingPaceHint: string
   slowDown: string
@@ -66,8 +82,6 @@ export interface Messages {
   vibration: string
   soundOn: string
   soundOff: string
-  lightMode: string
-  darkMode: string
   fullscreen: string
   exitFullscreen: string
   fullscreenIos: { title: string; steps: string[]; note: string }
@@ -78,30 +92,39 @@ export interface Messages {
   modelFallback: string
   guide: string
   progress: string
-  // Completion flow
+  /** Shown while the lungs empty before the first breath of an exercise. */
+  leadIn: string
+  /** Once the controls have stepped back. */
+  tapForControls: string
+  /** The same question before and after an exercise; `moods` runs from very tense (1) to very calm (5). */
+  moodTitle: string
+  moods: [string, string, string, string, string]
+  moodEnds: [string, string]
+  beforeAfter: (before: string, now: string) => string
+  /** Why an exercise is suggested. */
+  suggestByTime: string
+  suggestByExperience: string
+  // History
+  historyTitle: string
+  historyLead: string
+  thisWeek: string
+  previousWeek: string
+  nextWeek: string
+  sessions: (n: number) => string
+  weekEmpty: string
+  legendEmpty: string
+  legendWidth: string
+  weekdays: [string, string, string, string, string, string, string]
+  helpsTitle: string
+  helpsLead: string
+  helpsEmpty: string
+  /** "+1.2 calmer" style line for one exercise, from the user's own answers. */
+  helpsChange: (steps: string, direction: -1 | 0 | 1) => string
+  total: (sessions: string, minutes: string) => string
+  // Completion
   wellDone: string
-  /** Under "well done" over the still breathing figure, by exercise id (falls back to `default`). */
-  afterglow: Record<string, string> & { default: string }
-  completed: (duration: string, exercise: string) => string
-  /** A short reflection under "well done": a question, a line on it, then short labelled thoughts. */
-  reflection: { question: string; lead: string; parts: { title: string; text: string }[] }
-  liked: string
-  disliked: string
-  feelTitle: string
-  feelings: [string, string, string, string, string]
-  continue: string
   back: string
-  niceWork: string
-  breathingTime: string
-  breathsLabel: string
-  reported: string
-  notReported: string
-  noMeasurements: string
   done: string
-  keepGoing: string
-  tryAnother: string
-  startExercise: (name: string) => string
-  backHome: string
   // Learn and settings
   learnTitle: string
   learnIntro: string
@@ -122,7 +145,6 @@ export interface Messages {
 
 const de: Messages = {
   appName: 'Fluo',
-  splashTagline: 'Dein Atem als Werkzeug',
   welcome: [
     {
       eyebrow: 'Wusstest du?',
@@ -147,13 +169,31 @@ const de: Messages = {
     { title: 'Ausatmen wird unterschätzt.', lines: ['Lass die Luft langsam und entspannt ausströmen.', 'Gib dem Ausatmen bewusst Zeit.'] },
     { title: 'Weniger ist oft mehr.', lines: ['Nicht möglichst viel oder tief atmen.', 'Sondern sanft, ruhig und gleichmäßig.'] },
   ],
+  tagline: 'Sieh, was dein Atem in dir bewegt.',
+  continueWith: (n, m) => `Weiter mit ${n} · ${m} min`,
+  startWith: (n, m) => `Starten mit ${n} · ${m} min`,
+  otherExercise: 'Andere Übung',
+  stressed: 'Ich bin gestresst',
+  panic: 'Akute Hilfe bei Panik',
+  needTitle: 'Was brauchst du gerade?',
+  fitsNow: 'Passt jetzt',
+  adjust: (n) => `${n}: Dauer und Tempo einstellen`,
+  firstBreath: {
+    pad: 'Halten zum Einatmen',
+    hold: 'Leg den Finger auf das Zeichen und atme ein.',
+    holdSub: 'Loslassen heißt ausatmen.',
+    inhaleSub: 'So lange du hältst.',
+    exhaleSub: 'Lass die Luft einfach gehen.',
+    longer: 'Etwas länger halten.',
+    welcome: 'Schön, dass du da bist.',
+    welcomeSub: 'Das war dein erster Atemzug mit Fluo.',
+  },
+  intro: 'Einführung ansehen',
   next: 'Weiter',
   skip: 'Überspringen',
-  chooseTitle: ['Wähle', 'eine Atemübung'],
-  nav: { home: 'Start', learn: 'Lernen', settings: 'Einstellungen' },
+  nav: { history: 'Verlauf', learn: 'Lernen', settings: 'Einstellungen' },
   rhythm: (i, o) => `${i} s ein · ${o} s aus`,
   nose: 'Nase',
-  phaseShort: { inhale: 'ein', holdIn: 'halten', exhale: 'aus', holdOut: 'halten' },
   phase: { inhale: 'Einatmen', holdIn: 'Halten', exhale: 'Ausatmen', holdOut: 'Halten' },
   seconds: (s) => `${s} Sek.`,
   ready: 'Bereit',
@@ -161,7 +201,7 @@ const de: Messages = {
   start: 'Starten',
   pause: 'Pause',
   resume: 'Weiter',
-  restart: 'Neu starten',
+  restart: 'Zum Ende springen',
   close: 'Schließen',
   roundOf: (i, n) => `Atemzug ${i} von ${n}`,
   timeLeft: (clock) => `noch ${clock}`,
@@ -175,10 +215,6 @@ const de: Messages = {
   bodyInsights: 'Was gerade in deinem Körper passiert',
   insightImpact: 'Wirkung',
   insightPlace: 'Ort',
-  insightsExpand: 'Alle Hinweise zeigen',
-  insightsCollapse: 'Einklappen',
-  panelMaximize: 'Bedienfeld vergrößern',
-  panelMinimize: 'Bedienfeld verkleinern',
   breathingPace: 'Atemtempo',
   breathingPaceHint: 'Sekunden ein / aus',
   slowDown: 'Mit der Zeit langsamer',
@@ -190,8 +226,6 @@ const de: Messages = {
   vibration: 'Vibration',
   soundOn: 'Töne einschalten',
   soundOff: 'Töne ausschalten',
-  lightMode: 'Helles Design',
-  darkMode: 'Dunkles Design',
   fullscreen: 'Vollbild',
   exitFullscreen: 'Vollbild beenden',
   fullscreenIos: {
@@ -201,7 +235,7 @@ const de: Messages = {
   },
   visualization: 'Darstellung',
   modes: {
-    abstract: { label: 'Einfach', description: 'Ein Kreis, der mit deinem Atem wächst und schrumpft' },
+    abstract: { label: 'Einfach', description: 'Ein Zeichen, das sich mit deinem Atem von unten mit Licht füllt' },
     anatomical: { label: 'Anatomie', description: 'Luft auf dem Weg durch Nase, Atemwege und Lunge' },
   },
   resetView: 'Ansicht zurücksetzen',
@@ -209,45 +243,32 @@ const de: Messages = {
   modelFallback: '3D ist auf diesem Gerät nicht verfügbar. Die einfache Darstellung führt dich weiter.',
   guide: 'Atemführung',
   progress: 'Fortschritt',
+  leadIn: 'Atme noch einmal aus',
+  tapForControls: 'Tippen zeigt die Bedienung',
+  moodTitle: 'Wie fühlst du dich gerade?',
+  moods: ['Sehr angespannt', 'Angespannt', 'Neutral', 'Ruhig', 'Sehr ruhig'],
+  moodEnds: ['angespannt', 'ruhig'],
+  beforeAfter: (b, n) => `Vorher: ${b} · Jetzt: ${n}`,
+  suggestByTime: 'Passt zur Tageszeit',
+  suggestByExperience: 'Hat dir zu dieser Zeit oft geholfen',
+  historyTitle: 'Dein Verlauf',
+  historyLead: 'Jede Übung ist ein Ring. Die Woche wächst von innen nach außen, von Montag bis Sonntag.',
+  thisWeek: 'Diese Woche',
+  previousWeek: 'Woche davor',
+  nextWeek: 'Woche danach',
+  sessions: (n) => (n === 1 ? '1 Übung' : `${n} Übungen`),
+  weekEmpty: 'Noch keine Übung in dieser Woche.',
+  legendEmpty: 'Tag ohne Übung',
+  legendWidth: 'Je länger, desto breiter',
+  weekdays: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+  helpsTitle: 'Was dir hilft',
+  helpsLead: 'Aus deinen eigenen Antworten vor und nach der Übung. Keine Messung.',
+  helpsEmpty: 'Sobald du bei einer Übung dreimal vorher und nachher geantwortet hast, steht hier, was dir hilft.',
+  helpsChange: (steps, d) => (d === 0 ? 'im Schnitt unverändert' : `im Schnitt ${steps} ${steps === '1' ? 'Stufe' : 'Stufen'} ${d > 0 ? 'ruhiger' : 'angespannter'}`),
+  total: (s, m) => `Insgesamt ${s}, ${m}`,
   wellDone: 'Gut gemacht.',
-  afterglow: {
-    default: 'Du fühlst dich jetzt besser und entspannter.',
-    resonance: 'Du fühlst dich jetzt ruhiger und ausgeglichener.',
-    energy: 'Du fühlst dich jetzt wacher und klarer.',
-    relax: 'Du fühlst dich jetzt besser und entspannter.',
-  },
-  completed: (d, e) => `Du hast ${d} ${e} abgeschlossen.`,
-  reflection: {
-    question: 'Hast du gesehen, wie groß deine Lunge und dein Zwerchfell sind?',
-    lead: 'Fast alles in deinem Oberkörper ist dafür da, dass du atmen kannst. Im Alltag vergessen wir das leicht.',
-    parts: [
-      {
-        title: 'Wenn der Atem aus dem Takt gerät',
-        text: 'Viele atmen mit der Zeit unbemerkt zu flach und zu schnell. Das kann das Herz unruhiger schlagen lassen und Angstgefühle verstärken.',
-      },
-      {
-        title: 'Was hilft',
-        text: 'Den Atem bewusst wahrnehmen und lenken. Genau das hast du gerade geübt.',
-      },
-    ],
-  },
-  liked: 'Hat mir gefallen',
-  disliked: 'Hat mir nicht gefallen',
-  feelTitle: 'Wie fühlst du dich gerade?',
-  feelings: ['Viel ruhiger', 'Ruhiger', 'Neutral', 'Angespannter', 'Viel angespannter'],
-  continue: 'Weiter',
   back: 'Zurück',
-  niceWork: 'Stark!',
-  breathingTime: 'Atemzeit',
-  breathsLabel: 'Atemzüge',
-  reported: 'Dein Empfinden',
-  notReported: 'Keine Angabe',
-  noMeasurements: 'Ohne Messwerte. Nur deine Übung und deine Angaben.',
   done: 'Fertig',
-  keepGoing: 'Weitermachen?',
-  tryAnother: 'Probier eine andere Übung.',
-  startExercise: (n) => `${n} starten`,
-  backHome: 'Zur Startseite',
   learnTitle: 'Lernen',
   learnIntro: 'Was hinter den Übungen steckt und wie du sie machst.',
   learnBasics: 'Grundlagen',
@@ -258,7 +279,7 @@ const de: Messages = {
   language: 'Sprache',
   appearance: 'Erscheinungsbild',
   themes: { light: 'Hell', dark: 'Dunkel', system: 'System' },
-  defaultsHint: 'Tempo, Dauer und Fortschritt stellst du während der Übung ein.',
+  defaultsHint: 'Dauer und Tempo stellst du bei der Übung ein.',
   sessionsCompleted: (n) => (n === 1 ? '1 Übung abgeschlossen' : `${n} Übungen abgeschlossen`),
   about: 'Über Fluo',
   credits: 'Quellen und Lizenzen',
@@ -268,7 +289,6 @@ const de: Messages = {
 
 const en: Messages = {
   appName: 'Fluo',
-  splashTagline: 'Your breath as a tool',
   welcome: [
     {
       eyebrow: 'Did you know?',
@@ -293,13 +313,31 @@ const en: Messages = {
     { title: 'Exhaling is underrated.', lines: ['Let the air flow out slowly and easily.', 'Give your exhale time.'] },
     { title: 'Less is often more.', lines: ['Not as much or as deeply as you can,', 'but softly, calmly and evenly.'] },
   ],
+  tagline: 'See what your breath moves in you.',
+  continueWith: (n, m) => `Continue with ${n} · ${m} min`,
+  startWith: (n, m) => `Start with ${n} · ${m} min`,
+  otherExercise: 'Another exercise',
+  stressed: 'I’m feeling stressed',
+  panic: 'Acute help in a panic',
+  needTitle: 'What do you need right now?',
+  fitsNow: 'Fits now',
+  adjust: (n) => `${n}: set duration and pace`,
+  firstBreath: {
+    pad: 'Hold to breathe in',
+    hold: 'Put your finger on the sign and breathe in.',
+    holdSub: 'Letting go means breathing out.',
+    inhaleSub: 'For as long as you hold.',
+    exhaleSub: 'Just let the air go.',
+    longer: 'Hold a little longer.',
+    welcome: 'Good to have you here.',
+    welcomeSub: 'That was your first breath with Fluo.',
+  },
+  intro: 'See the introduction',
   next: 'Next',
   skip: 'Skip',
-  chooseTitle: ['Choose', 'a breathing exercise'],
-  nav: { home: 'Home', learn: 'Learn', settings: 'Settings' },
+  nav: { history: 'History', learn: 'Learn', settings: 'Settings' },
   rhythm: (i, o) => `${i} s in · ${o} s out`,
   nose: 'nose',
-  phaseShort: { inhale: 'in', holdIn: 'hold', exhale: 'out', holdOut: 'hold' },
   phase: { inhale: 'Breathe in', holdIn: 'Hold', exhale: 'Breathe out', holdOut: 'Hold' },
   seconds: (s) => `${s} sec`,
   ready: 'Ready',
@@ -307,7 +345,7 @@ const en: Messages = {
   start: 'Start',
   pause: 'Pause',
   resume: 'Resume',
-  restart: 'Restart',
+  restart: 'Skip to the end',
   close: 'Close',
   roundOf: (i, n) => `Breath ${i} of ${n}`,
   timeLeft: (clock) => `${clock} left`,
@@ -321,10 +359,6 @@ const en: Messages = {
   bodyInsights: 'What is happening in your body',
   insightImpact: 'Impact',
   insightPlace: 'Location',
-  insightsExpand: 'Show all notes',
-  insightsCollapse: 'Fold away',
-  panelMaximize: 'Enlarge controls',
-  panelMinimize: 'Shrink controls',
   breathingPace: 'Breathing pace',
   breathingPaceHint: 'Seconds in / out',
   slowDown: 'Slow down over time',
@@ -336,8 +370,6 @@ const en: Messages = {
   vibration: 'Vibration',
   soundOn: 'Turn sounds on',
   soundOff: 'Turn sounds off',
-  lightMode: 'Light mode',
-  darkMode: 'Dark mode',
   fullscreen: 'Full screen',
   exitFullscreen: 'Exit full screen',
   fullscreenIos: {
@@ -347,7 +379,7 @@ const en: Messages = {
   },
   visualization: 'View',
   modes: {
-    abstract: { label: 'Simple', description: 'A circle that grows and shrinks with your breath' },
+    abstract: { label: 'Simple', description: 'A sign that fills with light from below as you breathe' },
     anatomical: { label: 'Anatomical', description: 'Air moving through the nose, airways and lungs' },
   },
   resetView: 'Reset view',
@@ -355,45 +387,32 @@ const en: Messages = {
   modelFallback: '3D is not available on this device. The simple view keeps guiding you.',
   guide: 'Breathing guide',
   progress: 'Progress',
+  leadIn: 'Breathe out once more',
+  tapForControls: 'Tap to show the controls',
+  moodTitle: 'How do you feel right now?',
+  moods: ['Very tense', 'Tense', 'Neutral', 'Calm', 'Very calm'],
+  moodEnds: ['tense', 'calm'],
+  beforeAfter: (b, n) => `Before: ${b} · Now: ${n}`,
+  suggestByTime: 'Fits the time of day',
+  suggestByExperience: 'Has often helped you at this time',
+  historyTitle: 'Your history',
+  historyLead: 'Every exercise is a ring. The week grows from the inside out, Monday to Sunday.',
+  thisWeek: 'This week',
+  previousWeek: 'Week before',
+  nextWeek: 'Week after',
+  sessions: (n) => (n === 1 ? '1 exercise' : `${n} exercises`),
+  weekEmpty: 'No exercise this week yet.',
+  legendEmpty: 'Day without an exercise',
+  legendWidth: 'The longer, the wider',
+  weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  helpsTitle: 'What helps you',
+  helpsLead: 'From your own answers before and after an exercise. Not a measurement.',
+  helpsEmpty: 'Once you have answered before and after one exercise three times, you will see here what helps you.',
+  helpsChange: (steps, d) => (d === 0 ? 'unchanged on average' : `${steps} ${steps === '1' ? 'step' : 'steps'} ${d > 0 ? 'calmer' : 'more tense'} on average`),
+  total: (s, m) => `${s} in total, ${m}`,
   wellDone: 'Well done.',
-  afterglow: {
-    default: 'You feel better and more relaxed now.',
-    resonance: 'You feel calmer and more balanced now.',
-    energy: 'You feel more awake and clear now.',
-    relax: 'You feel better and more relaxed now.',
-  },
-  completed: (d, e) => `You completed ${d} of ${e}.`,
-  reflection: {
-    question: 'Did you see how large your lungs and your diaphragm are?',
-    lead: 'Almost everything in your upper body is there so that you can breathe. In everyday life, that is easy to forget.',
-    parts: [
-      {
-        title: 'When breathing loses its rhythm',
-        text: 'Over time, many people slip into breathing too shallow and too fast without noticing. That can make the heart beat more restlessly and feed anxious feelings.',
-      },
-      {
-        title: 'What helps',
-        text: 'Noticing your breath and guiding it on purpose. That is exactly what you just practised.',
-      },
-    ],
-  },
-  liked: 'I liked it',
-  disliked: 'I didn’t like it',
-  feelTitle: 'How do you feel right now?',
-  feelings: ['Much calmer', 'Calmer', 'Neutral', 'More tense', 'Much more tense'],
-  continue: 'Continue',
   back: 'Back',
-  niceWork: 'Nice work!',
-  breathingTime: 'Breathing time',
-  breathsLabel: 'Breaths',
-  reported: 'Reported state',
-  notReported: 'Not reported',
-  noMeasurements: 'No measurements. Just your practice and what you reported.',
   done: 'Done',
-  keepGoing: 'Keep going?',
-  tryAnother: 'Try another exercise.',
-  startExercise: (n) => `Start ${n}`,
-  backHome: 'Back to Home',
   learnTitle: 'Learn',
   learnIntro: 'What is behind the exercises and how to do them.',
   learnBasics: 'The basics',
@@ -404,7 +423,7 @@ const en: Messages = {
   language: 'Language',
   appearance: 'Appearance',
   themes: { light: 'Light', dark: 'Dark', system: 'System' },
-  defaultsHint: 'Pace, duration and progress are set during an exercise.',
+  defaultsHint: 'Duration and pace are set with each exercise.',
   sessionsCompleted: (n) => (n === 1 ? '1 session completed' : `${n} sessions completed`),
   about: 'About Fluo',
   credits: 'Sources and licences',

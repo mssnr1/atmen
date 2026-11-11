@@ -1,14 +1,7 @@
 import type { Language } from "../i18n";
 
-/** Texts of the start screen and the acute-help mode. */
+/** Texts of the acute-help mode. */
 export interface CalmText {
-  start: {
-    title: [string, string];
-    lead: [string, string];
-    training: { title: string; hint: string };
-    stressed: { title: string; hint: string };
-    panic: { title: string; hint: string };
-  };
   sos: {
     title: string;
     close: string;
@@ -34,19 +27,6 @@ export interface CalmText {
 }
 
 const de: CalmText = {
-  start: {
-    title: ["Dein Atem", "als Werkzeug."],
-    lead: ["Stress reduzieren, Fokus aufbauen", "und mehr in Balance kommen."],
-    training: { title: "Training starten", hint: "Übung wählen und üben" },
-    stressed: {
-      title: "Ich bin gestresst",
-      hint: "Mit langem Ausatmen runterfahren",
-    },
-    panic: {
-      title: "Akute Hilfe bei Panik",
-      hint: "oder brauche jetzt sofort Hilfe",
-    },
-  },
   sos: {
     title: "Akute Hilfe",
     close: "Schließen",
@@ -54,13 +34,13 @@ const de: CalmText = {
     exhale: "Ausatmen",
     since: (c) => `Du atmest seit ${c}`,
     lines: [
-      "Du bist nicht allein. Atme einfach mit dem Kreis.",
+      "Du bist nicht allein. Atme einfach mit dem Licht.",
       "Ein durch die Nase. Langsam aus, als würdest du eine Kerze anpusten.",
       "Das Gefühl ist heftig. Aber es geht vorbei.",
       "Panikattacken erreichen meist nach wenigen Minuten ihren Höhepunkt und lassen dann nach.",
       "Lass die Schultern sinken. Lockere deinen Kiefer.",
       "Spür deine Füße auf dem Boden.",
-      "Du musst nichts richtig machen. Folge nur dem Kreis.",
+      "Du musst nichts richtig machen. Folge nur dem Licht.",
       "Mit jedem langen Ausatmen wird es ein kleines bisschen ruhiger.",
     ],
     groundingTitle: "Komm im Hier und Jetzt an",
@@ -90,19 +70,6 @@ const de: CalmText = {
 };
 
 const en: CalmText = {
-  start: {
-    title: ["Your breath", "as a tool."],
-    lead: ["Reduce stress, build focus", "and feel more in balance."],
-    training: { title: "Start training", hint: "Choose an exercise and practise" },
-    stressed: {
-      title: "I’m feeling stressed",
-      hint: "Wind down with a long exhale",
-    },
-    panic: {
-      title: "Acute help in a panic",
-      hint: "or I need help right now",
-    },
-  },
   sos: {
     title: "Acute help",
     close: "Close",
@@ -110,13 +77,13 @@ const en: CalmText = {
     exhale: "Breathe out",
     since: (c) => `You’ve been breathing for ${c}`,
     lines: [
-      "You are not alone. Just breathe with the circle.",
+      "You are not alone. Just breathe with the light.",
       "In through your nose. Slowly out, as if blowing on a candle.",
       "The feeling is intense. But it will pass.",
       "Panic attacks usually peak within a few minutes and then ease off.",
       "Let your shoulders drop. Loosen your jaw.",
       "Feel your feet on the floor.",
-      "You don’t have to do anything right. Just follow the circle.",
+      "You don’t have to do anything right. Just follow the light.",
       "With every long exhale it gets a little calmer.",
     ],
     groundingTitle: "Come back to here and now",

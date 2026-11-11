@@ -8,6 +8,8 @@ export const energyBreathing: Exercise = {
   text: {
     de: {
       name: 'Energie',
+      short: 'Energie',
+      need: 'Wach werden',
       purpose: ['Wacher Fokus', 'Klarer Kopf'],
       tagline: 'Etwas zügiger, 4 Sekunden ein, 6 Sekunden aus',
       summary:
@@ -24,6 +26,8 @@ export const energyBreathing: Exercise = {
     },
     en: {
       name: 'Energy',
+      short: 'Energy',
+      need: 'Wake up',
       purpose: ['More focus', 'Mental clarity'],
       tagline: 'A little brisker, 4 seconds in, 6 seconds out',
       summary:

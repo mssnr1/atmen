@@ -41,12 +41,21 @@ export type StripeOptions = {
   /**
    * A second colour toward the bottom: below `range.x` (world height) line, fill and rim take `low`,
    * above `range.y` they keep their own colour, with a smooth blend between (the style guide's gradients).
+   * `fill` is the colour the fill takes instead (the day look: lines grow soft, the paper stays paper).
    */
-  gradient?: { low: string; range: { value: THREE.Vector2 } }
+  gradient?: { low: string; fill?: string; range: { value: THREE.Vector2 } }
   /** Add light instead of covering what lies behind: the surface glows (for the dark page). */
   glow?: boolean
   /** A broad outline glow in `color`, as strong as `amount` (0 = off): the lungs light up with the "more volume" card. */
   pulse?: { amount: { value: number }; color: string }
+  /** Opacity of the fill where the breath has lit the surface (defaults to `fillAlpha`): the day look's violet wash in the lungs. */
+  fillLitAlpha?: number
+  /** Colour of the lines the breath has not reached yet (defaults to a dimmed `line`): the day look's ink lines. */
+  dimLine?: string
+  /** Draw the rim as a line of even strength between these two rim values instead of a soft glow: an ink outline. */
+  rimEdge?: [number, number]
+  /** The rim keeps its own colour instead of following the gradient. */
+  rimPlain?: boolean
 }
 
 /** Shared uniforms of the lung edge map: the texture, the drawing buffer size and the rim width, both in device pixels. */
@@ -73,9 +82,12 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
       uDim: { value: o.dimAlpha ?? o.lineAlpha },
       uShow: o.show ?? { value: 1 },
       uLow: { value: new THREE.Color(o.gradient?.low ?? o.line) },
+      uLowFill: { value: new THREE.Color(o.gradient?.fill ?? o.gradient?.low ?? o.line) },
       uRange: o.gradient?.range ?? { value: new THREE.Vector2(-99, -98) },
       uPulse: o.pulse?.amount ?? { value: 0 },
       uPulseC: { value: new THREE.Color(o.pulse?.color ?? o.rim) },
+      uFillLit: { value: o.fillLitAlpha ?? o.fillAlpha },
+      uDimC: { value: new THREE.Color(o.dimLine ?? o.line) },
       ...(o.edges ? { uEdgeMap: o.edges.map, uEdgeSize: o.edges.size, uEdgeR: o.edges.radius } : {}),
     })
     shader.vertexShader = shader.vertexShader
@@ -103,7 +115,7 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
         varying vec3 vRest; varying vec3 vN; varying vec3 vView;${o.limb ? ' varying vec2 vAxis;' : ''}
         uniform vec3 uLine; uniform vec3 uFill; uniform vec3 uRim;
         uniform float uDensity; uniform float uWidth; uniform float uLineA; uniform float uFillA; uniform float uRimA; uniform float uLevel; uniform float uDim; uniform float uShow;
-        uniform vec3 uLow; uniform vec2 uRange; uniform float uPulse; uniform vec3 uPulseC;
+        uniform vec3 uLow; uniform vec3 uLowFill; uniform vec2 uRange; uniform float uPulse; uniform vec3 uPulseC; uniform float uFillLit; uniform vec3 uDimC;
         ${o.edges ? EDGE_GLSL : ''}`,
       )
       .replace(
@@ -115,17 +127,18 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
         float line = smoothstep(0.5 - uWidth - w, 0.5 - uWidth + w, d);
         float fr = pow(1.0 - abs(dot(normalize(vN), normalize(vView))), ${(o.rimPower ?? 2).toFixed(2)});
         ${o.edges ? 'fr = max(fr, edgeRim(vView.z));' : ''}
+        ${o.rimEdge ? `fr = smoothstep(${o.rimEdge[0].toFixed(3)}, ${o.rimEdge[1].toFixed(3)}, fr);` : ''}
         float focus = 1.0;
         ${o.focusTrunk ? 'line *= mix(0.3, 1.0, smoothstep(0.05, 0.5, fr));' : ''}
         float low = 1.0 - smoothstep(uRange.x, uRange.y, vRest.y);
         vec3 cLine = mix(uLine, uLow, low);
-        vec3 cFill = mix(uFill, uLow, low * 0.8);
-        vec3 cRim = mix(uRim, uLow, low * 0.7);
+        vec3 cFill = mix(uFill, uLowFill, low * 0.8);
+        vec3 cRim = ${o.rimPlain ? 'uRim' : 'mix(uRim, uLow, low * 0.7)'};
         vec3 col = mix(cFill, cLine, line);
         col = mix(col, cRim, fr * 0.8);
         float lit = 1.0 - smoothstep(uLevel - 0.012, uLevel + 0.012, vRest.y);
-        col = mix(mix(cFill, cLine, line * 0.55), col, lit);
-        float a = mix(uFillA, mix(uDim, uLineA, lit), line);
+        col = mix(${o.dimLine ? 'mix(mix(cFill, uDimC, line), cRim, fr * 0.8)' : 'mix(cFill, cLine, line * 0.55)'}, col, lit);
+        float a = mix(mix(uFillA, uFillLit, lit), mix(uDim, uLineA, lit), line);
         a = max(a, fr * uRimA * mix(0.5, 1.0, lit));
         ${o.pulse ? `float fp = max(pow(1.0 - abs(dot(normalize(vN), normalize(vView))), 1.1), fr);
         float gp = uPulse * smoothstep(0.08, 0.75, fp);
@@ -213,11 +226,15 @@ export function edgeDepthMaterial(id: number): THREE.Material {
  * `bodyRim` the glow along the outline, `bodyLow` the colour the skin turns toward the belly; the lungs
  * run from `lungLow` at their base to `lung` at their top, `lungRim` along their outline.
  */
-export type StripePalette = { line: string; lung: string; lungLow: string; lungRim: string; body: string; bodyFill: string; bodyBase: string; bodyRim: string; bodyLow: string }
+export type StripePalette = { line: string; lung: string; lungLow: string; lungRim: string; body: string; bodyFill: string; bodyBase: string; bodyRim: string; bodyLow: string; airway: string }
 
+/**
+ * Two looks, not one inverted: at night ("Tiefes Leuchten") the body is a dim outline and the lungs carry
+ * the light; by day ("Atlas") the body is an ink drawing on paper, and the breath is the only colour.
+ */
 export const STRIPE_PALETTES: Record<'light' | 'dark', StripePalette> = {
-  light: { body: '#8c7bff', bodyFill: '#b9adff', bodyBase: '#f1effe', bodyRim: '#6f5cf0', bodyLow: '#5ab8e8', line: '#8c7bff', lung: '#8c7bff', lungLow: '#38bdf8', lungRim: '#b3a6ff' },
-  dark: { body: '#8f86ff', bodyFill: '#3d3aa6', bodyBase: '#11132a', bodyRim: '#c7bbff', bodyLow: '#4aa6d6', line: '#b3a6ff', lung: '#b3a6ff', lungLow: '#7dd3fc', lungRim: '#e3dcff' },
+  light: { body: '#1a1f33', bodyFill: '#ffffff', bodyBase: '#fbfbf9', bodyRim: '#1a1f33', bodyLow: '#b4b8c6', line: '#6f5cf0', lung: '#6f5cf0', lungLow: '#4f7fd9', lungRim: '#1a1f33', airway: '#1a1f33' },
+  dark: { body: '#8f86ff', bodyFill: '#3d3aa6', bodyBase: '#0d1120', bodyRim: '#b9adff', bodyLow: '#4aa6d6', line: '#b3a6ff', lung: '#b3a6ff', lungLow: '#7dd3fc', lungRim: '#e3dcff', airway: '#b3a6ff' },
 }
 
 /**
@@ -240,13 +257,16 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     width: 0.06,
     line: p.body,
     fill: p.bodyBase,
-    lineAlpha: dark ? 0.5 : 0.42,
-    fillAlpha: dark ? 0.9 : 0.88,
+    lineAlpha: dark ? 0.5 : 0.34,
+    fillAlpha: dark ? 0.9 : 0.94,
     rim: p.bodyRim,
-    rimAlpha: 0.85,
-    rimPower: 1.5,
+    rimAlpha: dark ? 0.85 : 0.92,
+    rimPower: dark ? 1.5 : 1.0,
+    // By day the outline is a drawn line, not a glow.
+    rimEdge: dark ? undefined : [0.74, 0.86],
     focusTrunk: true,
-    gradient: { low: p.bodyLow, range: { value: SKIN_GRADIENT } },
+    // By day the lines grow soft toward the belly and the paper stays paper.
+    gradient: { low: p.bodyLow, fill: dark ? undefined : p.bodyBase, range: { value: SKIN_GRADIENT } },
     side: 'both',
   }
   const lungGradient = lungRange ? { low: p.lungLow, range: lungRange } : undefined
@@ -260,8 +280,29 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     // The lungs are drawn as a solid volume: first their far wall (the rings at the back, dimmed),
     // then their near wall. Both write depth, so the other lung and the airways behind or inside
     // a lung no longer show through it; only the lung's own back rings do.
-    lungBack: stripeMaterial({ gradient: lungGradient, glow: dark, show: inner, pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: dark ? 0.42 : 0.36, dimAlpha: dark ? 0.1 : 0.08, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.0, level, side: 'back', occlude: true }),
-    lung: stripeMaterial({ gradient: lungGradient, glow: dark, show: inner, pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: 1.0, dimAlpha: dark ? 0.22 : 0.18, fillAlpha: dark ? 0.05 : 0.035, rim: p.lungRim, rimAlpha: 0.85, level, occlude: true, edges, rimPower: 1.5, pulse: lungPulse ? { amount: lungPulse, color: dark ? '#efeaff' : '#6f5cf0' } : undefined }),
+    lungBack: stripeMaterial({ gradient: lungGradient, glow: dark, show: inner, pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: dark ? 0.42 : 0.3, dimAlpha: dark ? 0.1 : 0.06, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.0, level, side: 'back', occlude: true }),
+    // By day the breath is a violet wash rising in the lungs; the lines it has not reached stay ink, like the body's.
+    lung: stripeMaterial({
+      gradient: lungGradient,
+      glow: dark,
+      show: inner,
+      pattern: 'level',
+      density: 85,
+      width: 0.07,
+      line: p.lung,
+      fill: p.lung,
+      lineAlpha: 1.0,
+      dimAlpha: dark ? 0.22 : 0.4,
+      fillAlpha: dark ? 0.05 : 0.0,
+      rim: p.lungRim,
+      rimAlpha: dark ? 0.85 : 0.8,
+      level,
+      occlude: true,
+      edges,
+      rimPower: dark ? 1.5 : 1.0,
+      pulse: lungPulse ? { amount: lungPulse, color: dark ? '#efeaff' : '#6f5cf0' } : undefined,
+      ...(dark ? {} : { fillLitAlpha: 0.22, dimLine: p.body, rimEdge: [0.7, 0.84] as [number, number], rimPlain: true }),
+    }),
     lungEdgeLeft: edgeDepthMaterial(1),
     lungEdgeRight: edgeDepthMaterial(2),
     diaphragm: stripeMaterial({ gradient: lungGradient, glow: dark, show: inner, pattern: 'level', density: 85, width: 0.06, line: p.lung, fill: p.lung, lineAlpha: 0.3, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.3, side: 'both' }),
@@ -269,6 +310,22 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     // of its back wall, which one-sided drawing would leave blank.
     // Nose, mouth, throat and windpipe stay as quiet as a lung at rest: never lit by the breath
     // (their level stays below them), so during the exercise only the lungs brighten.
-    airway: stripeMaterial({ gradient: lungGradient, glow: dark, show: inner, pattern: 'level', density: 160, width: 0.1, line: p.lung, fill: p.lung, lineAlpha: 0.45, dimAlpha: dark ? 0.16 : 0.13, fillAlpha: dark ? 0.03 : 0.02, rim: p.lungRim, rimAlpha: 0.6, side: 'both', level: { value: -99 } }),
+    airway: stripeMaterial({
+      gradient: dark ? lungGradient : undefined,
+      glow: dark,
+      show: inner,
+      pattern: 'level',
+      density: 160,
+      width: 0.1,
+      line: p.airway,
+      fill: p.airway,
+      lineAlpha: 0.45,
+      dimAlpha: dark ? 0.16 : 0.3,
+      fillAlpha: dark ? 0.03 : 0.0,
+      rim: dark ? p.lungRim : p.airway,
+      rimAlpha: dark ? 0.6 : 0.55,
+      side: 'both',
+      level: { value: -99 },
+    }),
   }
 }

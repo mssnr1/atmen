@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
-import { BluePage } from '../components/BluePage'
 import { ArrowRightIcon } from '../components/icons'
 import { WelcomeArt } from '../components/WelcomeArt'
 import { Wordmark } from '../components/Wordmark'
@@ -7,7 +6,7 @@ import { useI18n } from '../i18n'
 import { navigate } from '../lib/route'
 import { store } from '../storage/store'
 
-/** Fullscreen blue introduction: a few pages, dots and one arrow. */
+/** The introduction: a few pages to swipe through, dots and one arrow. Reached from Learn and Settings. */
 export function WelcomeScreen() {
   const { t } = useI18n()
   const [page, setPage] = useState(0)
@@ -63,11 +62,12 @@ export function WelcomeScreen() {
   }, [count])
 
   return (
-    <BluePage testId="welcome">
-      <header className="flex items-center justify-between pt-4">
+    <main className="safe-area fixed inset-0 z-10 overflow-y-auto bg-paper" data-testid="welcome">
+      <div className="relative mx-auto flex min-h-full max-w-md flex-col px-7 md:max-w-3xl md:px-14 lg:max-w-5xl">
+      <header className="flex items-center justify-between pt-1">
         <Wordmark />
         {!last && (
-          <button type="button" onClick={finish} className="-mr-2 rounded-full px-3 py-2 text-[0.9375rem] text-white/75 hover:text-white">
+          <button type="button" onClick={finish} className="-mr-2 rounded-full px-3 py-2 text-[0.9375rem] text-ink-2 hover:text-ink">
             {t.skip}
           </button>
         )}
@@ -94,12 +94,12 @@ export function WelcomeScreen() {
               aria-live={i === page ? 'polite' : undefined}
             >
               <div>
-              <WelcomeArt index={i} className={`${p.closing ? 'mb-7' : 'mb-10'} h-16 w-40 text-page-mark md:h-24 md:w-64`} />
-              {p.eyebrow && <p className="mb-3 text-[0.9375rem] tracking-[0.08em] text-white/70 md:text-[1.1875rem]">{p.eyebrow}</p>}
-              <h1 className={`${p.closing ? 'text-[2.375rem]' : 'text-[2.75rem]'} leading-[1.08] font-bold tracking-[-0.02em] text-balance md:text-[4.5rem] lg:text-[5rem]`}>{p.title}</h1>
+              <WelcomeArt index={i} className={`${p.closing ? 'mb-7' : 'mb-10'} h-16 w-40 text-ink-2 md:h-24 md:w-64`} />
+              {p.eyebrow && <p className="eyebrow mb-3 md:text-[0.875rem]">{p.eyebrow}</p>}
+              <h1 className={`display ${p.closing ? 'text-[2.375rem]' : 'text-[2.75rem]'} md:text-[4.5rem] lg:text-[5rem]`}>{p.title}</h1>
               </div>
               <div>
-              <p className={`${p.closing ? 'mt-6 space-y-3' : 'mt-10'} max-w-2xl text-[1.0625rem] leading-relaxed text-white/85 md:text-[1.375rem] lg:mt-0`}>
+              <p className={`${p.closing ? 'mt-6 space-y-3' : 'mt-10'} max-w-2xl text-[1.0625rem] leading-relaxed text-ink-2 md:text-[1.375rem] lg:mt-0`}>
                 {p.lines.map((line) => (
                   <span key={line} className="block">
                     {line}
@@ -107,7 +107,7 @@ export function WelcomeScreen() {
                 ))}
               </p>
               {p.closing && (
-                <p className="mt-6 border-l-2 border-white/45 pl-4 max-w-2xl text-[1.0625rem] leading-relaxed text-white md:text-[1.375rem]" data-testid="welcome-closing">
+                <p className="mt-6 max-w-2xl border-l border-ink/40 pl-4 text-[1.0625rem] leading-relaxed text-ink md:text-[1.375rem]" data-testid="welcome-closing">
                   {p.closing}
                 </p>
               )}
@@ -121,7 +121,7 @@ export function WelcomeScreen() {
         <div className="-ml-2 flex">
           {t.welcome.map((_, i) => (
             <button key={i} type="button" onClick={() => go(i)} aria-label={`${i + 1} / ${count}`} aria-current={i === page ? 'step' : undefined} className="p-2">
-              <span className={`block size-2 rounded-full transition-colors ${i === page ? 'bg-page-dot' : 'bg-page-dot/50'}`} />
+              <span className={`block size-2 rounded-full transition-colors ${i === page ? 'bg-ink' : 'bg-ink/25'}`} />
             </button>
           ))}
         </div>
@@ -130,11 +130,12 @@ export function WelcomeScreen() {
           aria-label={t.next}
           data-testid="welcome-next"
           onClick={() => (last ? finish() : setPage(page + 1))}
-          className="flex size-[4.5rem] md:size-20 items-center justify-center rounded-full bg-page-button text-page-button-ink shadow-[0_8px_24px_rgb(0_0_0/0.12)] transition active:scale-95"
+          className="flex size-16 items-center justify-center rounded-full bg-solid text-on-solid transition active:scale-95 md:size-[4.5rem]"
         >
           <ArrowRightIcon className="size-7" strokeWidth={1.6} />
         </button>
       </footer>
-    </BluePage>
+      </div>
+    </main>
   )
 }

@@ -4,6 +4,10 @@ import type { Language } from '../i18n/messages'
 /** The words for an exercise in one language. */
 export interface ExerciseText {
   name: string
+  /** The name in one word, for the start button: "Weiter mit Resonanz". */
+  short: string
+  /** What someone needs when this exercise fits: it leads the exercise sheet, the name becomes the second line. */
+  need: string
   /** Two short lines on what the exercise is for, shown on its card. */
   purpose: [string, string]
   tagline: string
