@@ -4,21 +4,23 @@ import { Visualization } from '../visualization/Visualization'
 import { stageSource, useStageState } from './stage'
 
 /**
- * The figure, rendered once behind every screen. It mounts with the first screen that shows it and then
- * stays: screens that do not show it only pause its render loop, so coming back costs nothing.
+ * The figure, rendered once behind every screen. It mounts with the first screen that shows it (or that
+ * asks for it ahead, see `useStageAhead`) and then stays: screens that do not show it only pause its
+ * render loop, so coming back costs nothing. It comes into view slowly and leaves a little quicker.
  */
 export function Stage() {
   const s = useStageState()
   const mode = useStore((d) => d.preferences.visualizationMode)
   const showProgress = useStore((d) => d.preferences.showProgress)
-  const [mounted, setMounted] = useState(s.active)
+  const wanted = s.active || s.ahead
+  const [mounted, setMounted] = useState(wanted)
   useEffect(() => {
-    if (s.active) setMounted(true)
-  }, [s.active])
+    if (wanted) setMounted(true)
+  }, [wanted])
   if (!mounted) return null
   return (
     <div
-      className={`fixed inset-0 z-0 transition-opacity duration-700 ${s.active ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+      className={`fixed inset-0 z-0 transition-opacity ${s.active ? 'opacity-100 duration-1000' : 'pointer-events-none opacity-0 duration-700'}`}
       aria-hidden={!s.active}
       data-testid="stage"
     >

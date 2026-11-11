@@ -6,15 +6,11 @@ import { useTheme } from '../../lib/theme'
 import { lungLevel, setLungRange } from '../../lib/lungRings'
 import { breathState, type BreathSource } from '../breathState'
 import { intoFrame, simplifiedDiaphragm } from './diaphragmShape'
-import { airwayTree, type Branch } from './airwayTree'
 import { BreathSpecks } from './BreathSpecks'
 import { heartbeat } from './heartbeat'
 import { ImpactEffects } from './ImpactEffects'
-import { addCalmMorph } from './face'
-import { withHolesFilled } from './holes'
-import { simplifiedLung } from './lungShape'
 import { makeMaterials, type MaterialKind } from './materials'
-import { addLimbAxis } from './limbs'
+import { airwayFor, closedHead, inTurns, limbAxis, smoothLung } from './shapes'
 import { makeStripeMaterials, STRIPE_PALETTES, type EdgeMap, type Fade } from './stripes'
 
 /** Layer of the lung copies that only draw the edge map. */
@@ -78,103 +74,40 @@ const SHOW_DIAPHRAGM = false
 
 const BREATH_GAIN: Record<string, number> = { Body_Shell: 2.6, Arms: 2.6, Lung_Left: 1.7, Lung_Right: 1.7, Diaphragm: 1.25 }
 
-/**
- * Windpipe and main bronchi, drawn as one smooth piece instead of the model's
- * separate, overlapping trachea and bronchi (world metres, along the model's
- * airway; the bronchi end inside the lungs, which hide their ends).
- */
-const AIRWAY_TOP = 1.4606
-/**
- * The nasal cavity, front to back from its back end, as the model has it (world metres): depth z, floor,
- * roof and half its width. The airway is built along it, so nose, throat and windpipe are one surface
- * with the same lines everywhere, instead of the model's nasal cavity with its folds and inner walls.
- */
-const NOSE_PROFILE: [z: number, floor: number, roof: number, w: number][] = [
-  [0.053, 1.554, 1.5928, 0.0102],
-  [0.057, 1.5544, 1.5942, 0.0101],
-  [0.061, 1.5546, 1.5952, 0.0101],
-  [0.065, 1.5545, 1.5961, 0.01],
-  [0.069, 1.5545, 1.5968, 0.0098],
-  [0.073, 1.5546, 1.5965, 0.0098],
-  [0.077, 1.5545, 1.5955, 0.01],
-  [0.081, 1.554, 1.5935, 0.0107],
-  [0.085, 1.553, 1.592, 0.0114],
-  [0.089, 1.552, 1.59, 0.0116],
-  [0.093, 1.5512, 1.5878, 0.0112],
-  [0.097, 1.5513, 1.5826, 0.0102],
-  [0.101, 1.5514, 1.5773, 0.0085],
-]
-/** The nose's front, slanting down under the bridge: the airway is cut off beyond it (see `Branch.clip`). */
-const NOSE_FRONT = { point: [0, 1.5878, 0.093] as [number, number, number], normal: [0, 0.39, 0.92] as [number, number, number] }
-/** Where the throat's bend ends at the back of the nose: middle height, half its height, half its width. */
-const NOSE_OPENING = { y: 1.5722, r: 0.0198, w: 0.0105 }
-/** Radii of the throat's bend forward into the nose (world metres): its front wall's and its back wall's. */
-const THROAT_INNER = 0.014
-const THROAT_OUTER = 0.04
-const TRACHEA_R = 0.0105
-const CARINA: [number, number, number] = [-0.0005, 1.362, -0.013]
-const AIRWAY_BRANCHES: Branch[] = [
-  { points: [[0, AIRWAY_TOP + 0.004, 0.01], [-0.0004, 1.4257, 0.005], [-0.0004, 1.3904, -0.0033], CARINA], r0: 0.0105, r1: 0.0095 },
-  // Up the back of the throat and forward through the nose, so nose and windpipe are one airway
-  // without mouth or throat (see `throat`).
-  throat(),
-  { points: [CARINA, [0.027, 1.335, -0.018], [0.044, 1.321, -0.021], [0.062, 1.306, -0.02]], r0: 0.0078, r1: 0.0058 },
-  { points: [CARINA, [-0.014, 1.348, -0.017], [-0.031, 1.318, -0.021], [-0.044, 1.297, -0.026]], r0: 0.0078, r1: 0.0058 },
-]
-
-/**
- * Throat and nose: straight up from the windpipe at its width, then in one round bend forward into the
- * back of the nose, widening on the way to the nose's size (`NOSE_OPENING`), and on along the nose
- * (`NOSE_PROFILE`).
- * The bend is drawn by its two walls, each a quarter circle: the front wall turns from the windpipe's
- * front into the nose's floor, the back wall from the windpipe's back into the nose's roof. The tube
- * runs midway between them, as wide as they are apart.
- */
-function throat(): Branch {
-  const y0 = AIRWAY_TOP + 0.004
-  const z0 = 0.01
-  const backZ = 0.0125
-  const floor = NOSE_OPENING.y - NOSE_OPENING.r
-  const roof = NOSE_OPENING.y + NOSE_OPENING.r
-  const inner = { y: floor - THROAT_INNER, z: backZ + TRACHEA_R + THROAT_INNER, r: THROAT_INNER }
-  const outer = { y: roof - THROAT_OUTER, z: backZ - TRACHEA_R + THROAT_OUTER, r: THROAT_OUTER }
-  const wall = (c: { y: number; z: number; r: number }, a: number) => [c.y + c.r * Math.sin(a), c.z - c.r * Math.cos(a)]
-  const points: [number, number, number][] = []
-  const radii: number[] = []
-  const widths: number[] = []
-  const at = (y: number, z: number, r: number, grow: number) => {
-    points.push([0, y, z])
-    radii.push(r)
-    widths.push(TRACHEA_R + (NOSE_OPENING.w - TRACHEA_R) * THREE.MathUtils.smoothstep(grow, 0, 1))
-  }
-  // Up the back of the neck to where the bend starts.
-  const bendY = (wall(inner, 0)[0] + wall(outer, 0)[0]) / 2
-  const steps = 8
-  for (let i = 0; i < steps; i++) {
-    const f = i / steps
-    at(y0 + (bendY - y0) * f, z0 + (backZ - z0) * f, TRACHEA_R, 0)
-  }
-  // Round the bend, midway between its walls.
-  const arc = 14
-  for (let i = 0; i <= arc; i++) {
-    const a = ((Math.PI / 2) * i) / arc
-    const [yi, zi] = wall(inner, a)
-    const [yo, zo] = wall(outer, a)
-    at((yi + yo) / 2, (zi + zo) / 2, Math.hypot(yo - yi, zo - zi) / 2, i / arc)
-  }
-  // On through the nose to its front, where it ends round inside the nose.
-  for (const [z, floor, roof, w] of NOSE_PROFILE) {
-    points.push([0, (floor + roof) / 2, z])
-    radii.push((roof - floor) / 2)
-    widths.push(w)
-  }
-  return { points, r0: TRACHEA_R, r1: NOSE_OPENING.r, radii, widths, clip: NOSE_FRONT }
-}
-
 export { heartbeat }
 
 /** Seconds per beat for the illustrative heartbeat; not the user's pulse. */
 const BEAT_S = 60 / 62
+
+/** The models whose shapes are being worked out, or are ready. */
+const shaping = new WeakMap<THREE.Object3D, { ready: boolean; work: Promise<void> }>()
+
+/**
+ * Waits (like the model's loading does) until the model's shapes are worked out: the scene is only put
+ * together once they are, and then at once. They are made piece by piece (see `inTurns`), from the
+ * model as it was loaded, whose geometry every copy of it shares.
+ */
+function useShapes(scene: THREE.Object3D) {
+  let shapes = shaping.get(scene)
+  if (!shapes) {
+    const jobs: (() => void)[] = []
+    scene.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      const part = PARTS[mesh.name] ?? PARTS[mesh.parent?.name ?? '']
+      if (!mesh.isMesh || !part || part.hidden) return
+      if (part.kind === 'lung') jobs.push(() => smoothLung(mesh, BREATH_GAIN[mesh.name] ?? 1))
+      if (mesh.name === 'Head') jobs.push(() => closedHead(mesh))
+      if (LIMBS.has(mesh.name)) jobs.push(() => limbAxis(mesh))
+      if (mesh.name === 'Trachea') jobs.push(() => airwayFor(mesh))
+    })
+    const made = { ready: false, work: Promise.resolve() }
+    made.work = inTurns(jobs).then(() => {
+      made.ready = true
+    })
+    shaping.set(scene, (shapes = made))
+  }
+  if (!shapes.ready) throw shapes.work
+}
 
 /**
  * The anatomical model, driven by the breathing engine. Every frame it samples
@@ -185,6 +118,7 @@ const BEAT_S = 60 / 62
  */
 export function AnatomyModel({ engine }: { engine: BreathSource }) {
   const { scene } = useGLTF(MODEL_URL, false, true)
+  useShapes(scene)
   const theme = useTheme()
   const level = useMemo(() => ({ value: 99 }), [])
   const { gl } = useThree()
@@ -234,33 +168,13 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         mesh.visible = false
         return
       }
-      // Each lung is drawn as a simplified smooth body, not with its lobes, borders and notches,
-      // so its contour lines run calm and even.
-      if (part.kind === 'lung' && !mesh.geometry.userData.simplified) {
-        const at = mesh.getWorldPosition(new THREE.Vector3())
-        const scale = mesh.getWorldScale(new THREE.Vector3()).x
-        const side = Math.sign(at.x) || 1
-        const smooth = simplifiedLung(mesh.geometry, {
-          // Body midline at world x = 0; keep 3 mm off it, flattening over about 3 cm.
-          midline: { x: -at.x / scale, side, gap: 0.003 / scale, soft: 0.03 / scale, gain: BREATH_GAIN[mesh.name] ?? 1 },
-        })
-        if (smooth) {
-          smooth.userData.simplified = true
-          mesh.geometry = smooth
-          mesh.updateMorphTargets()
-        }
+      // The shapes drawn in place of the model's own (see `shapes.ts`), ready since the model was shaped.
+      const shape = part.kind === 'lung' ? smoothLung(mesh, BREATH_GAIN[mesh.name] ?? 1) : mesh.name === 'Head' ? closedHead(mesh) : mesh.geometry
+      if (shape !== mesh.geometry) {
+        mesh.geometry = shape
+        mesh.updateMorphTargets()
       }
-      // The head is closed over its eyes, brows and lips, so the lines run on across them.
-      if (mesh.name === 'Head' && !mesh.geometry.userData.holesFilled) {
-        const filled = withHolesFilled(mesh.geometry, mesh.getWorldScale(new THREE.Vector3()).x)
-        if (filled) {
-          filled.userData.holesFilled = true
-          addCalmMorph(filled, mesh.matrixWorld)
-          mesh.geometry = filled
-          mesh.updateMorphTargets()
-        }
-      }
-      if (LIMBS.has(mesh.name) && !mesh.geometry.getAttribute('axis')) addLimbAxis(mesh.geometry, 0.01 / mesh.getWorldScale(new THREE.Vector3()).x)
+      if (LIMBS.has(mesh.name)) limbAxis(mesh)
       mesh.material = LIMBS.has(mesh.name) ? materials.limbs : materials[part.kind]
       // The anatomical diaphragm folds over itself in the front view; a simplified sheet under the
       // lungs takes its place once the lungs are known (see below).
@@ -274,21 +188,16 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         mesh.visible = false
         return
       }
-      if (mesh.name === 'Trachea' && mesh.parent) {
+      const tree = mesh.name === 'Trachea' ? airwayFor(mesh) : null
+      if (tree) {
         mesh.visible = false
-        let tree = mesh.geometry.userData.tree as THREE.BufferGeometry | undefined
-        if (!tree) {
-          tree = airwayTree(AIRWAY_BRANCHES, { top: 1.7 })
-          tree.applyMatrix4(mesh.parent.matrixWorld.clone().invert())
-          mesh.geometry.userData.tree = tree
-        }
         const airway = new THREE.Mesh(tree, materials.airway)
         airway.renderOrder = part.order
         airway.userData.lungBack = true
         backs.push([mesh, airway])
         return
       }
-      // The nose is part of the airway built above (see `throat`).
+      // The nose is part of the airway built above (see `throat` in airwayShape.ts).
       if (mesh.name === 'Nasal_Cavity') {
         mesh.visible = false
         return

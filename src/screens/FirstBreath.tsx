@@ -4,6 +4,7 @@ import { Button } from '../components/Button'
 import { Wordmark } from '../components/Wordmark'
 import { useI18n } from '../i18n'
 import { navigate } from '../lib/route'
+import { useStageAhead } from '../stage/stage'
 import { store } from '../storage/store'
 
 /** Seconds the sign takes to fill while held, and to empty once let go: an unhurried breath. */
@@ -24,10 +25,8 @@ export function FirstBreath({ onDone }: { onDone?: () => void }) {
   const state = useRef({ hold: false, level: 0, peak: 0, last: 0, frame: 0, done: false })
 
   useEffect(() => () => cancelAnimationFrame(state.current.frame), [])
-  // The figure waits behind this page: fetch it now, so it is there when the page opens.
-  useEffect(() => {
-    if (store.get().preferences.visualizationMode !== 'abstract') void import('../visualization/anatomy3d/Anatomy3DVisualization').catch(() => {})
-  }, [])
+  // The figure waits behind this page: it is loaded and built now, and only fades in when the page opens.
+  useStageAhead()
 
   const tick = (now: number) => {
     const s = state.current
