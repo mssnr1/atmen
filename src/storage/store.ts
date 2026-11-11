@@ -20,6 +20,7 @@ const defaults: StoredData = {
     paceByExercise: {},
     showProgress: false,
     breathCues: true,
+    ringPulse: true,
     welcomeSeen: false,
   },
   sessions: [],

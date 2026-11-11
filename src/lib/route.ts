@@ -39,9 +39,10 @@ let pendingStart: string | null = null
 
 /**
  * Open an exercise and start it: one tap to the first breath. Audio is unlocked here, inside the tap,
- * because mobile browsers only allow it from a gesture.
+ * because mobile browsers only allow it from a gesture; each session begins with a fresh audio context.
  */
 export function startPractice(exerciseId: string): void {
+  audioCues.renew()
   void audioCues.unlock()
   pendingStart = exerciseId
   navigate({ name: 'practice', exerciseId })

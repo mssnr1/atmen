@@ -1,5 +1,5 @@
 import { defaultPace, resolvePlan, type EngineSnapshot } from '../engine'
-import { AMBIENT_HALF_MS, ambientAt, ambientMs, breathCurve, prefersReducedMotion, REST_LEVEL } from '../lib/breathClock'
+import { AMBIENT_HALF_MS, ambientAt, ambientMs, inverseBreathCurve, prefersReducedMotion, REST_LEVEL } from '../lib/breathClock'
 import type { BreathSource } from '../visualization/breathState'
 
 /** One calm breath, 5.5 s in and 5.5 s out: the plan the ambient snapshots refer to. */
@@ -39,19 +39,6 @@ function snapshot(type: 'inhale' | 'exhale', phaseProgress: number, elapsedMs: n
     phaseProgress,
     done: false,
   }
-}
-
-/** Progress 0..1 of a breath phase at which `breathCurve` reaches `level`. */
-export function inverseBreathCurve(level: number): number {
-  const target = clamp01(level)
-  let lo = 0
-  let hi = 1
-  for (let i = 0; i < 24; i++) {
-    const mid = (lo + hi) / 2
-    if (breathCurve(mid) < target) lo = mid
-    else hi = mid
-  }
-  return (lo + hi) / 2
 }
 
 /** The ambient breath at `ms` on the ambient clock (see lib/breathClock.ts). */

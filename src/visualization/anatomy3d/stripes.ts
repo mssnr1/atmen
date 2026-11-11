@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { RING_DENSITY } from '../../lib/lungRings'
 
 /**
  * Contour-stripe look: the body is drawn only as thin lines that follow its
@@ -280,14 +281,14 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     // The lungs are drawn as a solid volume: first their far wall (the rings at the back, dimmed),
     // then their near wall. Both write depth, so the other lung and the airways behind or inside
     // a lung no longer show through it; only the lung's own back rings do.
-    lungBack: stripeMaterial({ gradient: lungGradient, glow: dark, show: inner, pattern: 'level', density: 85, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: dark ? 0.42 : 0.3, dimAlpha: dark ? 0.1 : 0.06, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.0, level, side: 'back', occlude: true }),
+    lungBack: stripeMaterial({ gradient: lungGradient, glow: dark, show: inner, pattern: 'level', density: RING_DENSITY, width: 0.07, line: p.lung, fill: p.lung, lineAlpha: dark ? 0.42 : 0.3, dimAlpha: dark ? 0.1 : 0.06, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.0, level, side: 'back', occlude: true }),
     // By day the breath is a violet wash rising in the lungs; the lines it has not reached stay ink, like the body's.
     lung: stripeMaterial({
       gradient: lungGradient,
       glow: dark,
       show: inner,
       pattern: 'level',
-      density: 85,
+      density: RING_DENSITY,
       width: 0.07,
       line: p.lung,
       fill: p.lung,
@@ -305,7 +306,7 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     }),
     lungEdgeLeft: edgeDepthMaterial(1),
     lungEdgeRight: edgeDepthMaterial(2),
-    diaphragm: stripeMaterial({ gradient: lungGradient, glow: dark, show: inner, pattern: 'level', density: 85, width: 0.06, line: p.lung, fill: p.lung, lineAlpha: 0.3, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.3, side: 'both' }),
+    diaphragm: stripeMaterial({ gradient: lungGradient, glow: dark, show: inner, pattern: 'level', density: RING_DENSITY, width: 0.06, line: p.lung, fill: p.lung, lineAlpha: 0.3, fillAlpha: 0.0, rim: p.lungRim, rimAlpha: 0.3, side: 'both' }),
     // Both walls: the throat is open toward the mouth, and through that opening the eye sees the inside
     // of its back wall, which one-sided drawing would leave blank.
     // Nose, mouth, throat and windpipe stay as quiet as a lung at rest: never lit by the breath

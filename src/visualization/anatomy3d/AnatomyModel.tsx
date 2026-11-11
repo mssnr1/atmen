@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useTheme } from '../../lib/theme'
+import { lungLevel, setLungRange } from '../../lib/lungRings'
 import { breathState, type BreathSource } from '../breathState'
 import { intoFrame, simplifiedDiaphragm } from './diaphragmShape'
 import { airwayTree, type Branch } from './airwayTree'
@@ -361,11 +362,20 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     }
     morphs.current = found
     const lungs = new THREE.Box3()
+    // The lungs as they are modelled, without the breath moving them: the rings are drawn in that shape.
+    const drawn = new THREE.Box3()
+    const point = new THREE.Vector3()
     model.updateMatrixWorld(true)
     model.traverse((o) => {
-      if ((o as THREE.Mesh).isMesh && /^Lung_/.test(o.name)) lungs.expandByObject(o)
+      const mesh = o as THREE.Mesh
+      if (!mesh.isMesh || !/^Lung_/.test(o.name)) return
+      lungs.expandByObject(mesh)
+      const position = mesh.geometry.getAttribute('position')
+      for (let i = 0; i < position.count; i++) drawn.expandByPoint(point.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld))
     })
     lungRange.current = lungs.isEmpty() ? null : [lungs.min.y, lungs.max.y]
+    // The sound counts the same rings (a pulse for each): it reads the lungs' height from here.
+    if (!lungs.isEmpty()) setLungRange(lungs.min.y, lungs.max.y, drawn.min.y, drawn.max.y)
     if (!lungs.isEmpty()) lungGradient.value.set(lungs.min.y, lungs.max.y)
     return () => Object.values(materials).forEach((m) => m.dispose())
   }, [model, materials])
@@ -392,10 +402,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
     // The face settles (eyes close, a smile) a little after the lungs have begun to fade.
     const f = Math.min(Math.max((d - 0.3) / 0.7, 0), 1)
     calm.current = f * f * (3 - 2 * f)
-    if (lungRange.current) {
-      const [lo, hi] = lungRange.current
-      level.value = lo + (hi - lo) * (0.04 + 0.98 * b.volume)
-    }
+    if (lungRange.current) level.value = lungLevel(b.volume)
     for (const m of morphs.current) {
       const influences = m.mesh.morphTargetInfluences
       if (influences) influences[m.index] = m.kind === 'beat' ? h : m.kind === 'calm' ? calm.current : b.volume * m.gain

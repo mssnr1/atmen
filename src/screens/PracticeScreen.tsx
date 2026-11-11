@@ -93,11 +93,14 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   // (it was breathing on the start screen): `leadIn` is that last exhale.
   const [leadIn, setLeadIn] = useState<BreathSource | null>(null)
   const leadInTimer = useRef<number | undefined>(undefined)
-  const { start: startSession } = session
+  const { start: startSession, engine } = session
   const start = useCallback(
     (level: number) => {
-      // Unlock audio inside the tap; the session itself starts after the lead-in.
+      // Unlock audio inside the tap; the session itself starts after the lead-in, time enough to have
+      // its first breaths ready.
       void audioCues.unlock()
+      const { audioEnabled, ringPulse } = store.get().preferences
+      if (audioEnabled) audioCues.warm(engine.getPlan(), { pulse: ringPulse })
       window.clearTimeout(leadInTimer.current)
       setLeadIn(settleSource(level, LEAD_IN_MS))
       leadInTimer.current = window.setTimeout(() => {
@@ -106,7 +109,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         startSession()
       }, LEAD_IN_MS)
     },
-    [startSession],
+    [startSession, engine],
   )
   // Where the lungs stood when this screen opened, read before the stage hands over to this exercise.
   const [entryLevel] = useState(() => breathState(stageSource.sample()).volume)
@@ -312,7 +315,15 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
                       <PlayIcon className="ml-1 size-6" />
                     </IconButton>
                   ) : (
-                    <Button onClick={() => start(breathState(stageSource.sample()).volume)} className="px-10" data-testid="start">
+                    <Button
+                      onClick={() => {
+                        // A fresh audio context for each session, made here inside the tap.
+                        audioCues.renew()
+                        start(breathState(stageSource.sample()).volume)
+                      }}
+                      className="px-10"
+                      data-testid="start"
+                    >
                       {t.start}
                     </Button>
                   )}
@@ -413,6 +424,14 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
 
         <div className="mt-3 divide-y divide-line">
           <Switch label={t.sound} checked={prefs.audioEnabled} disabled={!audioSupported()} onChange={(v) => session.setAudioEnabled(v)} />
+          <Switch
+            label={t.ringPulse}
+            hint={t.ringPulseHint}
+            checked={prefs.ringPulse}
+            disabled={!audioSupported() || !prefs.audioEnabled}
+            onChange={(v) => session.setRingPulse(v)}
+            testId="toggle-pulse"
+          />
           <Switch
             label={t.vibration}
             checked={prefs.vibrationEnabled}

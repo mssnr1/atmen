@@ -9,6 +9,20 @@ export const AMBIENT_CYCLE_MS = 2 * AMBIENT_HALF_MS
 /** How lung volume follows a breath: starts and ends more gently than a sine (smootherstep). */
 export const breathCurve = (t: number) => t * t * t * (t * (6 * t - 15) + 10)
 
+/** Progress 0..1 of a breath phase at which `breathCurve` reaches `level`. */
+export function inverseBreathCurve(level: number): number {
+  if (!(level > 0)) return 0
+  if (level >= 1) return 1
+  let lo = 0
+  let hi = 1
+  for (let i = 0; i < 32; i++) {
+    const mid = (lo + hi) / 2
+    if (breathCurve(mid) < level) lo = mid
+    else hi = mid
+  }
+  return (lo + hi) / 2
+}
+
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now())
 const t0 = now()
 

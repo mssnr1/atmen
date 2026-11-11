@@ -25,6 +25,8 @@ export interface Preferences {
   showProgress: boolean
   /** Show a line over the figure's head while breathing: something to sense, later a good thought. */
   breathCues: boolean
+  /** With the sound on: a deep pulse for every ring of the lungs as it lights or goes dark. */
+  ringPulse: boolean
   /** The welcome pages have been seen once. */
   welcomeSeen: boolean
 }

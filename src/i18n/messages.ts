@@ -79,6 +79,8 @@ export interface Messages {
   showProgressHint: string
   breathCues: string
   breathCuesHint: string
+  ringPulse: string
+  ringPulseHint: string
   duration: string
   sound: string
   vibration: string
@@ -225,6 +227,8 @@ const de: Messages = {
   showProgressHint: 'Gesamtzeit und Fortschrittsbalken',
   breathCues: 'Gedanken beim Atmen',
   breathCuesHint: 'Kurze Sätze über der Figur: erst spüren, später ein guter Gedanke',
+  ringPulse: 'Basspuls',
+  ringPulseHint: 'Zum Atemton ein leiser, tiefer Puls für jeden Ring der Lunge',
   duration: 'Dauer',
   sound: 'Töne',
   vibration: 'Vibration',
@@ -371,6 +375,8 @@ const en: Messages = {
   showProgressHint: 'Show total time and progress bar',
   breathCues: 'Thoughts while breathing',
   breathCuesHint: 'Short lines above the figure: first something to sense, later a good thought',
+  ringPulse: 'Bass pulse',
+  ringPulseHint: 'With the breath sound, a quiet, deep pulse for every ring of the lungs',
   duration: 'Duration',
   sound: 'Sounds',
   vibration: 'Vibration',

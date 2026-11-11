@@ -14,6 +14,8 @@
  *   up; breathing out starts fuller and darker and sinks away like a sigh.
  * - Slow random wobble on level and filter imitates the turbulence of real air.
  *
+ * The noise is a little different in each ear, which gives the breath width.
+ *
  * A short, dark room reverb glues the breaths together. During quiet pauses the
  * breath falls silent, as a held breath does. All functions take a
  * BaseAudioContext so the same code renders offline (for previews).
@@ -27,11 +29,14 @@ export const PAD_RELEASE_S = 1.6
 export interface PadBus {
   /** Where breath voices connect to. */
   input: AudioNode
-  /** Brown noise: most energy in the lows, for the body of the breath. */
+  /** Brown noise: most energy in the lows, for the body of the breath. Two channels, like the pink. */
   brown: AudioBuffer
   /** Pink noise: a little brighter, for the air on top. */
   pink: AudioBuffer
 }
+
+/** How long a breath takes to come in when it is joined part-way (after a pause, or a change of pace). */
+export const JOIN_FADE_S = 0.4
 
 /** A scheduled breath that can be faded out and stopped early. */
 export interface PadVoice {
@@ -95,7 +100,7 @@ const EXHALE: BreathShape = {
 
 /**
  * Build the shared breath chain: warm EQ → gentle compressor → dry + dark
- * reverb → destination. Call once per AudioContext.
+ * reverb → destination. One per audio context.
  */
 export function createPadBus(ctx: BaseAudioContext, destination: AudioNode): PadBus {
   const input = ctx.createGain()
@@ -128,12 +133,29 @@ export function createPadBus(ctx: BaseAudioContext, destination: AudioNode): Pad
   dry.gain.value = 0.85
   const wet = ctx.createGain()
   wet.gain.value = 0.3
+  const { brown, pink, room } = materialFor(ctx)
   const reverb = ctx.createConvolver()
-  reverb.buffer = reverbImpulse(ctx, 2.6)
+  reverb.buffer = room
   comp.connect(dry).connect(destination)
   comp.connect(reverb).connect(wet).connect(destination)
 
-  return { input, brown: brownNoise(ctx, 6), pink: pinkNoise(ctx, 6) }
+  return { input, brown, pink }
+}
+
+/**
+ * The noise the breaths are shaped from and the room they sound in. Making them is the costly part of a
+ * chain, and buffers are not tied to one audio context: they are made once per sample rate and shared
+ * by every chain, live or rendered ahead.
+ */
+const materials = new Map<number, { brown: AudioBuffer; pink: AudioBuffer; room: AudioBuffer }>()
+
+function materialFor(ctx: BaseAudioContext): { brown: AudioBuffer; pink: AudioBuffer; room: AudioBuffer } {
+  let made = materials.get(ctx.sampleRate)
+  if (!made) {
+    made = { brown: brownNoise(ctx, 6), pink: pinkNoise(ctx, 6), room: reverbImpulse(ctx, 2.6) }
+    materials.set(ctx.sampleRate, made)
+  }
+  return made
 }
 
 /**
@@ -158,6 +180,12 @@ export function schedulePad(
   const out = ctx.createGain()
   out.gain.value = 1
   out.connect(bus.input)
+  // Joining a breath already under way: come in softly instead of at its full level.
+  const now = ctx.currentTime
+  if (start < now - 0.05) {
+    out.gain.setValueAtTime(0, now)
+    out.gain.linearRampToValueAtTime(1, now + JOIN_FADE_S)
+  }
 
   // Volume envelope, with a soft tail after the phase ends.
   const env = ctx.createGain()
@@ -264,45 +292,70 @@ export function fadeOutPad(ctx: BaseAudioContext, voice: PadVoice, seconds = 0.4
   voice.endsAt = now + seconds + 0.05
 }
 
-function brownNoise(ctx: BaseAudioContext, seconds: number): AudioBuffer {
+/** Seconds of noise in a loop, and of the cross-fade that closes it. */
+const LOOP_FADE_S = 0.25
+
+/**
+ * Two channels of noise that share a middle and differ at the sides, so the breath has width on
+ * headphones and still sits in the centre. `make` fills a buffer with one kind of noise.
+ */
+function stereoNoise(ctx: BaseAudioContext, seconds: number, make: (len: number) => Float32Array): AudioBuffer {
   const len = Math.floor(ctx.sampleRate * seconds)
-  const buf = ctx.createBuffer(1, len, ctx.sampleRate)
-  const data = buf.getChannelData(0)
-  let last = 0
-  for (let i = 0; i < len; i++) {
-    last = (last + (Math.random() * 2 - 1) * 0.02) / 1.02
-    data[i] = last * 3.5
+  const fade = Math.floor(ctx.sampleRate * LOOP_FADE_S)
+  const buf = ctx.createBuffer(2, len, ctx.sampleRate)
+  const mid = make(len + fade)
+  const SIDE = 0.8
+  const norm = 1 / Math.sqrt(1 + SIDE * SIDE)
+  for (let ch = 0; ch < 2; ch++) {
+    const side = make(len + fade)
+    const data = buf.getChannelData(ch)
+    for (let i = 0; i < len + fade; i++) side[i] = (mid[i] + SIDE * side[i]) * norm
+    closeLoop(side, data, fade)
   }
-  smoothLoop(data, ctx.sampleRate)
   return buf
+}
+
+function brownNoise(ctx: BaseAudioContext, seconds: number): AudioBuffer {
+  return stereoNoise(ctx, seconds, (len) => {
+    const data = new Float32Array(len)
+    let last = 0
+    for (let i = 0; i < len; i++) {
+      last = (last + (Math.random() * 2 - 1) * 0.02) / 1.02
+      data[i] = last * 3.5
+    }
+    return data
+  })
 }
 
 function pinkNoise(ctx: BaseAudioContext, seconds: number): AudioBuffer {
-  const len = Math.floor(ctx.sampleRate * seconds)
-  const buf = ctx.createBuffer(1, len, ctx.sampleRate)
-  const data = buf.getChannelData(0)
-  // Paul Kellet's economy pink filter.
-  let b0 = 0
-  let b1 = 0
-  let b2 = 0
-  for (let i = 0; i < len; i++) {
-    const w = Math.random() * 2 - 1
-    b0 = 0.99765 * b0 + w * 0.099046
-    b1 = 0.963 * b1 + w * 0.2965164
-    b2 = 0.57 * b2 + w * 1.0526913
-    data[i] = (b0 + b1 + b2 + w * 0.1848) * 0.12
-  }
-  smoothLoop(data, ctx.sampleRate)
-  return buf
+  return stereoNoise(ctx, seconds, (len) => {
+    const data = new Float32Array(len)
+    // Paul Kellet's economy pink filter.
+    let b0 = 0
+    let b1 = 0
+    let b2 = 0
+    for (let i = 0; i < len; i++) {
+      const w = Math.random() * 2 - 1
+      b0 = 0.99765 * b0 + w * 0.099046
+      b1 = 0.963 * b1 + w * 0.2965164
+      b2 = 0.57 * b2 + w * 1.0526913
+      data[i] = (b0 + b1 + b2 + w * 0.1848) * 0.12
+    }
+    return data
+  })
 }
 
-/** Cross-fade the end of a noise buffer into its start so the loop has no click. */
-function smoothLoop(data: Float32Array, rate: number): void {
-  const n = Math.min(Math.floor(rate * 0.05), data.length >> 2)
-  for (let i = 0; i < n; i++) {
-    const t = i / n
-    const j = data.length - n + i
-    data[j] = data[j] * (1 - t) + data[i] * t
+/**
+ * Make a seamless loop: `source` runs `fade` samples past the loop's end, and that overhang is faded
+ * into the loop's start. The sample after the last one is then the one the noise would have gone on
+ * with, so the turn-over cannot click. (Equal-power, because the two stretches are unrelated noise.)
+ */
+function closeLoop(source: Float32Array, loop: Float32Array, fade: number): void {
+  const len = loop.length
+  loop.set(source.subarray(0, len))
+  for (let i = 0; i < fade; i++) {
+    const t = i / fade
+    loop[i] = source[i] * Math.sin((t * Math.PI) / 2) + source[len + i] * Math.cos((t * Math.PI) / 2)
   }
 }
 
