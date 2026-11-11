@@ -24,7 +24,7 @@ export type StripeOptions = {
   rimAlpha: number
   /** Lines stronger toward the silhouette, quieter across the middle of the body, so the outline carries the picture. */
   focusTrunk?: boolean
-  /** 'around' lines run round each limb's own long axis (the geometry's `axis` attribute, see `addLimbAxis`) instead of the trunk's. */
+  /** 'around' lines run round each arm's own long axis (the geometry's `axis` attribute, see `addLimbAxis`) instead of the trunk's. */
   limb?: boolean
   /** Shared world height up to which the lines are lit (the breath filling up); lines above stay at `dimAlpha`. */
   level?: { value: number }
@@ -126,6 +126,7 @@ export function stripeMaterial(o: StripeOptions): THREE.Material {
         float d = abs(fract(v) - 0.5);
         float w = fwidth(v) * 0.9;
         float line = smoothstep(0.5 - uWidth - w, 0.5 - uWidth + w, d);
+        ${o.pattern === 'around' ? '// Where the lines crowd closer than a few pixels (between the legs, close to the axis they run round) they fade, instead of knotting into a star.\n        line *= 1.0 - smoothstep(0.2, 0.45, fwidth(v));' : ''}
         float fr = pow(1.0 - abs(dot(normalize(vN), normalize(vView))), ${(o.rimPower ?? 2).toFixed(2)});
         ${o.edges ? 'fr = max(fr, edgeRim(vView.z));' : ''}
         ${o.rimEdge ? `fr = smoothstep(${o.rimEdge[0].toFixed(3)}, ${o.rimEdge[1].toFixed(3)}, fr);` : ''}
@@ -277,7 +278,8 @@ export function makeStripeMaterials(p: StripePalette, dark: boolean, level: { va
     // Trunk, neck and head: lines running down round the body's axis, so they go on from the trunk over the
     // neck and jaw onto the head without a step.
     skin: stripeMaterial(skinLines),
-    // Arms and legs: the same lines, running round each limb (a limb is about a third of the trunk's girth).
+    // Arms: the same lines, running round each arm (an arm is about a third of the trunk's girth). The legs
+    // take the trunk's own lines, so they run on from the belly without a seam.
     limbs: stripeMaterial({ ...skinLines, limb: true, density: 44 }),
     skinDepth: skinDepthMaterial(),
     // The lungs are drawn as a solid volume: first their far wall (the rings at the back, dimmed),

@@ -10,7 +10,7 @@ import { BreathSpecks } from './BreathSpecks'
 import { heartbeat } from './heartbeat'
 import { ImpactEffects } from './ImpactEffects'
 import { makeMaterials, type MaterialKind } from './materials'
-import { airwayFor, closedHead, inTurns, limbAxis, smoothLung } from './shapes'
+import { airwayFor, closedHead, inTurns, legsShape, limbAxis, smoothLung } from './shapes'
 import { makeStripeMaterials, STRIPE_PALETTES, type EdgeMap, type Fade } from './stripes'
 
 /** Layer of the lung copies that only draw the edge map. */
@@ -59,8 +59,12 @@ const PARTS: Record<string, { kind: MaterialKind; order: number; hidden?: boolea
   Legs: { kind: 'skin', order: SKIN_ORDER },
 }
 
-/** Objects whose skin lines run round their own long axis (see `addLimbAxis`). */
-const LIMBS = new Set(['Arms', 'Legs'])
+/**
+ * Objects whose skin lines run round their own long axis (see `addLimbAxis`). The legs' lines are the
+ * trunk's, running on down from the belly without a seam: round the body's axis, they run straight down
+ * each leg as well.
+ */
+const LIMBS = new Set(['Arms'])
 
 /**
  * How much more the breath moves each part than in life, so the motion reads
@@ -98,6 +102,7 @@ function useShapes(scene: THREE.Object3D) {
       if (part.kind === 'lung') jobs.push(() => smoothLung(mesh, BREATH_GAIN[mesh.name] ?? 1))
       if (mesh.name === 'Head') jobs.push(() => closedHead(mesh))
       if (LIMBS.has(mesh.name)) jobs.push(() => limbAxis(mesh))
+      if (mesh.name === 'Legs') jobs.push(() => legsShape(mesh))
       if (mesh.name === 'Trachea') jobs.push(() => airwayFor(mesh))
     })
     const made = { ready: false, work: Promise.resolve() }
@@ -169,7 +174,7 @@ export function AnatomyModel({ engine }: { engine: BreathSource }) {
         return
       }
       // The shapes drawn in place of the model's own (see `shapes.ts`), ready since the model was shaped.
-      const shape = part.kind === 'lung' ? smoothLung(mesh, BREATH_GAIN[mesh.name] ?? 1) : mesh.name === 'Head' ? closedHead(mesh) : mesh.geometry
+      const shape = part.kind === 'lung' ? smoothLung(mesh, BREATH_GAIN[mesh.name] ?? 1) : mesh.name === 'Head' ? closedHead(mesh) : mesh.name === 'Legs' ? legsShape(mesh) : mesh.geometry
       if (shape !== mesh.geometry) {
         mesh.geometry = shape
         mesh.updateMorphTargets()

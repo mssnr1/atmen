@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { airwaySurface } from './airwayShape'
 import { addCalmMorph } from './face'
 import { withHolesFilled } from './holes'
+import { tidiedLegs } from './legShape'
 import { addLimbAxis } from './limbs'
 import { simplifiedLung } from './lungShape'
 
@@ -49,9 +50,23 @@ export function closedHead(head: THREE.Mesh): THREE.BufferGeometry {
   return closed ?? source
 }
 
-/** Gives an arm or leg mesh the axis its skin lines run round (see `addLimbAxis`). */
+/** Gives the arms the axis their skin lines run round (see `addLimbAxis`). */
 export function limbAxis(limb: THREE.Mesh): void {
   if (!limb.geometry.getAttribute('axis')) addLimbAxis(limb.geometry, 0.01 / limb.getWorldScale(new THREE.Vector3()).x)
+}
+
+/** The legs' skin, tidied between the legs (see `tidiedLegs`). */
+export function legsShape(legs: THREE.Mesh): THREE.BufferGeometry {
+  const source = legs.geometry
+  if (source.userData.tidied) return source
+  let tidied = source.userData.legs as THREE.BufferGeometry | undefined
+  if (!tidied) {
+    legs.updateWorldMatrix(true, false)
+    tidied = tidiedLegs(source, legs.matrixWorld)
+    tidied.userData.tidied = true
+    source.userData.legs = tidied
+  }
+  return tidied
 }
 
 /**
