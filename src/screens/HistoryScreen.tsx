@@ -47,10 +47,10 @@ export function HistoryScreen() {
               <ChevronLeftIcon className="size-5" strokeWidth={1.5} />
             </IconButton>
             <div className="text-center">
-              <p className="text-[1.0625rem] font-medium" data-testid="week-label">
+              <p className="text-body font-medium" data-testid="week-label">
                 {weekLabel}
               </p>
-              <p className="text-[0.875rem] text-ink-2 tabular-nums" data-testid="week-total">
+              <p className="text-note text-ink-2 tabular-nums" data-testid="week-total">
                 {count ? `${t.sessions(count)} · ${t.minutesLong(minutes)}` : t.weekEmpty}
               </p>
             </div>
@@ -82,14 +82,14 @@ export function HistoryScreen() {
               const m = Math.round(d.reduce((ms, s) => ms + s.durationMs, 0) / 60_000)
               return (
                 <li key={i} className={future ? 'opacity-35' : ''}>
-                  <span className="block text-[0.75rem] text-ink-2">{t.weekdays[i]}</span>
-                  <span className="mt-0.5 block text-[0.875rem] tabular-nums">{d.length ? t.minutes(Math.max(1, m)) : '–'}</span>
+                  <span className="block text-fine text-ink-2">{t.weekdays[i]}</span>
+                  <span className="mt-0.5 block text-note tabular-nums">{d.length ? t.minutes(Math.max(1, m)) : '–'}</span>
                 </li>
               )
             })}
           </ol>
 
-          <ul className="mx-auto mt-6 flex max-w-[22rem] flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[0.8125rem] text-ink-2">
+          <ul className="mx-auto mt-6 flex max-w-[22rem] flex-wrap items-center justify-center gap-x-5 gap-y-2 text-note text-ink-2">
             <li className="flex items-center gap-2">
               <svg viewBox="0 0 30 12" className="h-3 w-[1.875rem]" aria-hidden>
                 <path d="M2 6h6" stroke={ringColor(0)} strokeWidth={1.5} />
@@ -109,7 +109,7 @@ export function HistoryScreen() {
 
         <section className="mt-12 lg:mt-0" data-testid="what-helps">
           <h2 className="eyebrow">{t.helpsTitle}</h2>
-          <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-2">{t.helpsLead}</p>
+          <p className="mt-2 text-body leading-relaxed text-ink-2">{t.helpsLead}</p>
           {helps.length ? (
             <ul className="mt-4 divide-y divide-line border-y border-line">
               {helps.map((h) => {
@@ -117,20 +117,20 @@ export function HistoryScreen() {
                 const dir = h.change > 0.05 ? 1 : h.change < -0.05 ? -1 : 0
                 return (
                   <li key={h.exerciseId} className="flex items-baseline justify-between gap-4 py-3.5">
-                    <span className="text-[1rem]">{e?.text[lang].name ?? h.exerciseId}</span>
-                    <span className="text-right text-[0.875rem] text-ink-2">
+                    <span className="text-body">{e?.text[lang].name ?? h.exerciseId}</span>
+                    <span className="text-right text-note text-ink-2">
                       <span className={dir > 0 ? 'text-effect' : ''}>{t.helpsChange(number.format(Math.abs(h.change)), dir)}</span>
-                      <span className="block text-[0.75rem]">{t.sessions(h.sessions)}</span>
+                      <span className="block text-fine">{t.sessions(h.sessions)}</span>
                     </span>
                   </li>
                 )
               })}
             </ul>
           ) : (
-            <p className="mt-4 rounded-[18px] px-4 py-3.5 text-[0.9375rem] leading-relaxed text-ink-2 ring-1 ring-line">{t.helpsEmpty}</p>
+            <p className="mt-4 rounded-[18px] px-4 py-3.5 text-body leading-relaxed text-ink-2 ring-1 ring-line">{t.helpsEmpty}</p>
           )}
           {sessions.length > 0 && (
-            <p className="mt-6 text-[0.875rem] text-ink-2 tabular-nums" data-testid="history-total">
+            <p className="mt-6 text-note text-ink-2 tabular-nums" data-testid="history-total">
               {t.total(t.sessions(sessions.length), t.minutesLong(totalMinutes))}
             </p>
           )}

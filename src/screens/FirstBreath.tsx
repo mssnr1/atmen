@@ -82,7 +82,7 @@ export function FirstBreath() {
       <header className="mx-auto flex w-full max-w-md items-center justify-between md:max-w-3xl">
         <Wordmark size={30} className="mt-1" />
         {!done && (
-          <button type="button" onClick={finish} className="-mr-3 min-h-11 rounded-full px-3 text-[0.9375rem] text-ink-2 hover:text-ink" data-testid="first-breath-skip">
+          <button type="button" onClick={finish} className="-mr-3 min-h-11 rounded-full px-3 text-body text-ink-2 hover:text-ink" data-testid="first-breath-skip">
             {t.skip}
           </button>
         )}
@@ -123,7 +123,7 @@ export function FirstBreath() {
           <p key={step} className={`fade-in ${word ? 'phase-word text-[1.75rem]' : 'display text-[1.5rem]'} text-ink`}>
             {line}
           </p>
-          <p className="mt-2 text-[0.9375rem] text-ink-2">{sub}</p>
+          <p className="mt-2 text-body text-ink-2">{sub}</p>
         </div>
       </div>
       <div className="mx-auto h-14 w-full max-w-md">

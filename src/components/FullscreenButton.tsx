@@ -59,7 +59,7 @@ export function FullscreenButton({ withLabel = false }: { withLabel?: boolean })
     <>
       {withLabel ? (
         // A whole settings row, so nothing is left over where full screen is not on offer.
-        <button type="button" onClick={toggle} aria-pressed={on} data-testid="fullscreen" className="flex w-full items-center justify-between gap-4 py-3 text-left text-[0.9375rem] font-medium text-ink">
+        <button type="button" onClick={toggle} aria-pressed={on} data-testid="fullscreen" className="flex w-full items-center justify-between gap-4 py-3 text-left text-body font-medium text-ink">
           {on ? t.exitFullscreen : t.fullscreen}
           {on ? <FullscreenExitIcon className="size-5 text-ink-2" strokeWidth={1.5} /> : <FullscreenIcon className="size-5 text-ink-2" strokeWidth={1.5} />}
         </button>
@@ -72,12 +72,12 @@ export function FullscreenButton({ withLabel = false }: { withLabel?: boolean })
       {!supported &&
         createPortal(
           <BottomSheet open={hintOpen} title={t.fullscreenIos.title} closeLabel={t.close} onClose={closeHint}>
-            <ol className="list-decimal space-y-2 pt-2 pl-5 text-[0.9375rem] leading-relaxed">
+            <ol className="list-decimal space-y-2 pt-2 pl-5 text-body leading-relaxed">
               {t.fullscreenIos.steps.map((step) => (
                 <li key={step}>{step}</li>
               ))}
             </ol>
-            <p className="mt-4 pb-2 text-[0.875rem] leading-relaxed text-muted">{t.fullscreenIos.note}</p>
+            <p className="mt-4 pb-2 text-note leading-relaxed text-muted">{t.fullscreenIos.note}</p>
           </BottomSheet>,
           document.body,
         )}

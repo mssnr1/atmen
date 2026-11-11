@@ -20,18 +20,18 @@ export function LearnScreen() {
           {t.welcome.slice(0, 2).map((p, i) => (
             <section key={p.title} className="py-6 first:pt-0 last:pb-0 md:py-0">
               <WelcomeArt index={i} className="mb-5 h-12 w-32 text-ink-2" />
-              {p.eyebrow && <p className="text-[0.875rem] text-ink-2">{p.eyebrow}</p>}
+              {p.eyebrow && <p className="text-note text-ink-2">{p.eyebrow}</p>}
               <h3 className="display mt-1 text-[1.625rem]">{p.title}</h3>
-              <div className="mt-4 space-y-3 text-[0.9375rem] leading-relaxed text-ink-2">
+              <div className="mt-4 space-y-3 text-body leading-relaxed text-ink-2">
                 {p.lines.map((line) => (
                   <p key={line}>{line}</p>
                 ))}
               </div>
-              {p.closing && <p className="mt-4 border-l border-ink/40 pl-4 text-[0.9375rem] leading-relaxed">{p.closing}</p>}
+              {p.closing && <p className="mt-4 border-l border-ink/40 pl-4 text-body leading-relaxed">{p.closing}</p>}
             </section>
           ))}
         </div>
-        <button type="button" onClick={() => navigate({ name: 'welcome' })} className="mt-6 text-[0.9375rem] font-medium text-ink underline decoration-ink/35 underline-offset-4 hover:decoration-ink" data-testid="learn-intro">
+        <button type="button" onClick={() => navigate({ name: 'welcome' })} className="mt-6 text-body font-medium text-ink underline decoration-ink/35 underline-offset-4 hover:decoration-ink" data-testid="learn-intro">
           {t.intro}
         </button>
       </article>
@@ -44,17 +44,17 @@ export function LearnScreen() {
               <header className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-[1.25rem] tracking-[-0.01em]">{text.name}</h2>
-                  <p className="mt-0.5 text-[0.8125rem] text-ink-2">{rhythmText(e, 1, lang, t)}</p>
+                  <p className="mt-0.5 text-note text-ink-2">{rhythmText(e, 1, lang, t)}</p>
                 </div>
                 <Waveform phases={e.pattern.phases} tint={CURVE_TINT} className="h-7 w-20" />
               </header>
-              <p className="mt-4 text-[0.9375rem] leading-relaxed text-ink-2">{text.summary}</p>
+              <p className="mt-4 text-body leading-relaxed text-ink-2">{text.summary}</p>
               <h3 className="eyebrow mt-5">{t.whyItWorks}</h3>
-              <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-2">{text.howItWorks}</p>
+              <p className="mt-1.5 text-body leading-relaxed text-ink-2">{text.howItWorks}</p>
               <h3 className="eyebrow mt-5">{t.howTo}</h3>
               <ol className="mt-2 space-y-2">
                 {text.instructions.map((step, i) => (
-                  <li key={step} className="flex gap-3 text-[0.9375rem] leading-snug text-ink-2">
+                  <li key={step} className="flex gap-3 text-body leading-snug text-ink-2">
                     <span className="w-4 shrink-0 text-ink tabular-nums">{i + 1}</span>
                     {step}
                   </li>
@@ -64,7 +64,7 @@ export function LearnScreen() {
           )
         })}
       </div>
-      <p className="mt-8 mb-6 text-center text-[0.8125rem] text-muted">{t.inspired}</p>
+      <p className="mt-8 mb-6 text-center text-note text-muted">{t.inspired}</p>
     </Page>
   )
 }

@@ -55,7 +55,7 @@ export function EmergencyScreen() {
         <header className="flex items-center justify-between">
           <span className="eyebrow">{s.title}</span>
           <div className="flex items-center gap-2">
-            <a href="tel:112" className="inline-flex h-11 items-center rounded-full px-4 text-[0.9375rem] font-semibold text-alert ring-1 ring-alert/50 ring-inset">
+            <a href="tel:112" className="inline-flex h-11 items-center rounded-full px-4 text-body font-semibold text-alert ring-1 ring-alert/50 ring-inset">
               {s.emergencyCall}
             </a>
             <button type="button" aria-label={s.close} onClick={() => navigate({ name: 'home' })} className="inline-flex size-11 items-center justify-center rounded-full text-ink ring-1 ring-line ring-inset hover:bg-ink/5">
@@ -71,18 +71,18 @@ export function EmergencyScreen() {
             <div key={tick.inhale ? 'in' : 'out'} className="fade-in phase-word text-[1.75rem] md:text-[2rem]">
               {tick.inhale ? s.inhale : s.exhale}
             </div>
-            <div className="mt-1 text-[1.0625rem] text-ink-2 tabular-nums">{tick.left}</div>
+            <div className="mt-1 text-body text-ink-2 tabular-nums">{tick.left}</div>
           </div>
-          <p key={line} className="fade-in mt-8 min-h-[3.5rem] max-w-xs text-center text-[1.1875rem] leading-snug text-ink md:max-w-sm md:text-[1.375rem]" aria-live="polite">
+          <p key={line} className="fade-in mt-8 min-h-[3.5rem] max-w-xs text-center text-lead leading-snug text-ink md:max-w-sm md:text-[1.375rem]" aria-live="polite">
             {s.lines[line]}
           </p>
-          <p className="mt-4 text-[0.8125rem] text-muted tabular-nums">{s.since(formatClock(tick.elapsed * 1000))}</p>
+          <p className="mt-4 text-note text-muted tabular-nums">{s.since(formatClock(tick.elapsed * 1000))}</p>
         </section>
 
         <section className="space-y-3 pb-10">
           <Card>
-            <h2 className="text-[1.0625rem] font-medium">{s.groundingTitle}</h2>
-            <ol className="mt-3 space-y-1.5 text-[0.9375rem] text-ink-2">
+            <h2 className="text-body font-medium">{s.groundingTitle}</h2>
+            <ol className="mt-3 space-y-1.5 text-body text-ink-2">
               {s.grounding.map((g) => (
                 <li key={g}>{g}</li>
               ))}
@@ -92,26 +92,26 @@ export function EmergencyScreen() {
           {/* Community help: only sketched for now, not working yet. */}
           <Card>
             <div className="flex items-start justify-between gap-3">
-              <h2 className="text-[1.0625rem] font-medium">{s.communityTitle}</h2>
-              <span className="shrink-0 rounded-full px-2.5 py-1 text-[0.75rem] font-medium text-ink-2 ring-1 ring-ink/25">{s.soon}</span>
+              <h2 className="text-body font-medium">{s.communityTitle}</h2>
+              <span className="shrink-0 rounded-full px-2.5 py-1 text-fine font-medium text-ink-2 ring-1 ring-ink/25">{s.soon}</span>
             </div>
-            <p className="mt-3 text-[0.9375rem] leading-snug text-ink-2">{s.communityText}</p>
+            <p className="mt-3 text-body leading-snug text-ink-2">{s.communityText}</p>
           </Card>
 
           <Card>
-            <h2 className="text-[1.0625rem] font-medium">{s.helpTitle}</h2>
-            <p className="mt-2 text-[0.9375rem] leading-snug text-ink-2">{s.helpText}</p>
-            <a href="tel:112" className="mt-4 flex min-h-12 w-full items-center justify-center rounded-full bg-alert text-[1rem] font-semibold text-on-solid" data-testid="sos-call">
+            <h2 className="text-body font-medium">{s.helpTitle}</h2>
+            <p className="mt-2 text-body leading-snug text-ink-2">{s.helpText}</p>
+            <a href="tel:112" className="mt-4 flex min-h-12 w-full items-center justify-center rounded-full bg-alert text-body font-semibold text-on-solid" data-testid="sos-call">
               {s.emergencyCall}
             </a>
-            <h2 className="mt-6 text-[1.0625rem] font-medium">{s.talkTitle}</h2>
-            <p className="mt-2 text-[0.9375rem] leading-snug text-ink-2">{s.talkText}</p>
-            <a href={`tel:${s.talkNumber}`} className="mt-4 flex min-h-12 w-full items-center justify-center rounded-full text-[1rem] font-semibold text-ink ring-1 ring-ink/30 ring-inset hover:bg-ink/5">
+            <h2 className="mt-6 text-body font-medium">{s.talkTitle}</h2>
+            <p className="mt-2 text-body leading-snug text-ink-2">{s.talkText}</p>
+            <a href={`tel:${s.talkNumber}`} className="mt-4 flex min-h-12 w-full items-center justify-center rounded-full text-body font-semibold text-ink ring-1 ring-ink/30 ring-inset hover:bg-ink/5">
               {s.talkCall}
             </a>
           </Card>
 
-          <p className="px-2 pt-2 text-center text-[0.8125rem] leading-snug text-muted">{s.disclaimer}</p>
+          <p className="px-2 pt-2 text-center text-note leading-snug text-muted">{s.disclaimer}</p>
         </section>
       </div>
     </main>

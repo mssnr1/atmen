@@ -32,7 +32,7 @@ export function Page({ title, eyebrow, lead, narrow = false, testId, children }:
       </IconButton>
       {eyebrow && <p className="eyebrow mt-5">{eyebrow}</p>}
       <h1 className={`display text-[2.125rem] md:text-[3rem] ${eyebrow ? 'mt-2' : 'mt-5'}`}>{title}</h1>
-      {lead && <p className="mt-3 max-w-xl text-[1rem] leading-relaxed text-ink-2">{lead}</p>}
+      {lead && <p className="mt-3 max-w-xl text-body leading-relaxed text-ink-2">{lead}</p>}
       {children}
     </main>
   )

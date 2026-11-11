@@ -26,7 +26,7 @@ export function Segmented<T extends string | number>({ label, options, value, on
             aria-label={o.icon ? o.label : undefined}
             disabled={disabled}
             onClick={() => onChange(o.value)}
-            className={`min-h-11 flex-1 rounded-full px-3 text-[0.9375rem] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-ink ${
+            className={`min-h-11 flex-1 rounded-full px-3 text-body font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-ink ${
               selected ? 'bg-solid text-on-solid' : 'text-ink-2 hover:bg-ink/5 hover:text-ink'
             }`}
           >
