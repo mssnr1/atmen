@@ -69,6 +69,13 @@ export function SettingsScreen() {
             checked={prefs.showProgress}
             onChange={(showProgress) => store.updatePreferences({ showProgress })}
           />
+          <Switch
+            label={t.breathCues}
+            hint={t.breathCuesHint}
+            checked={prefs.breathCues}
+            onChange={(breathCues) => store.updatePreferences({ breathCues })}
+            testId="toggle-cues"
+          />
         </section>
         </div>
 

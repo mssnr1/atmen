@@ -11,6 +11,8 @@ import { exercises, getExercise, type Exercise } from '../exercises'
 import { audioCues, audioSupported } from '../feedback/audio'
 import { vibrationSupported } from '../feedback/haptics'
 import { BodyInsights } from '../guide/BodyInsights'
+import { BreathCue } from '../guide/BreathCue'
+import { CUE_LEAVES_AT } from '../guide/cues'
 import { InsightNote } from '../guide/InsightNote'
 import { bodyInsights } from '../guide/insights'
 import { useIsPhone } from '../hooks/useMediaQuery'
@@ -186,6 +188,8 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   }
 
   const totalCycles = Math.ceil(s.plan.totalCycles)
+  // Which lines the cues begin with changes from session to session.
+  const [cueTurn] = useState(() => store.get().sessions.length)
   const setPace = (patch: { preset?: number; slowDown?: boolean }) => store.setPace(exercise.id, { preset, slowDown, ...patch })
   const planLine = `${t.minutes(Math.round(s.plan.totalDurationMs / 60_000))} · ${t.breaths(totalCycles)}`
   // What to offer next: what tends to fit now, by time of day and the user's own answers, not a fixed order.
@@ -231,6 +235,8 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         </div>
       )}
       {isPhone && <InsightNote cycleIndex={s.cycleIndex} active={active} bottom={panelHeight + 6} />}
+      {/* Over the figure's head: something to sense, later a thought, on the breaths the notes leave free. */}
+      {prefs.breathCues && <BreathCue cycleIndex={s.cycleIndex} totalCycles={totalCycles} active={active && s.cycleProgress < CUE_LEAVES_AT} top={headerHeight} turn={cueTurn} />}
 
       <section ref={panel} className="safe-bottom safe-x absolute inset-x-0 bottom-0 z-10 md:pb-6" aria-label={t.guide}>
         <div className={`veil-bottom chrome pointer-events-none absolute inset-x-0 -top-10 bottom-0 ${chrome || completed ? '' : 'chrome-off'}`} aria-hidden />
@@ -370,6 +376,13 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             checked={prefs.showProgress}
             onChange={(showProgress) => store.updatePreferences({ showProgress })}
             testId="toggle-progress"
+          />
+          <Switch
+            label={t.breathCues}
+            hint={t.breathCuesHint}
+            checked={prefs.breathCues}
+            onChange={(breathCues) => store.updatePreferences({ breathCues })}
+            testId="toggle-cues"
           />
         </div>
 

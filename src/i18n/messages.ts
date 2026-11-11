@@ -77,6 +77,8 @@ export interface Messages {
   slowDownHint: string
   showProgress: string
   showProgressHint: string
+  breathCues: string
+  breathCuesHint: string
   duration: string
   sound: string
   vibration: string
@@ -221,6 +223,8 @@ const de: Messages = {
   slowDownHint: 'Das Tempo sinkt allmählich',
   showProgress: 'Fortschritt anzeigen',
   showProgressHint: 'Gesamtzeit und Fortschrittsbalken',
+  breathCues: 'Gedanken beim Atmen',
+  breathCuesHint: 'Kurze Sätze über der Figur: erst spüren, später ein guter Gedanke',
   duration: 'Dauer',
   sound: 'Töne',
   vibration: 'Vibration',
@@ -365,6 +369,8 @@ const en: Messages = {
   slowDownHint: 'Gradually reduce the pace',
   showProgress: 'Show session progress',
   showProgressHint: 'Show total time and progress bar',
+  breathCues: 'Thoughts while breathing',
+  breathCuesHint: 'Short lines above the figure: first something to sense, later a good thought',
   duration: 'Duration',
   sound: 'Sounds',
   vibration: 'Vibration',

@@ -23,6 +23,8 @@ export interface Preferences {
   paceByExercise: Record<string, PacePreference>
   /** Show overall time left and session progress while practising. */
   showProgress: boolean
+  /** Show a line over the figure's head while breathing: something to sense, later a good thought. */
+  breathCues: boolean
   /** The welcome pages have been seen once. */
   welcomeSeen: boolean
 }

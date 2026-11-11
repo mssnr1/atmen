@@ -112,6 +112,29 @@ body {
   text-transform: uppercase;
   color: var(--color-ink-2);
 }
+/*
+ * A line over the figure while breathing. It lies on the figure's lines and lights, so a soft cloud in
+ * the page's colour sits behind it and takes them back.
+ */
+.breath-cue {
+  text-wrap: balance;
+  text-shadow:
+    0 0 0.75rem var(--color-paper),
+    0 0 0.3rem var(--color-paper);
+}
+.breath-cue > span {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+  animation: fade-in 1600ms ease-out both;
+}
+.breath-cue > span::before {
+  content: "";
+  position: absolute;
+  inset: -1.4rem -2.6rem;
+  z-index: -1;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-paper) 84%, transparent) 42%, transparent);
+}
 /* The phase word of the practice screen: light, lower case, widely spaced. */
 .phase-word {
   font-weight: 300;
