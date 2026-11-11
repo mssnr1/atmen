@@ -1,6 +1,6 @@
 import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { CubeIcon } from '../../components/icons'
@@ -112,12 +112,15 @@ function Rig({
   resetSignal,
   bottomInset,
   topInset,
+  onReady,
 }: {
   framing: Framing
   controls: React.RefObject<OrbitControlsImpl | null>
   resetSignal: number
   bottomInset: number
   topInset: number
+  /** The first frame, with the camera in place, is on screen. */
+  onReady: () => void
 }) {
   const { camera, size } = useThree()
   const aspect = size.width / Math.max(1, size.height)
@@ -126,7 +129,7 @@ function Rig({
   const clear = Math.min(Math.max(1 - bottomInset / H - top, 0.4), 1)
   // Read through a ref so a start zooms the camera smoothly instead of resetting it.
   const framingRef = useRef(framing)
-  useEffect(() => {
+  useLayoutEffect(() => {
     framingRef.current = framing
   }, [framing])
   /** The framing the camera is at (or heading for). */
@@ -136,11 +139,25 @@ function Rig({
   layout.current = { aspect, clear, top }
   /** A tween of the whole camera pose: from where it was to the default view for the current framing and layout. */
   const turn = useRef<{ from: THREE.Spherical; fromTarget: THREE.Vector3; t: number; seconds: number } | null>(null)
+  /** The camera and the controls' target stand at the default view (false until the controls exist). */
+  const placed = useRef(false)
+  const place = () => {
+    const c = controls.current
+    const { aspect: a, clear: cl, top: tp } = layout.current
+    const { target } = fitView(a, cl, framingRef.current, tp)
+    camera.position.copy(defaultPosition(a, cl, framingRef.current, tp))
+    c?.target.copy(target)
+    camera.lookAt(target)
+    c?.update()
+    placed.current = !!c
+  }
   // Default view on mount and on Reset view. A layout change once started (the
   // controls panel shrinks as the exercise starts) eases there, as part of
   // the turn if one is running, so the figure never jumps.
+  // A layout effect, so the camera stands before the first frame is drawn: a passive effect can run
+  // after that frame, and it would show the camera's blank default, a view down at the feet.
   const lastSignal = useRef<number | null>(null)
-  useEffect(() => {
+  useLayoutEffect(() => {
     const c = controls.current
     const first = lastSignal.current === null
     const reset = !first && lastSignal.current !== resetSignal
@@ -166,19 +183,20 @@ function Rig({
     // At rest (first load, the controls being measured, a resize) it just snaps.
     turn.current = null
     framed.current = framingRef.current
-    const { target } = fitView(aspect, clear, framingRef.current, top)
-    camera.position.copy(defaultPosition(aspect, clear, framingRef.current, top))
-    controls.current?.target.copy(target)
-    camera.lookAt(target)
-    controls.current?.update()
+    place()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [camera, aspect, clear, top, controls, resetSignal])
 
   // Zoom in when the exercise starts, and back out when it ends or goes back to the start.
   const spherical = useMemo(() => new THREE.Spherical(), [])
   const offset = useMemo(() => new THREE.Vector3(), [])
+  const frames = useRef(0)
   useFrame((_, delta) => {
+    // The second frame begins: the first, with everything compiled and the camera in place, is on screen.
+    if (frames.current < 2 && ++frames.current === 2) onReady()
     const c = controls.current
     if (!c) return
+    if (!placed.current) place()
     // After a pause (the figure hidden behind another screen) the first frame reports the whole gap.
     const dt = Math.min(delta, 0.1)
     if (framed.current !== framingRef.current) {
@@ -227,6 +245,8 @@ export function Anatomy3DVisualization({
   const controls = useRef<OrbitControlsImpl | null>(null)
   const [resetSignal, setResetSignal] = useState(0)
   const [supported] = useState(webglAvailable)
+  // The figure fades in once its first frame is drawn, never while the graphics are still being prepared.
+  const [shown, setShown] = useState(false)
   // "Reset view" only shows once the figure has been turned or zoomed by hand.
   const [moved, setMoved] = useState(false)
   useEffect(() => setMoved(false), [framing])
@@ -278,7 +298,7 @@ export function Anatomy3DVisualization({
           }
         >
           <Canvas
-            className="fade-in"
+            className={shown ? 'fade-in' : 'opacity-0'}
             frameloop={paused ? 'never' : 'always'}
             dpr={[1, 1.75]}
             camera={{ fov: FOV, near: 0.05, far: 10, position: defaultPosition(1, 1) }}
@@ -316,7 +336,7 @@ export function Anatomy3DVisualization({
                 }
               }}
             />
-            <Rig framing={framing} controls={controls} resetSignal={resetSignal} bottomInset={bottomInset} topInset={topInset} />
+            <Rig framing={framing} controls={controls} resetSignal={resetSignal} bottomInset={bottomInset} topInset={topInset} onReady={() => setShown(true)} />
           </Canvas>
         </Suspense>
       </ModelBoundary>
