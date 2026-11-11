@@ -67,7 +67,7 @@ export function WelcomeScreen() {
       <header className="flex items-center justify-between pt-1">
         <Wordmark />
         {!last && (
-          <button type="button" onClick={finish} className="-mr-2 rounded-full px-3 py-2 text-[0.9375rem] text-ink-2 hover:text-ink">
+          <button type="button" onClick={finish} className="-mr-2 rounded-full px-3 py-2 text-body text-ink-2 hover:text-ink">
             {t.skip}
           </button>
         )}
@@ -95,11 +95,11 @@ export function WelcomeScreen() {
             >
               <div>
               <WelcomeArt index={i} className={`${p.closing ? 'mb-7' : 'mb-10'} h-16 w-40 text-ink-2 md:h-24 md:w-64`} />
-              {p.eyebrow && <p className="eyebrow mb-3 md:text-[0.875rem]">{p.eyebrow}</p>}
+              {p.eyebrow && <p className="eyebrow mb-3 md:text-note">{p.eyebrow}</p>}
               <h1 className={`display ${p.closing ? 'text-[2.375rem]' : 'text-[2.75rem]'} md:text-[4.5rem] lg:text-[5rem]`}>{p.title}</h1>
               </div>
               <div>
-              <p className={`${p.closing ? 'mt-6 space-y-3' : 'mt-10'} max-w-2xl text-[1.0625rem] leading-relaxed text-ink-2 md:text-[1.375rem] lg:mt-0`}>
+              <p className={`${p.closing ? 'mt-6 space-y-3' : 'mt-10'} max-w-2xl text-body leading-relaxed text-ink-2 md:text-[1.375rem] lg:mt-0`}>
                 {p.lines.map((line) => (
                   <span key={line} className="block">
                     {line}
@@ -107,7 +107,7 @@ export function WelcomeScreen() {
                 ))}
               </p>
               {p.closing && (
-                <p className="mt-6 max-w-2xl border-l border-ink/40 pl-4 text-[1.0625rem] leading-relaxed text-ink md:text-[1.375rem]" data-testid="welcome-closing">
+                <p className="mt-6 max-w-2xl border-l border-ink/40 pl-4 text-body leading-relaxed text-ink md:text-[1.375rem]" data-testid="welcome-closing">
                   {p.closing}
                 </p>
               )}

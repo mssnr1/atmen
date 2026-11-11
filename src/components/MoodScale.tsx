@@ -35,7 +35,7 @@ export function MoodScale({ label, value, onChange, testId }: { label: string; v
           )
         })}
       </div>
-      <div className="mt-1.5 flex justify-between px-1 text-[0.75rem] text-ink-2" aria-hidden>
+      <div className="mt-1.5 flex justify-between px-1 text-fine text-ink-2" aria-hidden>
         <span>{t.moodEnds[0]}</span>
         <span>{t.moodEnds[1]}</span>
       </div>

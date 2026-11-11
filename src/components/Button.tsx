@@ -20,7 +20,7 @@ export function Button({ variant = 'primary', icon, trailingIcon, className = ''
   return (
     <button
       type="button"
-      className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-6 text-[1.0625rem] font-semibold whitespace-nowrap transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-40 [&>svg]:shrink-0 ${styles[variant]} ${className}`}
+      className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-6 text-body font-semibold whitespace-nowrap transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-40 [&>svg]:shrink-0 ${styles[variant]} ${className}`}
       {...rest}
     >
       {icon}

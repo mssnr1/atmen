@@ -31,11 +31,11 @@ export function Switch({ label, hint, checked, onChange, disabled, info, testId,
       className="flex w-full items-center justify-between gap-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-ink disabled:opacity-40"
     >
       <span className="min-w-0">
-        <span className={`flex items-center gap-1.5 text-ink ${strong ? 'text-[1rem] font-semibold' : 'text-[0.9375rem] font-medium'}`}>
+        <span className={`flex items-center gap-1.5 text-ink ${strong ? 'text-body font-semibold' : 'text-body font-medium'}`}>
           {label}
           {info && <InfoIcon className="size-4 text-muted" strokeWidth={1.6} />}
         </span>
-        {hint && <span className="mt-1 block text-[0.875rem] text-ink-2">{hint}</span>}
+        {hint && <span className="mt-1 block text-note text-ink-2">{hint}</span>}
       </span>
       <span className={`relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors ${checked ? 'bg-solid' : 'bg-surface-2 ring-1 ring-line'}`} aria-hidden>
         <span

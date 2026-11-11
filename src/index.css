@@ -35,6 +35,14 @@
   --color-night: #0b0f16;
   /* The veil under controls that float over the figure. */
   --color-panel: rgb(244 245 243 / 0.72);
+  /*
+   * Type scale. Running text is `body`; nothing is set smaller than `fine`. Headlines use sizes of their own.
+   * fine 13 px: captions and tags. note 15 px: secondary lines. body 17 px: text, lists, buttons. lead 19 px: a line that leads.
+   */
+  --text-fine: 0.8125rem;
+  --text-note: 0.9375rem;
+  --text-body: 1.0625rem;
+  --text-lead: 1.1875rem;
   --font-sans:
     "Figtree Variable", "Figtree", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
@@ -98,7 +106,7 @@ body {
   text-wrap: balance;
 }
 .eyebrow {
-  font-size: 0.75rem;
+  font-size: var(--text-fine);
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;

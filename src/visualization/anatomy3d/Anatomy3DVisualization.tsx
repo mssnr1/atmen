@@ -12,8 +12,11 @@ import { Aura } from './Aura'
 
 /** What the camera looks at by default: the middle of the chest. Its height is set per viewport by `fitView`. */
 const TARGET = new THREE.Vector3(0, 1.37, 0.0)
-/** Default view: straight from the front, slightly from above. A start only zooms in, it never turns. */
+/** Default view: straight from the front, slightly from above. A start never turns the figure sideways. */
 const ELEVATION = THREE.MathUtils.degToRad(6)
+/** While breathing the camera rises a little, so the lungs and their rings show their depth; after the exercise it comes back to the front. */
+const RUN_ELEVATION = THREE.MathUtils.degToRad(17)
+const elevation = (framing: Framing) => (framing === 'run' ? RUN_ELEVATION : ELEVATION)
 const FOV = 28
 /** Half the width that must be visible: the whole figure, arms included. */
 const HALF_W = 0.32
@@ -77,7 +80,8 @@ const RUN_BOTTOM = 1.1
 
 function defaultPosition(aspect: number, clear: number, framing: Framing = 'idle', top = 0): THREE.Vector3 {
   const { distance: d, target } = fitView(aspect, clear, framing, top)
-  return new THREE.Vector3(target.x, target.y + d * Math.sin(ELEVATION), target.z + d * Math.cos(ELEVATION))
+  const e = elevation(framing)
+  return new THREE.Vector3(target.x, target.y + d * Math.sin(e), target.z + d * Math.cos(e))
 }
 
 /** A slow zoom (and the way back from wherever the user turned the figure) that eases in and out with no jolt at either end (smootherstep). */
@@ -213,7 +217,7 @@ function Rig({
     // From wherever the user left the camera (turned, zoomed, panned) the shortest way round to the default view.
     c.target.lerpVectors(tw.fromTarget, target, k)
     const theta = THREE.MathUtils.euclideanModulo(tw.from.theta + Math.PI, 2 * Math.PI) - Math.PI
-    spherical.set(mix(tw.from.radius, distance), mix(tw.from.phi, Math.PI / 2 - ELEVATION), mix(theta, 0))
+    spherical.set(mix(tw.from.radius, distance), mix(tw.from.phi, Math.PI / 2 - elevation(framingRef.current)), mix(theta, 0))
     camera.position.copy(c.target).add(offset.setFromSpherical(spherical))
     camera.lookAt(c.target)
     c.update()
@@ -262,7 +266,7 @@ export function Anatomy3DVisualization({
     >
       {!paused && <AbstractVisualization engine={engine} showProgress={showProgress} />}
       {!start && (
-        <p style={{ top: topInset + 4 }} className="absolute px-10 text-center text-[0.8125rem] text-muted" data-testid="model-fallback">
+        <p style={{ top: topInset + 4 }} className="absolute px-10 text-center text-note text-muted" data-testid="model-fallback">
           {t.modelFallback}
         </p>
       )}

@@ -338,7 +338,7 @@ const en: Messages = {
   nav: { history: 'History', learn: 'Learn', settings: 'Settings' },
   rhythm: (i, o) => `${i} s in · ${o} s out`,
   nose: 'nose',
-  phase: { inhale: 'Breathe in', holdIn: 'Hold', exhale: 'Breathe out', holdOut: 'Hold' },
+  phase: { inhale: 'Inhale', holdIn: 'Hold', exhale: 'Exhale', holdOut: 'Hold' },
   seconds: (s) => `${s} sec`,
   ready: 'Ready',
   paused: 'Paused',

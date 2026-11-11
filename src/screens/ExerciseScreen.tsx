@@ -26,24 +26,24 @@ export function ExerciseScreen({ exerciseId }: { exerciseId: string }) {
   return (
     <Page title={text.need} eyebrow={text.name} testId={`exercise-page-${e.id}`} narrow>
       <div className="mt-4 flex items-end justify-between gap-4">
-        <p className="text-[1rem] leading-snug text-ink-2">
+        <p className="text-body leading-snug text-ink-2">
           {text.purpose[0]}
           <br />
           {text.purpose[1]}
         </p>
         <Waveform phases={e.pattern.phases} animate scale={scale} tint={CURVE_TINT} className="mb-1 h-9 w-28 flex-none" />
       </div>
-      <p className="mt-4 text-[0.9375rem] text-ink-2">{rhythmText(e, scale, lang, t)}</p>
+      <p className="mt-4 text-body text-ink-2">{rhythmText(e, scale, lang, t)}</p>
       <div className="my-6 h-px bg-line" />
       <div data-testid={`settings-${e.id}`}>
-        <h2 className="mb-2.5 text-[0.9375rem] font-medium">{t.duration}</h2>
+        <h2 className="mb-2.5 text-body font-medium">{t.duration}</h2>
         <Segmented
           label={t.duration}
           options={e.durationOptionsMs.map((ms) => ({ value: ms, label: t.minutes(ms / 60_000) }))}
           value={durationMs}
           onChange={(ms) => store.setDuration(e.id, ms)}
         />
-        <h2 className="mt-6 mb-2.5 text-[0.9375rem] font-medium">{t.breathingPace}</h2>
+        <h2 className="mt-6 mb-2.5 text-body font-medium">{t.breathingPace}</h2>
         <Segmented label={t.breathingPace} options={e.paces.options.map((o, i) => ({ value: i, label: o.label[lang] }))} value={preset} onChange={(i) => setPace({ preset: i })} />
         <div className="mt-3">
           <Switch label={t.slowDown} hint={t.slowDownHint} checked={slowDown} onChange={(v) => setPace({ slowDown: v })} testId={`slowdown-${e.id}`} />

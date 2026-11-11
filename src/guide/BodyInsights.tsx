@@ -48,7 +48,7 @@ export function OutcomeIcon({ className = 'size-[0.7rem]' }: { className?: strin
 }
 
 /** A small label: icon plus uppercase word. Mint marks an effect; everything else stays neutral. */
-export function Label({ icon, children, className = 'text-[0.6875rem]', effect = false }: { icon: React.ReactNode; children: string; className?: string; effect?: boolean }) {
+export function Label({ icon, children, className = 'text-fine', effect = false }: { icon: React.ReactNode; children: string; className?: string; effect?: boolean }) {
   return (
     <span className={`flex items-center gap-1.5 leading-none font-semibold tracking-[0.1em] uppercase ${effect ? 'text-effect' : 'text-ink-2'} ${className}`}>
       {icon}
@@ -61,9 +61,9 @@ type Size = 'phone' | 'tablet' | 'desktop'
 
 /** Type sizes and padding of the body notes. */
 const TEXT: Record<Size, { pad: string; label: string; icon: string; title: string; sub: string }> = {
-  phone: { pad: 'px-3.5 pt-3 pb-3.5', label: 'text-[0.6875rem]', icon: 'size-[0.75rem]', title: 'mt-2 text-[1.0625rem]', sub: 'mt-1 text-[0.8125rem]' },
-  tablet: { pad: 'px-3 pt-2.5 pb-3', label: 'text-[0.625rem]', icon: 'size-[0.6875rem]', title: 'mt-1.5 text-[0.9375rem]', sub: 'mt-0.5 text-[0.6875rem]' },
-  desktop: { pad: 'px-5 pt-4 pb-[1.125rem]', label: 'text-[0.75rem]', icon: 'size-[0.875rem]', title: 'mt-2.5 text-[1.25rem]', sub: 'mt-1 text-[0.875rem]' },
+  phone: { pad: 'px-3.5 pt-3 pb-3.5', label: 'text-fine', icon: 'size-[0.75rem]', title: 'mt-2 text-body', sub: 'mt-1 text-note' },
+  tablet: { pad: 'px-3 pt-2.5 pb-3', label: 'text-fine', icon: 'size-[0.6875rem]', title: 'mt-1.5 text-body', sub: 'mt-0.5 text-fine' },
+  desktop: { pad: 'px-5 pt-4 pb-[1.125rem]', label: 'text-fine', icon: 'size-[0.875rem]', title: 'mt-2.5 text-[1.25rem]', sub: 'mt-1 text-note' },
 }
 
 type Labels = { place: string; impact: string }

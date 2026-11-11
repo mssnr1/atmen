@@ -21,7 +21,7 @@ export function SettingsScreen() {
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start lg:gap-12">
         <div>
         <section className="mt-8">
-          <h2 className="mb-2 text-[0.9375rem] font-medium">{t.language}</h2>
+          <h2 className="mb-2 text-body font-medium">{t.language}</h2>
           <Segmented
             label={t.language}
             options={languages.map((l) => ({ value: l.id, label: l.label }))}
@@ -31,7 +31,7 @@ export function SettingsScreen() {
         </section>
 
         <section className="mt-7">
-          <h2 className="mb-2 text-[0.9375rem] font-medium">{t.appearance}</h2>
+          <h2 className="mb-2 text-body font-medium">{t.appearance}</h2>
           <Segmented
             label={t.appearance}
             options={themePreferences.map((id) => ({ value: id, label: t.themes[id] }))}
@@ -41,7 +41,7 @@ export function SettingsScreen() {
         </section>
 
         <section className="mt-7">
-          <h2 className="mb-2 text-[0.9375rem] font-medium">{t.visualization}</h2>
+          <h2 className="mb-2 text-body font-medium">{t.visualization}</h2>
           <Segmented
             label={t.visualization}
             options={visualizationModes.map((m) => ({ value: m.id, label: t.modes[m.id].label, title: t.modes[m.id].description }))}
@@ -72,14 +72,14 @@ export function SettingsScreen() {
         </section>
         </div>
 
-        <section className="fluo-card mt-8 rounded-[22px] p-5 text-[0.875rem] leading-relaxed text-ink-2 md:p-7">
-          <h2 className="text-[0.9375rem] font-medium text-ink">{t.about}</h2>
+        <section className="fluo-card mt-8 rounded-[22px] p-5 text-note leading-relaxed text-ink-2 md:p-7">
+          <h2 className="text-body font-medium text-ink">{t.about}</h2>
           <p className="mt-1">{t.inspired}</p>
           <p className="mt-1 text-muted">{t.sessionsCompleted(sessions)}</p>
           <button type="button" onClick={() => navigate({ name: 'welcome' })} className="mt-3 text-ink underline decoration-ink/35 underline-offset-4 hover:decoration-ink">
             {t.intro}
           </button>
-          <h2 className="mt-5 text-[0.9375rem] font-medium text-ink">{t.credits}</h2>
+          <h2 className="mt-5 text-body font-medium text-ink">{t.credits}</h2>
           <p className="mt-1" data-testid="anatomy-credit">
             {t.anatomyCredit}{' '}
             <a className="text-ink underline decoration-ink/35 underline-offset-2 hover:decoration-ink" href="https://github.com/Z-Anatomy/Models-of-human-anatomy" target="_blank" rel="noreferrer">

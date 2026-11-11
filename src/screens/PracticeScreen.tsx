@@ -261,7 +261,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
                 {leadIn ? t.phase.exhale : phaseLabel(s, t)}
               </p>
               {!running && !leadIn && (
-                <p className="mt-1 text-[0.9375rem] text-ink-2 tabular-nums" data-testid="phase-time">
+                <p className="mt-1 text-body text-ink-2 tabular-nums" data-testid="phase-time">
                   {s.status === 'paused' ? t.paused : `${text.name} · ${planLine}`}
                 </p>
               )}
@@ -270,17 +270,17 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             {/* One place under the phase word: the question before, a hint, or the controls. */}
             <div className="relative mt-4 h-[6.75rem]">
               <div data-ask className={`chrome absolute inset-0 flex flex-col justify-end ${asking ? 'pointer-events-auto' : 'chrome-off'}`}>
-                <p className="mb-3 text-center text-[0.9375rem] text-ink-2">{t.moodTitle}</p>
+                <p className="mb-3 text-center text-body text-ink-2">{t.moodTitle}</p>
                 <MoodScale label={t.moodTitle} value={before} onChange={setBefore} testId="mood-before" />
               </div>
-              <p className={`chrome absolute inset-x-0 bottom-3 text-center text-[0.8125rem] text-ink-2 ${hint && !chrome ? '' : 'chrome-off'}`}>{t.tapForControls}</p>
+              <p className={`chrome absolute inset-x-0 bottom-3 text-center text-note text-ink-2 ${hint && !chrome ? '' : 'chrome-off'}`}>{t.tapForControls}</p>
               <div className={`chrome absolute inset-0 flex flex-col justify-end ${controls ? 'pointer-events-auto' : 'chrome-off'}`}>
                 {prefs.showProgress && active && (
                   <div className="mb-3 px-1" data-testid="session-progress">
                     <div className="h-px bg-line" role="progressbar" aria-label={t.progress} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(s.progress * 100)}>
                       <div className="h-px bg-ink transition-[width] duration-300" style={{ width: `${s.progress * 100}%` }} />
                     </div>
-                    <div className="mt-1.5 flex justify-between text-[0.8125rem] text-ink-2 tabular-nums">
+                    <div className="mt-1.5 flex justify-between text-note text-ink-2 tabular-nums">
                       <span data-testid="cycle-count">{t.roundOf(Math.min(s.cycleIndex + 1, totalCycles), totalCycles)}</span>
                       <span data-testid="remaining">{t.timeLeft(formatClock(s.remainingMs))}</span>
                     </div>
@@ -321,27 +321,27 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
       </section>
 
       <BottomSheet open={infoOpen} title={text.name} closeLabel={t.close} onClose={closeInfo} testId="info-sheet">
-        <p className="pt-1 text-[0.9375rem] text-ink-2" data-testid="rhythm">
+        <p className="pt-1 text-body text-ink-2" data-testid="rhythm">
           {rhythmText(exercise, scale, lang, t)} · {planLine}
         </p>
-        <p className="mt-3 text-[0.9375rem] leading-relaxed">{text.summary}</p>
-        <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-2">{text.howItWorks}</p>
+        <p className="mt-3 text-body leading-relaxed">{text.summary}</p>
+        <p className="mt-3 text-body leading-relaxed text-ink-2">{text.howItWorks}</p>
         <h3 className="eyebrow mt-6">{t.bodyInsights}</h3>
         <ul className="mt-2 divide-y divide-line pb-2">
           {bodyInsights[lang].map((it) => (
             <li key={it.id} className="py-3">
-              <p className="text-[0.9375rem] font-medium">
+              <p className="text-body font-medium">
                 {it.place} <span className="font-normal text-ink-2">· {it.impact}</span>
               </p>
-              <p className="mt-0.5 text-[0.875rem] leading-snug text-ink-2">{it.title}</p>
+              <p className="mt-0.5 text-note leading-snug text-ink-2">{it.title}</p>
             </li>
           ))}
         </ul>
       </BottomSheet>
 
       <BottomSheet open={sheetOpen} title={t.settings} closeLabel={t.close} onClose={closeSheet}>
-        <h3 className="pt-3 text-[0.9375rem] font-medium">{t.breathingPace}</h3>
-        <p className="text-[0.8125rem] text-ink-2">{t.breathingPaceHint}</p>
+        <h3 className="pt-3 text-body font-medium">{t.breathingPace}</h3>
+        <p className="text-note text-ink-2">{t.breathingPaceHint}</p>
         <div role="radiogroup" aria-label={t.breathingPace} className="mt-3 grid grid-cols-3 gap-2.5">
           {exercise.paces.options.map((o, i) => {
             const on = i === preset
@@ -355,8 +355,8 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
                 onClick={() => setPace({ preset: i })}
                 className={`rounded-[18px] px-2 py-3.5 text-center transition ${on ? 'bg-solid text-on-solid' : 'bg-surface-2/70 text-ink ring-1 ring-line/70 hover:bg-surface-2'}`}
               >
-                <span className="block text-[1.0625rem] tabular-nums">{paceText(exercise, o.scale, lang)}</span>
-                <span className={`mt-0.5 block text-[0.8125rem] ${on ? 'opacity-70' : 'text-ink-2'}`}>{o.label[lang]}</span>
+                <span className="block text-body tabular-nums">{paceText(exercise, o.scale, lang)}</span>
+                <span className={`mt-0.5 block text-note ${on ? 'opacity-70' : 'text-ink-2'}`}>{o.label[lang]}</span>
               </button>
             )
           })}
@@ -373,7 +373,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           />
         </div>
 
-        <h3 className="mt-5 mb-2 text-[0.9375rem] font-medium">{t.duration}</h3>
+        <h3 className="mt-5 mb-2 text-body font-medium">{t.duration}</h3>
         <Segmented
           label={t.duration}
           disabled={active}
@@ -382,7 +382,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           onChange={(ms) => store.setDuration(exercise.id, ms)}
         />
 
-        <h3 className="mt-5 mb-2 text-[0.9375rem] font-medium">{t.visualization}</h3>
+        <h3 className="mt-5 mb-2 text-body font-medium">{t.visualization}</h3>
         <Segmented
           label={t.visualization}
           options={visualizationModes.map((m) => ({ value: m.id, label: t.modes[m.id].label, title: t.modes[m.id].description }))}
@@ -390,7 +390,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           onChange={(visualizationMode) => store.updatePreferences({ visualizationMode })}
         />
 
-        <h3 className="mt-5 mb-2 text-[0.9375rem] font-medium">{t.appearance}</h3>
+        <h3 className="mt-5 mb-2 text-body font-medium">{t.appearance}</h3>
         <Segmented
           label={t.appearance}
           options={themePreferences.map((id) => ({ value: id, label: t.themes[id] }))}
@@ -439,12 +439,12 @@ function Completion({
       <h1 className="display text-[2.25rem] md:text-[2.75rem]" aria-live="polite">
         {t.wellDone}
       </h1>
-      <p className="mt-2 text-[0.9375rem] text-ink-2 tabular-nums" data-testid="completion-text">
+      <p className="mt-2 text-body text-ink-2 tabular-nums" data-testid="completion-text">
         {line}
       </p>
-      <p className="mt-6 mb-3 text-[1rem] text-ink">{t.moodTitle}</p>
+      <p className="mt-6 mb-3 text-body text-ink">{t.moodTitle}</p>
       <MoodScale label={t.moodTitle} value={after} onChange={onAfter} testId="mood-after" />
-      <p className={`mt-3 min-h-5 text-[0.875rem] text-ink-2 transition-opacity duration-700 ${before && after ? 'opacity-100' : 'opacity-0'}`} data-testid="before-after">
+      <p className={`mt-3 min-h-5 text-note text-ink-2 transition-opacity duration-700 ${before && after ? 'opacity-100' : 'opacity-0'}`} data-testid="before-after">
         {before && after ? t.beforeAfter(t.moods[before - 1], t.moods[after - 1]) : ''}
       </p>
       <Button onClick={onDone} className="mt-4 w-full" data-testid="completion-done">
@@ -452,8 +452,8 @@ function Completion({
       </Button>
       {next && (
         <button type="button" onClick={next.start} className="mt-2 flex min-h-12 w-full flex-col items-center justify-center rounded-full px-4 py-1.5 text-ink transition hover:bg-ink/5" data-testid="completion-next">
-          <span className="text-[1rem] font-semibold">{next.label}</span>
-          <span className="text-[0.8125rem] text-ink-2">{next.reason}</span>
+          <span className="text-body font-semibold">{next.label}</span>
+          <span className="text-note text-ink-2">{next.reason}</span>
         </button>
       )}
     </div>

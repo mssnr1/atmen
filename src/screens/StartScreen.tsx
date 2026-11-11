@@ -59,13 +59,13 @@ export function StartScreen() {
           {mainLabel}
         </Button>
         <div className="mt-1.5 flex items-center justify-between">
-          <button type="button" onClick={() => setPickerOpen(true)} className="-ml-3 min-h-11 rounded-full px-3 text-[0.9375rem] font-medium text-ink-2 transition hover:text-ink" data-testid="start-other">
+          <button type="button" onClick={() => setPickerOpen(true)} className="-ml-3 min-h-11 rounded-full px-3 text-body font-medium text-ink transition hover:opacity-70" data-testid="start-other">
             {t.otherExercise}
           </button>
           <button
             type="button"
             onClick={() => startPractice(STRESS_EXERCISE)}
-            className="-mr-3 min-h-11 rounded-full px-3 text-[0.9375rem] font-medium text-ink-2 transition hover:text-ink"
+            className="-mr-3 min-h-11 rounded-full px-3 text-body font-medium text-ink transition hover:opacity-70"
             data-testid="start-stressed"
           >
             {t.stressed}
@@ -75,7 +75,7 @@ export function StartScreen() {
         <button
           type="button"
           onClick={() => navigate({ name: 'sos' })}
-          className="mx-auto mt-1 flex min-h-11 items-center gap-2 rounded-full px-4 text-[0.9375rem] font-semibold text-alert transition hover:bg-alert/10"
+          className="mx-auto mt-1 flex min-h-11 items-center gap-2 rounded-full px-4 text-body font-semibold text-alert transition hover:bg-alert/10"
           data-testid="start-panic"
         >
           {t.panic}
@@ -90,10 +90,10 @@ export function StartScreen() {
               <li key={e.id} className="flex items-center gap-1">
                 <button type="button" onClick={() => startPractice(e.id)} className="min-w-0 flex-1 py-4 text-left" data-testid={`exercise-${e.id}`}>
                   <span className="flex items-center gap-2.5">
-                    <span className="text-[1.1875rem] leading-tight">{text.need}</span>
-                    {fit.exerciseId === e.id && <span className="rounded-full px-2 py-0.5 text-[0.6875rem] font-medium tracking-wide text-ink-2 ring-1 ring-ink/25">{t.fitsNow}</span>}
+                    <span className="text-lead leading-tight">{text.need}</span>
+                    {fit.exerciseId === e.id && <span className="rounded-full px-2 py-0.5 text-fine font-medium tracking-wide text-ink-2 ring-1 ring-ink/25">{t.fitsNow}</span>}
                   </span>
-                  <span className="mt-1 block text-[0.875rem] text-ink-2">
+                  <span className="mt-1 block text-note text-ink-2">
                     {text.name} · {t.minutes(minutes(e.id))}
                   </span>
                 </button>
@@ -104,7 +104,7 @@ export function StartScreen() {
             )
           })}
           <li>
-            <button type="button" onClick={() => navigate({ name: 'sos' })} className="flex w-full items-center gap-2.5 py-4 text-left text-[1.0625rem] font-medium text-alert">
+            <button type="button" onClick={() => navigate({ name: 'sos' })} className="flex w-full items-center gap-2.5 py-4 text-left text-body font-medium text-alert">
               <LifebuoyIcon className="size-5" strokeWidth={1.6} />
               {t.panic}
             </button>
