@@ -64,7 +64,7 @@ function Screen() {
   if (route.name === 'sos') return <EmergencyScreen />
   if (route.name === 'welcome') return <WelcomeScreen />
   if (route.name === 'exercise') return <ExerciseScreen key={route.exerciseId} exerciseId={route.exerciseId} />
-  if (route.name === 'history') return <HistoryScreen />
+  if (route.name === 'history') return <HistoryScreen justDoneId={route.sessionId} />
   if (route.name === 'learn') return <LearnScreen />
   if (route.name === 'settings') return <SettingsScreen />
   // The very first open begins with one breath instead of a menu.

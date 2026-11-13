@@ -4,7 +4,8 @@ import { audioCues } from '../feedback/audio'
 /** Minimal hash router: "#/practice/resonance" -> ["practice", "resonance"]. */
 export type Route =
   | { name: 'home' }
-  | { name: 'history' }
+  /** `sessionId`: the exercise just finished, shown at the top and its ring drawn in. */
+  | { name: 'history'; sessionId?: string }
   | { name: 'learn' }
   | { name: 'settings' }
   | { name: 'welcome' }
@@ -16,7 +17,8 @@ function parse(hash: string): Route {
   const [name, id] = hash.replace(/^#\/?/, '').split('/')
   if (name === 'practice' && id) return { name: 'practice', exerciseId: id }
   if (name === 'exercise' && id) return { name: 'exercise', exerciseId: id }
-  if (name === 'history' || name === 'learn' || name === 'settings' || name === 'welcome' || name === 'sos') return { name }
+  if (name === 'history') return id ? { name, sessionId: id } : { name }
+  if (name === 'learn' || name === 'settings' || name === 'welcome' || name === 'sos') return { name }
   return { name: 'home' }
 }
 
@@ -30,8 +32,23 @@ export function useRoute(): Route {
   return parse(hash)
 }
 
+function hashOf(route: Route): string {
+  if (route.name === 'home') return '/'
+  if (route.name === 'practice' || route.name === 'exercise') return `/${route.name}/${route.exerciseId}`
+  if (route.name === 'history' && route.sessionId) return `/history/${route.sessionId}`
+  return `/${route.name}`
+}
+
 export function navigate(route: Route): void {
-  window.location.hash = route.name === 'home' ? '/' : route.name === 'practice' || route.name === 'exercise' ? `/${route.name}/${route.exerciseId}` : `/${route.name}`
+  window.location.hash = hashOf(route)
+}
+
+/**
+ * Go somewhere without leaving the page behind in the browser's history: after an exercise, "back"
+ * from the overview goes to where the exercise was opened from, not into the finished exercise again.
+ */
+export function navigateReplacing(route: Route): void {
+  window.location.replace(`${window.location.pathname}${window.location.search}#${hashOf(route)}`)
 }
 
 /** The exercise a tap asked to start right away; the practice screen picks it up and begins. */
