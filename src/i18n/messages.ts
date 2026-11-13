@@ -125,6 +125,10 @@ export interface Messages {
   /** "+1.2 calmer" style line for one exercise, from the user's own answers. */
   helpsChange: (steps: string, direction: -1 | 0 | 1) => string
   total: (sessions: string, minutes: string) => string
+  /** The exercise just finished, at the top of the history. */
+  justDone: string
+  /** "Your 3rd exercise this week". */
+  nthThisWeek: (n: number) => string
   // Completion
   wellDone: string
   back: string
@@ -274,6 +278,8 @@ const de: Messages = {
   helpsEmpty: 'Sobald du bei einer Übung dreimal vorher und nachher geantwortet hast, steht hier, was dir hilft.',
   helpsChange: (steps, d) => (d === 0 ? 'im Schnitt unverändert' : `im Schnitt ${steps} ${steps === '1' ? 'Stufe' : 'Stufen'} ${d > 0 ? 'ruhiger' : 'angespannter'}`),
   total: (s, m) => `Insgesamt ${s}, ${m}`,
+  justDone: 'Gerade geschafft',
+  nthThisWeek: (n) => (n === 1 ? 'Deine erste Übung diese Woche' : `Deine ${n}. Übung diese Woche`),
   wellDone: 'Gut gemacht.',
   back: 'Zurück',
   done: 'Fertig',
@@ -422,6 +428,12 @@ const en: Messages = {
   helpsEmpty: 'Once you have answered before and after one exercise three times, you will see here what helps you.',
   helpsChange: (steps, d) => (d === 0 ? 'unchanged on average' : `${steps} ${steps === '1' ? 'step' : 'steps'} ${d > 0 ? 'calmer' : 'more tense'} on average`),
   total: (s, m) => `${s} in total, ${m}`,
+  justDone: 'Just done',
+  nthThisWeek: (n) => {
+    if (n === 1) return 'Your first exercise this week'
+    const end = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'
+    return `Your ${n}${end} exercise this week`
+  },
   wellDone: 'Well done.',
   back: 'Back',
   done: 'Done',

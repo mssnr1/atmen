@@ -291,6 +291,32 @@ body {
     opacity: 0;
   }
 }
+/* The ring of the exercise just done draws itself in on the history page. */
+@keyframes ring-draw {
+  from {
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: 1;
+  }
+  99.9% {
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: 0;
+  }
+  /* Closed again at the end, so no seam stays where the line began. */
+  to {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+.ring-draw {
+  animation: ring-draw 1800ms cubic-bezier(0.45, 0, 0.2, 1) 400ms both;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--color-breath) 70%, transparent));
+}
+@media (prefers-reduced-motion: reduce) {
+  .ring-draw {
+    animation: none;
+  }
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;

@@ -4,9 +4,11 @@ import { ChevronLeftIcon, ChevronRightIcon } from '../components/icons'
 import { Page } from '../components/Page'
 import { getExercise } from '../exercises'
 import { useI18n } from '../i18n'
+import { formatDuration } from '../lib/format'
 import { whatHelps } from '../lib/suggest'
 import { addDays, sessionsByDay, weekRings, weekStart } from '../lib/weekRings'
 import { useStore } from '../storage/store'
+import type { SessionRecord } from '../storage/types'
 
 /** Breath light for a ring: sky at the start of the week, lavender at its end. */
 const ringColor = (t: number) => `color-mix(in srgb, var(--color-breath) ${Math.round(t * 100)}%, var(--color-breath-2))`
@@ -16,9 +18,10 @@ const ringColor = (t: number) => `color-mix(in srgb, var(--color-breath) ${Math.
  * without an exercise is a fine dashed ring and nothing more: no streaks, no pressure. Below it, what
  * the user's own answers before and after say about what helps them.
  */
-export function HistoryScreen() {
+export function HistoryScreen({ justDoneId }: { justDoneId?: string }) {
   const { lang, t } = useI18n()
   const sessions = useStore((d) => d.sessions)
+  const justDone = justDoneId ? sessions.find((s) => s.id === justDoneId) : undefined
   const [weeksBack, setWeeksBack] = useState(0)
 
   const now = useMemo(() => new Date(), [])
@@ -37,9 +40,12 @@ export function HistoryScreen() {
   const helps = useMemo(() => whatHelps(sessions), [sessions])
   const totalMinutes = Math.round(sessions.reduce((ms, s) => ms + s.durationMs, 0) / 60_000)
   const oldest = sessions.length ? weekStart(new Date(sessions[0].completedAt)).getTime() : start.getTime()
+  // Which of the week's exercises the one just done was: counted, not judged.
+  const nth = justDone && weeksBack === 0 ? days.flat().sort((a, b) => a.completedAt.localeCompare(b.completedAt)).findIndex((s) => s.id === justDone.id) + 1 : 0
 
   return (
     <Page title={t.historyTitle} lead={t.historyLead} testId="history">
+      {justDone && <JustDone session={justDone} nth={nth} />}
       <div className="mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start lg:gap-16">
         <section aria-label={weekLabel}>
           <div className="flex items-center justify-between">
@@ -70,7 +76,17 @@ export function HistoryScreen() {
               ring.empty ? (
                 <circle key={i} r={ring.r} fill="none" stroke="var(--color-muted)" strokeWidth={1} strokeDasharray="2 7" strokeLinecap="round" />
               ) : (
-                <circle key={i} r={ring.r} fill="none" stroke={ringColor(ring.t)} strokeWidth={ring.width} />
+                <circle
+                  key={i}
+                  r={ring.r}
+                  fill="none"
+                  stroke={ringColor(ring.t)}
+                  strokeWidth={ring.width}
+                  {...(justDone && ring.session?.id === justDone.id
+                    ? // The ring just earned draws itself in, from the top, and keeps a soft glow.
+                      { pathLength: 1, transform: 'rotate(-90)', className: 'ring-draw', 'data-testid': 'ring-just-done' }
+                    : {})}
+                />
               ),
             )}
           </svg>
@@ -138,5 +154,29 @@ export function HistoryScreen() {
       </div>
       <div className="h-10" />
     </Page>
+  )
+}
+
+/**
+ * The exercise just finished, at the top of the overview: what was done, how the user said they felt
+ * before and after, and where it stands in the week.
+ */
+function JustDone({ session, nth }: { session: SessionRecord; nth: number }) {
+  const { lang, t } = useI18n()
+  const e = getExercise(session.exerciseId)
+  const { before, after } = session.feedback ?? {}
+  const mood = (m?: number) => (m && m >= 1 && m <= 5 ? t.moods[m - 1] : undefined)
+  const b = mood(before)
+  const a = mood(after)
+  return (
+    <section className="fade-up mt-7 max-w-xl rounded-[22px] px-5 py-4 ring-1 ring-line" aria-label={t.justDone} data-testid="just-done">
+      <p className="eyebrow">{t.justDone}</p>
+      <p className="mt-1.5 text-lead font-medium">{e?.text[lang].name ?? session.exerciseId}</p>
+      <p className="mt-0.5 text-body text-ink-2 tabular-nums">
+        {formatDuration(session.durationMs)} · {t.breaths(session.cycles)}
+      </p>
+      {b && a && <p className="mt-2 text-body">{t.beforeAfter(b, a)}</p>}
+      {nth > 0 && <p className="mt-2 text-note text-ink-2">{t.nthThisWeek(nth)}</p>}
+    </section>
   )
 }

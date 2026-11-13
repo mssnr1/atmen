@@ -20,7 +20,7 @@ import { usePracticeSession } from '../hooks/usePracticeSession'
 import { useI18n, type Messages } from '../i18n'
 import { paceText, presetIndex, rhythmText } from '../lib/exerciseText'
 import { formatClock, formatDuration } from '../lib/format'
-import { clearPendingStart, hasPendingStart, navigate, startPractice } from '../lib/route'
+import { clearPendingStart, hasPendingStart, navigate, navigateReplacing, startPractice } from '../lib/route'
 import { suggest } from '../lib/suggest'
 import { themePreferences } from '../lib/themePreferences'
 import { settleSource } from '../stage/ambient'
@@ -189,6 +189,13 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
     session.reset()
     navigate({ name: 'home' })
   }
+  // Done: on to the overview, with this exercise at the top of the user's own history.
+  const goToHistory = () => {
+    clearPendingStart()
+    const id = sessionId
+    session.reset()
+    navigateReplacing(id ? { name: 'history', sessionId: id } : { name: 'history' })
+  }
 
   const totalCycles = Math.ceil(s.plan.totalCycles)
   // Which lines the cues begin with changes from session to session.
@@ -250,7 +257,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             before={before}
             after={after}
             onAfter={answerAfter}
-            onDone={goHome}
+            onDone={goToHistory}
             next={
               next && {
                 label: t.continueWith(next.exercise.text[lang].short, Math.round((prefs.durationByExercise[next.exercise.id] ?? next.exercise.defaultDurationMs) / 60_000)),
