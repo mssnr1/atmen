@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { BottomSheet } from '../components/BottomSheet'
 import { Button, IconButton } from '../components/Button'
-import { GearIcon, LearnIcon, LifebuoyIcon, RingsIcon, SlidersIcon } from '../components/icons'
+import { ChevronRightIcon, GearIcon, LearnIcon, LifebuoyIcon, RingsIcon, SlidersIcon } from '../components/icons'
 import { Wordmark } from '../components/Wordmark'
 import { exercises, getExercise } from '../exercises'
 import { useI18n } from '../i18n'
@@ -10,6 +10,8 @@ import { lastExercise, suggest } from '../lib/suggest'
 import { ambientSource } from '../stage/ambient'
 import { useStage } from '../stage/stage'
 import { useStore } from '../storage/store'
+import { ringColor } from '../components/WeekRingsChart'
+import { sessionsByDay, weekRings, weekStart } from '../lib/weekRings'
 
 /** The exercise behind "I'm stressed": the long exhale. */
 const STRESS_EXERCISE = 'relax'
@@ -54,7 +56,8 @@ export function StartScreen() {
       </header>
 
       <div className="fade-up safe-bottom relative mx-auto mt-auto w-full max-w-md px-6 md:max-w-lg md:pb-10" data-testid="start-choices">
-        <h1 className="display text-[2.125rem] md:text-[2.75rem]">{t.tagline}</h1>
+        <WeekLink />
+        <h1 className="display mt-5 text-[2.125rem] md:text-[2.75rem]">{t.tagline}</h1>
         <Button onClick={() => startPractice(main.id)} className="mt-6 w-full" data-testid="start-main">
           {mainLabel}
         </Button>
@@ -112,5 +115,42 @@ export function StartScreen() {
         </ul>
       </BottomSheet>
     </main>
+  )
+}
+
+/**
+ * The way to the user's own history, right on the start page: the week's rings in small and what they
+ * add up to. Without any exercise this week it simply names the history.
+ */
+function WeekLink() {
+  const { t } = useI18n()
+  const sessions = useStore((d) => d.sessions)
+  const { rings, outer, count, minutes } = useMemo(() => {
+    const now = new Date()
+    const days = sessionsByDay(sessions, weekStart(now))
+    const week = weekRings(days, (now.getDay() + 6) % 7)
+    const done = days.flat()
+    return { ...week, count: done.length, minutes: Math.round(done.reduce((ms, s) => ms + s.durationMs, 0) / 60_000) }
+  }, [sessions])
+  const R = Math.max(outer, 60)
+  return (
+    <button
+      type="button"
+      onClick={() => navigate({ name: 'history' })}
+      className="-ml-1 flex min-h-11 items-center gap-2.5 rounded-full py-1 pr-3 pl-1 text-note text-ink-2 transition hover:text-ink"
+      data-testid="start-week"
+    >
+      <svg viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`} className="size-9 shrink-0" aria-hidden>
+        {rings.map((ring, i) =>
+          ring.empty ? (
+            <circle key={i} r={ring.r} fill="none" stroke="var(--color-muted)" strokeWidth={2} opacity={0.5} />
+          ) : (
+            <circle key={i} r={ring.r} fill="none" stroke={ringColor(ring.t)} strokeWidth={Math.max(5, ring.width * 1.6)} />
+          ),
+        )}
+      </svg>
+      <span className="font-medium">{count ? t.weekOnStart(t.sessions(count), t.minutesLong(minutes)) : t.weekOnStartEmpty}</span>
+      <ChevronRightIcon className="size-4" strokeWidth={1.5} />
+    </button>
   )
 }
