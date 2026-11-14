@@ -1,3 +1,4 @@
+import { useState, type KeyboardEvent } from 'react'
 import { getExercise } from '../exercises'
 import { useI18n } from '../i18n'
 import type { WeekRing } from '../lib/weekRings'
@@ -6,10 +7,10 @@ import type { WeekRing } from '../lib/weekRings'
 export const ringColor = (t: number) => `color-mix(in srgb, var(--color-breath) ${Math.round(t * 100)}%, var(--color-breath-2))`
 
 /** Half the height of the opening on the right, where the time axis runs from the middle outwards. */
-const OPEN = 9
-/** Size of the text along the rings and on the axis. */
-const LABEL = 8
-const AXIS_LABEL = 6.8
+const OPEN = 14
+/** Size of the chosen ring's line, and of the days on the axis (in the drawing's units, about 1.1 px each on a phone). */
+const LABEL = 11
+const AXIS_LABEL = 9.5
 
 const pt = (r: number, a: number) => `${(r * Math.cos(a)).toFixed(2)} ${(r * Math.sin(a)).toFixed(2)}`
 
@@ -19,9 +20,9 @@ function ringPath(r: number) {
   return `M ${pt(r, a)} A ${r} ${r} 0 1 1 ${pt(r, 2 * Math.PI - a)}`
 }
 
-/** The line a ring's text sits on: from the bottom, over the left and the top, up to the opening. */
+/** The line the chosen ring's text sits on: from the bottom, over the left and the top, up to the opening. */
 function labelPath(r: number) {
-  const a = Math.asin(Math.min(0.95, (OPEN + 1.5) / r))
+  const a = Math.asin(Math.min(0.95, (OPEN + 2) / r))
   return `M ${pt(r, Math.PI / 2)} A ${r} ${r} 0 1 1 ${pt(r, 2 * Math.PI - a)}`
 }
 
@@ -34,80 +35,118 @@ interface Props {
 }
 
 /**
- * The week as rings, Monday in the middle, Sunday outside. Every ring carries a small line along it
- * (day, exercise, minutes, how the user felt afterwards), ending at an opening on the right where a
- * time axis runs from the middle outwards, so it is clear what is inside and what is outside.
+ * The week as rings, Monday in the middle, the last day outside. One ring is chosen at a time (at first
+ * the latest one): it stands out and carries its line along it in a readable size (day, exercise,
+ * minutes, how the user felt afterwards). A tap on another ring chooses that one. On the right the
+ * rings open for a time axis from the middle outwards, so it is clear what is inside and what outside.
  */
 export function WeekRingsChart({ rings, outer, label, justDoneId }: Props) {
   const { lang, t } = useI18n()
-  const R = Math.max(outer + 13, 100)
+  const sessionRings = rings.filter((r) => !r.empty)
+  const latest = sessionRings[sessionRings.length - 1]?.session?.id
+  const [chosenId, setChosenId] = useState<string>()
+  // A chosen ring of another week falls back to this week's latest one.
+  const activeId = sessionRings.some((r) => r.session?.id === chosenId) ? chosenId : latest
+  const active = rings.find((r) => r.session?.id === activeId)
+
+  const R = Math.max(outer + LABEL + 6, 100)
   const date = new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'numeric' })
   const mood = (m?: number) => (m && m >= 1 && m <= 5 ? t.moods[m - 1].toLowerCase() : undefined)
-
   const text = (ring: WeekRing) => {
     const s = ring.session
     if (!s) return ''
     const e = getExercise(s.exerciseId)
-    const after = mood(s.feedback?.after)
-    return [`${t.weekdays[ring.day]} ${date.format(new Date(s.completedAt))}`, e?.text[lang].short ?? s.exerciseId, t.minutes(Math.max(1, Math.round(s.durationMs / 60_000))), after]
+    return [`${t.weekdays[ring.day]} ${date.format(new Date(s.completedAt))}`, e?.text[lang].short ?? s.exerciseId, t.minutes(Math.max(1, Math.round(s.durationMs / 60_000))), mood(s.feedback?.after)]
       .filter(Boolean)
       .join(' · ')
   }
 
-  // One tick on the axis for each day, where its first ring lies.
+  // One tick on the axis for each day, where its first ring lies; the days' names take turns above and below.
   const ticks = rings.filter((r, i) => i === 0 || rings[i - 1].day !== r.day)
-  const axisStart = rings.length ? rings[0].r - 10 : 20
-  const axisEnd = outer + 2
+  const axisStart = rings.length ? rings[0].r - 12 : 20
+  const axisEnd = outer + 6
+  // How far a ring's tap area reaches either side: half the way to its neighbours.
+  const reach = (i: number) => {
+    const inner = i > 0 ? (rings[i].r - rings[i - 1].r) / 2 : 8
+    const outerGap = i < rings.length - 1 ? (rings[i + 1].r - rings[i].r) / 2 : 8
+    return Math.max(8, Math.min(inner, outerGap) * 2)
+  }
+  const choose = (id?: string) => id && setChosenId(id)
+  const onKey = (e: KeyboardEvent, id?: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      choose(id)
+    }
+  }
 
   return (
-    <svg viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`} className="-mx-4 mt-4 block w-[calc(100%+2rem)] max-w-[30rem] sm:mx-auto sm:w-full" role="img" aria-label={label} data-testid="week-rings">
-      <defs>
-        {rings.map((ring, i) => (ring.empty ? null : <path key={i} id={`ring-label-${i}`} d={labelPath(ring.r + ring.width / 2 + 2)} />))}
-      </defs>
+    <svg viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`} className="-mx-4 mt-4 block w-[calc(100%+2rem)] max-w-[30rem] select-none sm:mx-auto sm:w-full" role="group" aria-label={label} data-testid="week-rings">
+      <defs>{active && <path id="ring-label" d={labelPath(active.r + active.width / 2 + 3)} />}</defs>
 
-      {rings.map((ring, i) =>
-        ring.empty ? (
-          <path key={i} d={ringPath(ring.r)} fill="none" stroke="var(--color-muted)" strokeWidth={1} strokeDasharray="2 7" strokeLinecap="round" />
-        ) : (
+      {rings.map((ring, i) => {
+        const isActive = ring === active
+        if (ring.empty) return <path key={i} d={ringPath(ring.r)} fill="none" stroke="var(--color-muted)" strokeWidth={1} strokeDasharray="2 7" strokeLinecap="round" opacity={0.8} />
+        return (
           <path
             key={i}
             d={ringPath(ring.r)}
             fill="none"
             stroke={ringColor(ring.t)}
             strokeWidth={ring.width}
-            {...(justDoneId && ring.session?.id === justDoneId
-              ? // The ring just earned draws itself in, from the axis round, and keeps a soft glow.
-                { pathLength: 1, className: 'ring-draw', 'data-testid': 'ring-just-done' }
-              : {})}
+            className={`transition-opacity duration-300 ${isActive ? 'ring-glow' : ''} ${justDoneId && ring.session?.id === justDoneId ? 'ring-draw' : ''}`}
+            opacity={isActive ? 1 : 0.4}
+            pathLength={1}
+            data-testid={justDoneId && ring.session?.id === justDoneId ? 'ring-just-done' : undefined}
+            data-active={isActive || undefined}
           />
-        ),
+        )
+      })}
+
+      {/* The chosen ring's line, with a rim in the page's colour so it reads over the rings beneath. */}
+      {active && (
+        <text key={active.session?.id} fontSize={LABEL} fill="var(--color-ink)" fontWeight={500} stroke="var(--color-paper)" strokeWidth={3.2} strokeLinejoin="round" paintOrder="stroke" className="fade-in pointer-events-none" data-testid="ring-label">
+          <textPath href="#ring-label" startOffset="100%" textAnchor="end">
+            {text(active)}
+          </textPath>
+        </text>
       )}
 
-      {/* The small line along each ring, ending at the opening. */}
-      <g fontSize={LABEL} fill="var(--color-ink-2)" letterSpacing={0.1} data-testid="ring-labels">
-        {rings.map((ring, i) =>
-          ring.empty ? null : (
-            <text key={i}>
-              <textPath href={`#ring-label-${i}`} startOffset="100%" textAnchor="end">
-                {text(ring)}
-              </textPath>
-            </text>
-          ),
-        )}
+      {/* The time axis in the opening: from the start of the week in the middle to its end outside. */}
+      <g className="pointer-events-none" data-testid="time-axis">
+        <path d={`M ${axisStart} 0 H ${axisEnd}`} stroke="var(--color-ink-2)" strokeWidth={1} />
+        <path d={`M ${axisEnd - 5} -3.5 L ${axisEnd} 0 L ${axisEnd - 5} 3.5`} fill="none" stroke="var(--color-ink-2)" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+        {ticks.map((ring, k) => {
+          const on = active?.day === ring.day
+          return (
+            <g key={ring.day}>
+              <path d={`M ${ring.r} -2.5 V 2.5`} stroke={on ? 'var(--color-ink)' : 'var(--color-ink-2)'} strokeWidth={1} />
+              <text x={ring.r} y={k % 2 ? -5 : 4 + AXIS_LABEL} fontSize={AXIS_LABEL} textAnchor="middle" fill={on ? 'var(--color-ink)' : 'var(--color-ink-2)'} fontWeight={on ? 600 : 400}>
+                {t.weekdays[ring.day]}
+              </text>
+            </g>
+          )
+        })}
       </g>
 
-      {/* The time axis in the opening: from the start of the week in the middle to its end outside. */}
-      <g data-testid="time-axis">
-        <path d={`M ${axisStart} 0 H ${axisEnd}`} stroke="var(--color-ink-2)" strokeWidth={0.6} opacity={0.7} />
-        <path d={`M ${axisEnd - 3} -2.2 L ${axisEnd} 0 L ${axisEnd - 3} 2.2`} fill="none" stroke="var(--color-ink-2)" strokeWidth={0.6} opacity={0.7} />
-        {ticks.map((ring) => (
-          <g key={ring.day}>
-            <path d={`M ${ring.r} -1.6 V 1.6`} stroke="var(--color-ink-2)" strokeWidth={0.6} />
-            <text x={ring.r} y={1.6 + AXIS_LABEL} fontSize={AXIS_LABEL} textAnchor="middle" fill="var(--color-ink-2)">
-              {t.weekdays[ring.day]}
-            </text>
-          </g>
-        ))}
+      {/* Tap areas, wider than the rings themselves, on top of everything. */}
+      <g fill="none" stroke="transparent" pointerEvents="stroke">
+        {rings.map((ring, i) =>
+          ring.empty ? null : (
+            <path
+              key={i}
+              d={ringPath(ring.r)}
+              strokeWidth={reach(i)}
+              role="button"
+              tabIndex={0}
+              aria-label={text(ring)}
+              aria-pressed={ring === active}
+              className="cursor-pointer outline-none"
+              onClick={() => choose(ring.session?.id)}
+              onKeyDown={(e) => onKey(e, ring.session?.id)}
+              data-testid="ring-hit"
+            />
+          ),
+        )}
       </g>
     </svg>
   )

@@ -52,9 +52,9 @@ export function ringWidth(durationMs: number): number {
   return minutes <= 3 ? 1.5 : minutes <= 7 ? 3.5 : 6.5
 }
 
-const INNER = 30
+const INNER = 34
 /** Room outside each session's ring for the small line of text that follows it. */
-const GAP = 15
+const GAP = 9
 const DAY_GAP = 2
 const EMPTY_STEP = 6
 

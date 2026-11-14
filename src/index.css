@@ -309,6 +309,9 @@ body {
 }
 .ring-draw {
   animation: ring-draw 1800ms cubic-bezier(0.45, 0, 0.2, 1) 400ms both;
+}
+/* The ring chosen on the history page. */
+.ring-glow {
   filter: drop-shadow(0 0 5px color-mix(in srgb, var(--color-breath) 70%, transparent));
 }
 @media (prefers-reduced-motion: reduce) {
