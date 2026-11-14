@@ -117,8 +117,7 @@ export interface Messages {
   sessions: (n: number) => string
   weekEmpty: string
   /** The way to the history on the start page. */
-  weekOnStart: (sessions: string, minutes: string) => string
-  weekOnStartEmpty: string
+  historyButton: string
   legendEmpty: string
   legendWidth: string
   weekdays: [string, string, string, string, string, string, string]
@@ -273,8 +272,7 @@ const de: Messages = {
   nextWeek: 'Woche danach',
   sessions: (n) => (n === 1 ? '1 Übung' : `${n} Übungen`),
   weekEmpty: 'Noch keine Übung in dieser Woche.',
-  weekOnStart: (s, m) => `Diese Woche: ${s} · ${m}`,
-  weekOnStartEmpty: 'Dein Verlauf',
+  historyButton: 'Dein Verlauf',
   legendEmpty: 'Tag ohne Übung',
   legendWidth: 'Je länger, desto breiter',
   weekdays: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
@@ -425,8 +423,7 @@ const en: Messages = {
   nextWeek: 'Week after',
   sessions: (n) => (n === 1 ? '1 exercise' : `${n} exercises`),
   weekEmpty: 'No exercise this week yet.',
-  weekOnStart: (s, m) => `This week: ${s} · ${m}`,
-  weekOnStartEmpty: 'Your history',
+  historyButton: 'Your history',
   legendEmpty: 'Day without an exercise',
   legendWidth: 'The longer, the wider',
   weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
