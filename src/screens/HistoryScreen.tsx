@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { IconButton } from '../components/Button'
 import { ChevronLeftIcon, ChevronRightIcon } from '../components/icons'
 import { Page } from '../components/Page'
+import { ringColor, WeekRingsChart } from '../components/WeekRingsChart'
 import { getExercise } from '../exercises'
 import { useI18n } from '../i18n'
 import { formatDuration } from '../lib/format'
@@ -10,8 +11,6 @@ import { addDays, sessionsByDay, weekRings, weekStart } from '../lib/weekRings'
 import { useStore } from '../storage/store'
 import type { SessionRecord } from '../storage/types'
 
-/** Breath light for a ring: sky at the start of the week, lavender at its end. */
-const ringColor = (t: number) => `color-mix(in srgb, var(--color-breath) ${Math.round(t * 100)}%, var(--color-breath-2))`
 
 /**
  * The history as breath rings: every exercise is a ring, the week grows from the inside out. A day
@@ -32,7 +31,6 @@ export function HistoryScreen({ justDoneId }: { justDoneId?: string }) {
   const { rings, outer } = useMemo(() => weekRings(days, weeksBack === 0 ? today : 6), [days, weeksBack, today])
   const count = days.reduce((n, d) => n + d.length, 0)
   const minutes = Math.round(days.flat().reduce((ms, s) => ms + s.durationMs, 0) / 60_000)
-  const R = Math.max(outer + 6, 110)
 
   const date = new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short' })
   const weekLabel = weeksBack === 0 ? t.thisWeek : `${date.format(start)} – ${date.format(addDays(start, 6))}`
@@ -65,31 +63,12 @@ export function HistoryScreen({ justDoneId }: { justDoneId?: string }) {
             </IconButton>
           </div>
 
-          <svg
-            viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`}
-            className="mx-auto mt-4 block w-full max-w-[22rem]"
-            role="img"
-            aria-label={`${weekLabel}: ${count ? `${t.sessions(count)}, ${t.minutesLong(minutes)}` : t.weekEmpty}`}
-            data-testid="week-rings"
-          >
-            {rings.map((ring, i) =>
-              ring.empty ? (
-                <circle key={i} r={ring.r} fill="none" stroke="var(--color-muted)" strokeWidth={1} strokeDasharray="2 7" strokeLinecap="round" />
-              ) : (
-                <circle
-                  key={i}
-                  r={ring.r}
-                  fill="none"
-                  stroke={ringColor(ring.t)}
-                  strokeWidth={ring.width}
-                  {...(justDone && ring.session?.id === justDone.id
-                    ? // The ring just earned draws itself in, from the top, and keeps a soft glow.
-                      { pathLength: 1, transform: 'rotate(-90)', className: 'ring-draw', 'data-testid': 'ring-just-done' }
-                    : {})}
-                />
-              ),
-            )}
-          </svg>
+          <WeekRingsChart
+            rings={rings}
+            outer={outer}
+            label={`${weekLabel}: ${count ? `${t.sessions(count)}, ${t.minutesLong(minutes)}` : t.weekEmpty}`}
+            justDoneId={justDone?.id}
+          />
 
           {/* The same week in words: the day and its minutes. */}
           <ol className="mx-auto mt-5 grid max-w-[22rem] grid-cols-7 text-center" data-testid="week-days">
