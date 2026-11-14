@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { BottomSheet } from '../components/BottomSheet'
 import { Button, IconButton } from '../components/Button'
-import { ChevronRightIcon, GearIcon, LearnIcon, LifebuoyIcon, RingsIcon, SlidersIcon } from '../components/icons'
+import { GearIcon, LearnIcon, LifebuoyIcon, RingsIcon, SlidersIcon } from '../components/icons'
 import { Wordmark } from '../components/Wordmark'
 import { exercises, getExercise } from '../exercises'
 import { useI18n } from '../i18n'
@@ -56,11 +56,11 @@ export function StartScreen() {
       </header>
 
       <div className="fade-up safe-bottom relative mx-auto mt-auto w-full max-w-md px-6 md:max-w-lg md:pb-10" data-testid="start-choices">
-        <WeekLink />
-        <h1 className="display mt-5 text-[2.125rem] md:text-[2.75rem]">{t.tagline}</h1>
+        <h1 className="display text-[2.125rem] md:text-[2.75rem]">{t.tagline}</h1>
         <Button onClick={() => startPractice(main.id)} className="mt-6 w-full" data-testid="start-main">
           {mainLabel}
         </Button>
+        <HistoryButton />
         <div className="mt-1.5 flex items-center justify-between">
           <button type="button" onClick={() => setPickerOpen(true)} className="-ml-3 min-h-11 rounded-full px-3 text-body font-medium text-ink transition hover:opacity-70" data-testid="start-other">
             {t.otherExercise}
@@ -119,38 +119,38 @@ export function StartScreen() {
 }
 
 /**
- * The way to the user's own history, right on the start page: the week's rings in small and what they
- * add up to. Without any exercise this week it simply names the history.
+ * The way to the user's own history, as present as the button that starts: the week's rings in small,
+ * "Your history" and how many exercises the week holds so far.
  */
-function WeekLink() {
+function HistoryButton() {
   const { t } = useI18n()
   const sessions = useStore((d) => d.sessions)
-  const { rings, outer, count, minutes } = useMemo(() => {
+  const { rings, outer, count } = useMemo(() => {
     const now = new Date()
     const days = sessionsByDay(sessions, weekStart(now))
-    const week = weekRings(days, (now.getDay() + 6) % 7)
-    const done = days.flat()
-    return { ...week, count: done.length, minutes: Math.round(done.reduce((ms, s) => ms + s.durationMs, 0) / 60_000) }
+    return { ...weekRings(days, (now.getDay() + 6) % 7), count: days.flat().length }
   }, [sessions])
   const R = Math.max(outer, 60)
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
       onClick={() => navigate({ name: 'history' })}
-      className="-ml-1 flex min-h-11 items-center gap-2.5 rounded-full py-1 pr-3 pl-1 text-note text-ink-2 transition hover:text-ink"
-      data-testid="start-week"
+      className="mt-3 w-full bg-paper/40 backdrop-blur-md"
+      icon={
+        <svg viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`} className="size-7" aria-hidden>
+          {rings.map((ring, i) =>
+            ring.empty ? (
+              <circle key={i} r={ring.r} fill="none" stroke="var(--color-muted)" strokeWidth={2} opacity={0.5} />
+            ) : (
+              <circle key={i} r={ring.r} fill="none" stroke={ringColor(ring.t)} strokeWidth={Math.max(5, ring.width * 1.6)} />
+            ),
+          )}
+        </svg>
+      }
+      data-testid="start-history"
     >
-      <svg viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`} className="size-9 shrink-0" aria-hidden>
-        {rings.map((ring, i) =>
-          ring.empty ? (
-            <circle key={i} r={ring.r} fill="none" stroke="var(--color-muted)" strokeWidth={2} opacity={0.5} />
-          ) : (
-            <circle key={i} r={ring.r} fill="none" stroke={ringColor(ring.t)} strokeWidth={Math.max(5, ring.width * 1.6)} />
-          ),
-        )}
-      </svg>
-      <span className="font-medium">{count ? t.weekOnStart(t.sessions(count), t.minutesLong(minutes)) : t.weekOnStartEmpty}</span>
-      <ChevronRightIcon className="size-4" strokeWidth={1.5} />
-    </button>
+      {t.historyButton}
+      {count > 0 && <span className="font-normal text-ink-2">· {t.sessions(count)}</span>}
+    </Button>
   )
 }
