@@ -52,10 +52,11 @@ export function ringWidth(durationMs: number): number {
   return minutes <= 3 ? 1.5 : minutes <= 7 ? 3.5 : 6.5
 }
 
-const INNER = 30
-const GAP = 7
-const DAY_GAP = 5
-const EMPTY_STEP = 9
+const INNER = 34
+/** Room outside each session's ring for the small line of text that follows it. */
+const GAP = 9
+const DAY_GAP = 2
+const EMPTY_STEP = 6
 
 /**
  * Lays the week out from the inside: returns the rings and the outer radius they reach, so the drawing
@@ -67,10 +68,13 @@ export function weekRings(days: SessionRecord[][], upToDay = 6): { rings: WeekRi
   const rings: WeekRing[] = []
   let r = INNER
   let k = 0
+  // A session's ring has its line of text just outside it, so whatever comes next keeps clear of that.
+  let afterSession = false
   shown.forEach((sessions, day) => {
     const t = () => (total > 1 ? k / (total - 1) : 0)
     if (!sessions.length) {
-      r += EMPTY_STEP
+      r += afterSession ? GAP - DAY_GAP : EMPTY_STEP
+      afterSession = false
       rings.push({ r, width: 1, day, t: t(), empty: true })
       r += EMPTY_STEP
       k++
@@ -83,6 +87,7 @@ export function weekRings(days: SessionRecord[][], upToDay = 6): { rings: WeekRi
       r += width / 2
       k++
     }
+    afterSession = true
     r += DAY_GAP
   })
   return { rings, outer: r }
