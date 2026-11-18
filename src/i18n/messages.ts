@@ -152,6 +152,23 @@ export interface Messages {
   about: string
   credits: string
   anatomyCredit: string
+  /** The quiet way to tell the team something, during or after an exercise. */
+  feedback: {
+    open: string
+    title: string
+    intro: string
+    paused: string
+    placeholder: string
+    contact: string
+    contactHint: string
+    send: string
+    sending: string
+    sentTitle: string
+    sentLine: string
+    failed: string
+    during: string
+    after: string
+  }
 }
 
 const de: Messages = {
@@ -304,6 +321,22 @@ const de: Messages = {
   credits: 'Quellen und Lizenzen',
   anatomyCredit:
     '3D-Anatomie abgeleitet von „Z-Anatomy – The libre 3D atlas of anatomy“ (CC BY-SA 4.0) und „BodyParts3D, The Database Center for Life Science“ (CC BY-SA 2.1 Japan). Das angepasste Modell steht unter CC BY-SA 4.0.',
+  feedback: {
+    open: 'Feedback ans Team',
+    title: 'Feedback ans Team',
+    paused: 'Die Übung ist pausiert.',
+    intro: 'Was möchtest du uns sagen? Was hat geholfen, was hat gestört?',
+    placeholder: 'Deine Nachricht …',
+    contact: 'Kontakt für eine Antwort (freiwillig)',
+    contactHint: 'E-Mail oder Telefon, nur wenn du eine Antwort möchtest.',
+    send: 'Abschicken',
+    sending: 'Wird gesendet …',
+    sentTitle: 'Danke dir.',
+    sentLine: 'Deine Nachricht ist beim Team angekommen.',
+    failed: 'Das hat gerade nicht geklappt. Prüf die Verbindung und versuch es noch einmal.',
+    during: 'während der Übung',
+    after: 'nach der Übung',
+  },
 }
 
 const en: Messages = {
@@ -460,6 +493,22 @@ const en: Messages = {
   credits: 'Sources and licences',
   anatomyCredit:
     '3D anatomy derived from “Z-Anatomy – The libre 3D atlas of anatomy” (CC BY-SA 4.0) and “BodyParts3D, The Database Center for Life Science” (CC BY-SA 2.1 Japan). The adapted model is licensed CC BY-SA 4.0.',
+  feedback: {
+    open: 'Give feedback to the team',
+    title: 'Give feedback to the team',
+    paused: 'The exercise is paused.',
+    intro: 'What would you like to tell us? What helped, what got in the way?',
+    placeholder: 'Your message …',
+    contact: 'Contact for a reply (optional)',
+    contactHint: 'E-mail or phone, only if you would like an answer.',
+    send: 'Send',
+    sending: 'Sending …',
+    sentTitle: 'Thank you.',
+    sentLine: 'Your message has reached the team.',
+    failed: 'That did not work just now. Check your connection and try again.',
+    during: 'during the exercise',
+    after: 'after the exercise',
+  },
 }
 
 export const messages: Record<Language, Messages> = { de, en }

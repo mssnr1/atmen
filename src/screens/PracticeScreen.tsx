@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BottomSheet } from '../components/BottomSheet'
 import { Button, IconButton } from '../components/Button'
 import { FullscreenButton } from '../components/FullscreenButton'
-import { CloseIcon, InfoIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
+import { FeedbackSheet } from '../components/FeedbackSheet'
+import { CloseIcon, FeedbackIcon, InfoIcon, PauseIcon, PlayIcon, RestartIcon, SlidersIcon, SoundIcon, SoundOffIcon } from '../components/icons'
 import { MoodScale } from '../components/MoodScale'
 import { Segmented } from '../components/Segmented'
 import { Switch } from '../components/Switch'
@@ -22,6 +23,7 @@ import { paceText, presetIndex, rhythmText } from '../lib/exerciseText'
 import { formatClock, formatDuration } from '../lib/format'
 import { clearPendingStart, hasPendingStart, navigate, navigateReplacing, startPractice } from '../lib/route'
 import { suggest } from '../lib/suggest'
+import { feedbackAvailable } from '../report/send'
 import { themePreferences } from '../lib/themePreferences'
 import { settleSource } from '../stage/ambient'
 import { stageSource, useStage } from '../stage/stage'
@@ -81,6 +83,9 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
   const closeSheet = useCallback(() => setSheetOpen(false), [])
   const [infoOpen, setInfoOpen] = useState(false)
   const closeInfo = useCallback(() => setInfoOpen(false), [])
+  // Feedback to the team: opening it holds the exercise; it waits paused until the user goes on.
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const closeFeedback = useCallback(() => setFeedbackOpen(false), [])
   const [panelHeight, panel] = useHeight()
   const [headerHeight, header] = useHeight()
   const isPhone = useIsPhone()
@@ -171,7 +176,11 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
     // Only a start, a pause or a resume re-arm this; the first breath's length is read once then.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running, stepBack, session.engine])
-  const chrome = !running || awake || sheetOpen || infoOpen
+  const chrome = !running || awake || sheetOpen || infoOpen || feedbackOpen
+  const openFeedback = () => {
+    if (running) session.pause()
+    setFeedbackOpen(true)
+  }
   const controls = chrome && !asking && !leadIn
   const wordShown = !running || s.cycleIndex < WORD_BREATHS || chrome
 
@@ -224,6 +233,11 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
           <CloseIcon className="size-5" strokeWidth={1.5} />
         </IconButton>
         <div className="pointer-events-auto flex items-center">
+          {feedbackAvailable() && (
+            <IconButton label={t.feedback.open} onClick={openFeedback} className="text-ink-2" data-testid="feedback-open">
+              <FeedbackIcon className="size-5" strokeWidth={1.5} />
+            </IconButton>
+          )}
           <IconButton
             label={prefs.audioEnabled ? t.soundOff : t.soundOn}
             pressed={prefs.audioEnabled}
@@ -258,6 +272,7 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
             after={after}
             onAfter={answerAfter}
             onDone={goToHistory}
+            onFeedback={feedbackAvailable() ? openFeedback : undefined}
             next={
               next && {
                 label: t.continueWith(next.exercise.text[lang].short, Math.round((prefs.durationByExercise[next.exercise.id] ?? next.exercise.defaultDurationMs) / 60_000)),
@@ -363,6 +378,16 @@ export function PracticeScreen({ exercise }: { exercise: Exercise }) {
         </ul>
       </BottomSheet>
 
+      <FeedbackSheet
+        open={feedbackOpen}
+        onClose={closeFeedback}
+        t={t.feedback}
+        closeLabel={t.close}
+        paused={s.status === 'paused'}
+        context={`${text.name} · ${completed ? t.feedback.after : t.feedback.during}`}
+        language={lang}
+      />
+
       <BottomSheet open={sheetOpen} title={t.settings} closeLabel={t.close} onClose={closeSheet}>
         <h3 className="pt-3 text-body font-medium">{t.breathingPace}</h3>
         <p className="text-note text-ink-2">{t.breathingPaceHint}</p>
@@ -463,6 +488,7 @@ function Completion({
   after,
   onAfter,
   onDone,
+  onFeedback,
   next,
 }: {
   t: Messages
@@ -471,6 +497,7 @@ function Completion({
   after?: Mood
   onAfter: (mood: Mood) => void
   onDone: () => void
+  onFeedback?: () => void
   next: { label: string; reason: string; start: () => void } | null
 }) {
   return (
@@ -493,6 +520,12 @@ function Completion({
         <button type="button" onClick={next.start} className="mt-2 flex min-h-12 w-full flex-col items-center justify-center rounded-full px-4 py-1.5 text-ink transition hover:bg-ink/5" data-testid="completion-next">
           <span className="text-body font-semibold">{next.label}</span>
           <span className="text-note text-ink-2">{next.reason}</span>
+        </button>
+      )}
+      {onFeedback && (
+        <button type="button" onClick={onFeedback} className="mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 text-note text-ink-2 transition hover:bg-ink/5 hover:text-ink" data-testid="completion-feedback">
+          <FeedbackIcon className="size-4" strokeWidth={1.5} />
+          {t.feedback.open}
         </button>
       )}
     </div>
