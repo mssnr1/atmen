@@ -134,3 +134,9 @@ export const RingsIcon = (p: P) => (
     <circle cx="12" cy="12" r="9" />
   </svg>
 )
+export const FeedbackIcon = (p: P) => (
+  <svg {...base} {...p}>
+    {/* A soft speech bubble. */}
+    <path d="M4.5 11.2c0-3.7 3.4-6.4 7.5-6.4s7.5 2.7 7.5 6.4-3.4 6.4-7.5 6.4c-.9 0-1.8-.1-2.6-.4L5.6 19l.9-3.3c-1.2-1.2-2-2.8-2-4.5z" />
+  </svg>
+)
